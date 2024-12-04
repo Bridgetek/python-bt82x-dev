@@ -79,6 +79,12 @@ class EVE2(eve.EVE2):
             t -= n
             s = s[n:]
 
+    def cs(self, v):
+        if v:
+            self.slave.force_select(0)
+        else:
+            self.slave.force_select(1)
+
     def reset(self):
         while 1:
             # self.gpio.write(0x00)
@@ -87,8 +93,7 @@ class EVE2(eve.EVE2):
             # time.sleep(.1)
 
             exchange = self.slave.exchange
-
-            # Set System PLL NS = 15 for 72MHz
+            # Set System PLL NS = 15 for 576MHz
             exchange(bytes([0xFF, 0xE4, 0x0F, 0x00, 0x00]))
             # Set System clock divider to 0x17 for 72MHz
             exchange(bytes([0xFF, 0xE6, 0x17, 0x00, 0x00]))

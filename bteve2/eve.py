@@ -66,25 +66,62 @@ _Inputs = namedtuple(
     ))
 
 class EVE2:
+    """
+    Co-processor commands are defined in this file and begin with "cmd_".
 
-    # This class is designed to be used as a subclass of a superclass that provides
-    # the methods reset, wr and rd, which provide raw byte read/write to the EVE2
-    # hardware.
+    Typically the library will be called like this:
+        gd.begin()
+        gd.ClearColorRGB(64,72,64)
+        gd.Clear(1,1,1)
+        gd.cmd_text(10, 10, 25, 0, "Hello, World!")
+        # Send CMD_SWAP then wait for the co-processor to finish.
+        gd.swap() 
 
-    #  reset()          Strobe the reset pin
-    #  rd(a, n)         Read bytes
-    #  wr(a, s)         Write bytes
+    However, if required the display list can be ended with finish
+        gd.begin()
+        gd.ClearColorRGB(64,72,64)
+        gd.Clear(1,1,1)
+        gd.cmd_text(10, 10, 25, 0, "Hello, World!")
+        # Send CMD_SWAP to the display list.
+        gd.cmd_swap()
+        # Wait for the co-processor to finish.
+        gd.finish()
+    
+    More advanced usage can have multiple display lists sent to the 
+    co-processor.
 
+        gd.begin()
+        gd.ClearColorRGB(64,72,64)
+        gd.Clear(1,1,1)
+        gd.cmd_text(10, 10, 25, 0, "Hello, World!")
+        # Send CMD_SWAP to the display list.
+        gd.cmd_swap()
+        # Start the co-processor, but do not wait to finish.
+        gd.finish(False)
+        # Perform some processing for a long time in parallel to the
+        # co-processor working.
+        long_time_routine()
+        # Wait for co-processor.
+        while not gd.is_finished(): pass
+
+    """
+
+    # Reset and wait until the co-processor is ready.
     def boot(self):
         self.reset()
         self.getspace()
 
+    # Read a 32 bit word from an address on the EVE.
     def rd32(self, a):
         return struct.unpack("I", self.rd(a, 4))[0]
 
+    # Write 32 bit word to an address on the EVE.
     def wr32(self, a, v):
         self.wr(a, struct.pack("I", v))
 
+    # Query the co-processor RAM_CMD space.
+    # When the co-processor is idle this will be FIFO_MAX.
+    # Note: when bit 0 is set then the co-processor has encountered an error.
     def getspace(self):
         self.space = self.rd32(REG_CMDB_SPACE)
         if self.space & 1:
@@ -92,36 +129,144 @@ class EVE2:
             # print('message', repr(message))
             raise CoprocessorException(message)
 
+    # Wait until a specified amount of space is available in the co-processor
+    # RAM_CMD space.
     def reserve(self, n):
         while self.space < n:
             self.getspace()
 
+    # Return True if the co-processor RAM_CMD space is empty (FIFO_MAX 
+    # remaining).
     def is_finished(self):
         self.getspace()
         return self.space == FIFO_MAX
-            
+
+    # Write data to the co-processor RAM_CMD space. First checks to see if
+    # there is sufficient space.            
     def write(self, ss):
         self.reserve(len(ss))
         self.wr(REG_CMDB_WRITE, ss)
         self.space -= len(ss)
 
-    def finish(self):
+    # Start a display list in the co-processor.
+    def begin(self):
+        self.cmd_dlstart()
+        self.cmd_loadidentity()
+
+    # Perform a swap command in the co-processor. 
+    # This will optionally call the finish function to send the data to
+    # the co-processor then wait for it to complete.
+    def swap(self, finish = True):
+        self.Display()
+        self.cmd_swap()
+        if finish:
+            self.finish()
+
+    # Finish a display list in the co-processor.
+    # The command buffer is sent to the co-processor then it will optionally
+    # wait for the co-processor to complete.
+    # Note that this will be synchronised with the frame rate.
+    def finish(self, wait = True):
+        self.cs(True)
         self.flush()
-        self.reserve(FIFO_MAX)
+        self.cs(False)
+        if wait:
+            while not self.is_finished():
+                pass
 
-    def is_idle(self):
-        self.getspace()
-        return self.space == FIFO_MAX
-
+    # Send a 'C' string to the command buffer.
     def cstring(self, s):
         if type(s) == str:
             s = bytes(s, "utf-8")
         self.cc(align4(s + _B0))
 
+    # Send a string to the command buffer in MicroPython.
     def fstring(self, aa):
         self.cstring(aa[0])
         # XXX MicroPython is currently lacking array.array.tobytes()
         self.cc(bytes(array.array("i", aa[1:])))
+
+    # Read the touch inputs.
+    def get_inputs(self):
+        self.finish()
+        t = _Touch(*struct.unpack("hhHHhhhhhhhhI", self.rd(REG_TOUCH_RAW_XY, 28)))
+
+        r = _Tracker(*struct.unpack("HH", self.rd(REG_TRACKER, 4)))
+
+        if not hasattr(self, "prev_touching"):
+            self.prev_touching = False
+        touching = (t.x != -32768)
+        press = touching and not self.prev_touching
+        release = (not touching) and self.prev_touching
+        s = _State(touching, press, release)
+        self.prev_touching = touching
+
+        self.inputs = _Inputs(t, r, s)
+        return self.inputs
+
+    # Calibrate the touch screen.
+    def calibrate(self):
+        fn = "calibrate.bin"
+
+        try:
+            with open(fn, "rb") as f:
+                self.wr(REG_TOUCH_TRANSFORM_A, f.read())
+        except FileNotFoundError:
+            self.Clear()
+            self.cmd_text(self.w // 2, self.h // 2, 34, OPT_CENTER, "Tap the dot")
+            self.cmd_calibrate(0)
+            self.cmd_dlstart()
+            with open(fn, "wb") as f:
+                f.write(self.rd(REG_TOUCH_TRANSFORM_A, 24))
+
+    # Load from a file-like into the command buffer.
+    def load(self, f):
+        while True:
+            s = f.read(512)
+            if not s:
+                return
+            self.cc(align4(s))
+
+    # Setup the EVE registers to match the surface created.
+    def panel(self, surface):
+        self.cmd_rendertarget(*surface)
+        self.Clear()
+        self.swap()
+        self.cmd_graphicsfinish()
+
+        (self.w, self.h) = (surface.w, surface.h)
+
+        horcy = self.w + 180
+        vercy = self.h + 45 # 1210-1280
+        self.cmd_regwrite(REG_GPIO, 0x80)
+        self.cmd_regwrite(REG_DISP, 1)
+
+        self.cmd_regwrite(REG_HCYCLE, horcy)
+        self.cmd_regwrite(REG_HSIZE, self.w)
+        self.cmd_regwrite(REG_HOFFSET, 50)
+        self.cmd_regwrite(REG_HSYNC0, 0)
+        self.cmd_regwrite(REG_HSYNC1, 30)
+
+        self.cmd_regwrite(REG_VCYCLE, vercy)
+        self.cmd_regwrite(REG_VSIZE, self.h)
+        self.cmd_regwrite(REG_VOFFSET, 10)
+        self.cmd_regwrite(REG_VSYNC0, 0)
+        self.cmd_regwrite(REG_VSYNC1, 3)
+
+        self.cmd_regwrite(REG_PCLK_POL, 0)
+
+        extsyncmode = 3     # 0: 1 pixel single // 1: 2 pixel single // 2: 2 pixel dual // 3: 4 pixel dual
+        TXPLLDiv = 0x03
+        self.cmd_apbwrite(LVDSPLL_CFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
+
+        self.cmd_apbwrite(LVDS_EN, 7) # Enable PLL
+
+        self.cmd_regwrite(REG_SO_MODE, extsyncmode)
+        self.cmd_regwrite(REG_SO_SOURCE, surface.addr)
+        self.cmd_regwrite(REG_SO_FORMAT, surface.fmt)
+        self.cmd_regwrite(REG_SO_EN, 1)
+
+        self.flush()
 
     # cmd_animdraw(int32_t ch)
     def cmd_animdraw(self, *args):
@@ -694,91 +839,6 @@ class EVE2:
     def cmd_workarea(self, *args):
         self.cmd(0x6c, 'I', args)
         # Some higher-level functions
-
-    def get_inputs(self):
-        self.finish()
-        t = _Touch(*struct.unpack("hhHHhhhhhhhhI", self.rd(REG_TOUCH_RAW_XY, 28)))
-
-        r = _Tracker(*struct.unpack("HH", self.rd(REG_TRACKER, 4)))
-
-        if not hasattr(self, "prev_touching"):
-            self.prev_touching = False
-        touching = (t.x != -32768)
-        press = touching and not self.prev_touching
-        release = (not touching) and self.prev_touching
-        s = _State(touching, press, release)
-        self.prev_touching = touching
-
-        self.inputs = _Inputs(t, r, s)
-        return self.inputs
-
-    def swap(self):
-        self.Display()
-        self.cmd_swap()
-        self.flush()
-        self.cmd_dlstart()
-        self.cmd_loadidentity()
-
-    def calibrate(self):
-        fn = "calibrate.bin"
-
-        try:
-            with open(fn, "rb") as f:
-                self.wr(REG_TOUCH_TRANSFORM_A, f.read())
-        except FileNotFoundError:
-            self.Clear()
-            self.cmd_text(self.w // 2, self.h // 2, 34, OPT_CENTER, "Tap the dot")
-            self.cmd_calibrate(0)
-            self.cmd_dlstart()
-            with open(fn, "wb") as f:
-                f.write(self.rd(REG_TOUCH_TRANSFORM_A, 24))
-
-    def load(self, f):
-        while True:
-            s = f.read(512)
-            if not s:
-                return
-            self.cc(align4(s))
-
-    def panel(self, surface):
-        self.cmd_rendertarget(*surface)
-        self.Clear()
-        self.swap()
-        self.cmd_graphicsfinish()
-
-        (self.w, self.h) = (surface.w, surface.h)
-
-        horcy = 1920+180
-        vercy = 1200+45 # 1210-1280
-        self.cmd_regwrite(REG_GPIO, 0x80)
-        self.cmd_regwrite(REG_DISP, 1)
-
-        self.cmd_regwrite(REG_HCYCLE, horcy)
-        self.cmd_regwrite(REG_HSIZE, 1920)
-        self.cmd_regwrite(REG_HOFFSET, 50)
-        self.cmd_regwrite(REG_HSYNC0, 0)
-        self.cmd_regwrite(REG_HSYNC1, 30)
-
-        self.cmd_regwrite(REG_VCYCLE, vercy)
-        self.cmd_regwrite(REG_VSIZE, 1200)
-        self.cmd_regwrite(REG_VOFFSET, 10)
-        self.cmd_regwrite(REG_VSYNC0, 0)
-        self.cmd_regwrite(REG_VSYNC1, 3)
-
-        self.cmd_regwrite(REG_PCLK_POL, 0)
-
-        extsyncmode = 3     # 0: 1 pixel single // 1: 2 pixel single // 2: 2 pixel dual // 3: 4 pixel dual
-        TXPLLDiv = 0x03
-        self.cmd_apbwrite(LVDSPLL_CFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
-
-        self.cmd_apbwrite(LVDS_EN, 7) # Enable PLL
-
-        self.cmd_regwrite(REG_SO_MODE, extsyncmode)
-        self.cmd_regwrite(REG_SO_SOURCE, surface.addr)
-        self.cmd_regwrite(REG_SO_FORMAT, surface.fmt)
-        self.cmd_regwrite(REG_SO_EN, 1)
-
-        self.flush()
 
 """
 class MoviePlayer:

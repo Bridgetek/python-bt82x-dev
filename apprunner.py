@@ -6,11 +6,17 @@ import importlib
 import bteve2 as eve
 
 def run(app, minimal = False):
+    width = 1920
+    height = 1200
     parser = argparse.ArgumentParser(description="EVE demo")
-    parser.add_argument("-c", "--connector", default="ft4232h", help="the connection method for EVE")
+    parser.add_argument("--connector", default="ft4232h", help="the connection method for EVE")
+    parser.add_argument("--width", default=str(width), help="panel width in pixels")
+    parser.add_argument("--height", default=str(height), help="panel height in pixels")
     (args, rem) = parser.parse_known_args()
     sys.argv = rem
 
+    width = int(args.width, 0)
+    height = int(args.height, 0)
     connector_dir = "connectors/"
 
     sys.path.append(connector_dir)
@@ -28,7 +34,7 @@ def run(app, minimal = False):
         gd.cmd_regwrite(eve.REG_SC0_SIZE, 2)
         gd.cmd_regwrite(eve.REG_SC0_PTR0, 10 << 20)
         gd.cmd_regwrite(eve.REG_SC0_PTR1, 18 << 20)
-        gd.panel(eve.Surface(eve.SWAPCHAIN_0, eve.RGB6, 1920, 1200))
+        gd.panel(eve.Surface(eve.SWAPCHAIN_0, eve.RGB6, width, height))
         gd.cmd_regwrite(eve.REG_RE_DITHER, 1)
         app(gd)
         gd.finish()

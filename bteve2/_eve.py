@@ -2,34 +2,43 @@ import struct
 
 class _EVE:
 
+    # Add commands and data to the co-processor bufffer.
+    # It is only sent when flush is called.
     def cc(self, s):
         assert (len(s) % 4) == 0
         self.buf += s
-        while len(self.buf) > 512:
-            self.write(self.buf[:512])
-            self.buf = self.buf[512:]
 
     def register(self, sub):
         self.buf = b''
         getattr(sub, 'write') # Confirm that there is a write method
 
+    # Send the co-processor buffer to the EVE device.
+    # Chunks are sized to account for 12 bytes of MPSSE preable and
+    # 12 bytes after the data. The 512 byte packet size of the FTDI
+    # high-speed device is therefore almost fully utilised (510 bytes)
+    # without a short packet following.
     def flush(self):
+        chunk = 512 - 24
+        while len(self.buf) > chunk:
+            self.write(self.buf[:chunk])
+            self.buf = self.buf[chunk:]
         self.write(self.buf)
         self.buf = b''
 
+    # Send a 32-bit value to the EVE.
     def c4(self, i):
-        """Send a 32-bit value to the GD2."""
         self.cc(struct.pack("I", i))
 
+    # Send a 32-bit basic graphic command to the EVE.
     def cmd0(self, num):
         self.c4(0xffffff00 | num)
 
+    # Send a 32-bit basic graphic command and parameters to the EVE.
     def cmd(self, num, fmt, args):
         self.c4(0xffffff00 | num)
         self.cc(struct.pack(fmt, *args))
 
-
-    # The basic graphics instructions
+    # The basic graphics instructions for Display Lists.
 
     def AlphaFunc(self, func,ref):
         self.c4((9 << 24) | ((func & 7) << 8) | ((ref & 255)))

@@ -1,5 +1,5 @@
 # Typical command line:
-# python fontmagic.py -c ft4232h ascii fonts\L4\Roboto-BoldCondensed_50_L4.raw -d 0x400 -l 32
+# python fontmagic.py --connector ft4232h ascii fonts\L4\Roboto-BoldCondensed_50_L4.raw -d 0x400 -l 32
 import sys
 import struct
 import zlib
@@ -8,9 +8,11 @@ import argparse
 # This module provides the connector (gd) to the EVE hardware.
 import apprunner
 
+# Target EVE device.
+family = "BT82x"
+
 # EVE family support check.
 device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
-family = "BT82x"
 assert(family in device_families)
 
 if family == "BT82x":
@@ -20,7 +22,7 @@ else:
     # This loads FT80x, FT81x, BT81x family definitions.
     import bteve as eve
 
-# Valid actions.
+# Valid program actions.
 actions = ["standard", "ascii", "symbol"]
 
 # Align an array to a multiple of 4 bytes (32 bits).
