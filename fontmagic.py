@@ -343,6 +343,7 @@ def fontmagic(gd):
     assert(romfontcache)
 
     # Start drawing test screen.
+    gd.begin()
     gd.ClearColorRGB(64,72,64)
     gd.Clear(1,1,1)
 
