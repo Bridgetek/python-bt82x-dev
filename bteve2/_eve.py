@@ -44,16 +44,24 @@ class _EVE:
         self.c4((9 << 24) | ((func & 7) << 8) | ((ref & 255)))
     def Begin(self, prim):
         self.c4((31 << 24) | ((prim & 15)))
+    def BitmapExtFormat(self, fmt):
+        self.c4((46 << 24) | (fmt & 65535))
     def BitmapHandle(self, handle):
-        self.c4((5 << 24) | ((handle & 31)))
+        self.c4((5 << 24) | ((handle & 63)))
     def BitmapLayout(self, format,linestride,height):
         self.c4((7 << 24) | ((format & 31) << 19) | ((linestride & 1023) << 9) | ((height & 511)))
+    def BitmapLayoutH(self, linestride,height):
+        self.c4((40 << 24) | (((linestride) & 3) << 2) | (((height) & 3)))
     def BitmapSize(self, filter,wrapx,wrapy,width,height):
         self.c4((8 << 24) | ((filter & 1) << 20) | ((wrapx & 1) << 19) | ((wrapy & 1) << 18) | ((width & 511) << 9) | ((height & 511)))
+    def BitmapSizeH(self, width,height):
+        self.c4((41 << 24) | (((width) & 3) << 2) | (((height) & 3)))
     def BitmapSource(self, addr):
         self.c4((1 << 24) | ((addr & 0xffffff)))
     def BitmapSourceH(self, addr):
         self.c4((49 << 24) | ((addr & 0xff)))
+    def BitmapSwizzle(self, r, g, b, a):
+        self.c4((47 << 24) | ((r & 7) << 9) | ((g & 7) << 6) | ((b & 7) << 3) | ((a & 7)))
     def BitmapTransformA(self, p, a):
         self.c4((21 << 24) | ((p & 1) << 17) | ((a & 131071)))
     def BitmapTransformB(self, p, b):
@@ -98,6 +106,10 @@ class _EVE:
         self.c4((14 << 24) | ((int(8 * width) & 4095)))
     def Macro(self, m):
         self.c4((37 << 24) | ((m & 1)))
+    def Nop(self):
+        self.c4((45 << 24))
+    def PaletteSource(self, addr):
+        self.c4((42 << 24) | (((addr) & 4194303)))
     def PointSize(self, size):
         self.c4((13 << 24) | ((int(8 * size) & 8191)))
     def RestoreContext(self):
@@ -106,12 +118,10 @@ class _EVE:
         self.c4((36 << 24))
     def SaveContext(self):
         self.c4((34 << 24))
-
     def ScissorSize(self, width,height):
         self.c4((28 << 24) | ((width & 4095) << 12) | ((height & 4095)))
     def ScissorXY(self, x,y):
         self.c4((27 << 24) | ((x & 2047) << 11) | ((y & 2047)))
-
     def StencilFunc(self, func,ref,mask):
         self.c4((10 << 24) | ((func & 7) << 16) | ((ref & 255) << 8) | ((mask & 255)))
     def StencilMask(self, mask):
@@ -122,6 +132,14 @@ class _EVE:
         self.c4((20 << 24) | ((mask & 1)))
     def Tag(self, s):
         self.c4((3 << 24) | ((s & 255)))
+    def VertexFormat(self, frac):
+        self.c4((39 << 24) | (frac & 7))
+        self.Vertex2f = [
+            self.Vertex2f_1,
+            self.Vertex2f_2,
+            self.Vertex2f_4,
+            self.Vertex2f_8,
+            self.Vertex2f_16][frac]
     def Vertex2f_1(self, x, y):
         x = int(x)
         y = int(y)
@@ -142,41 +160,10 @@ class _EVE:
         x = int(16 * x)
         y = int(16 * y)
         self.c4(0x40000000 | ((x & 32767) << 15) | (y & 32767))
-
-    Vertex2f = Vertex2f_16
-
     def Vertex2ii(self, x, y, handle = 0, cell = 0):
         self.c4((2 << 30) | ((x & 511) << 21) | ((y & 511) << 12) | ((handle & 31) << 7) | ((cell & 127)))
-
-    def VertexFormat(self, frac):
-        self.c4((39 << 24) | (frac & 7))
-        self.Vertex2f = [
-            self.Vertex2f_1,
-            self.Vertex2f_2,
-            self.Vertex2f_4,
-            self.Vertex2f_8,
-            self.Vertex2f_16][frac]
-
-    def BitmapLayoutH(self, linestride,height):
-        self.c4((40 << 24) | (((linestride) & 3) << 2) | (((height) & 3)))
-
-    def BitmapSizeH(self, width,height):
-        self.c4((41 << 24) | (((width) & 3) << 2) | (((height) & 3)))
-
-    def PaletteSource(self, addr):
-        self.c4((42 << 24) | (((addr) & 4194303)))
-
     def VertexTranslateX(self, x):
         self.c4((43 << 24) | (((int(16 * x)) & 131071)))
-
     def VertexTranslateY(self, y):
         self.c4((44 << 24) | (((int(16 * y)) & 131071)))
-
-    def Nop(self):
-        self.c4((45 << 24))
-
-    def BitmapExtFormat(self, fmt):
-        self.c4((46 << 24) | (fmt & 65535))
-
-    def BitmapSwizzle(self, r, g, b, a):
-        self.c4((47 << 24) | ((r & 7) << 9) | ((g & 7) << 6) | ((b & 7) << 3) | ((a & 7)))
+    Vertex2f = Vertex2f_16
