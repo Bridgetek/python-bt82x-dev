@@ -29,6 +29,10 @@ The Zadig utility is a handy utility that will replace a driver with libusb. Cli
 
 ![Zadig screenshot](docs/zadig.png)
 
+It may be neccessary to reboot the PC or remove and replug the MPSSE device. Once this is done the interface for the device will show in Windows Device Manager. Note that there is a missing USB Serial Port (COM4) now.
+
+![Device Manager screenshot](docs/devman.png)
+
 ### Linux Setup
 
 *These instructions are incomplete!* The built-in Linux drivers for FTDI devices need to be disabled for the libusb driver to be invoked.
