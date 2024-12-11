@@ -5,7 +5,10 @@ import time
 
 import bteve2 as eve
 
-FREQUENCY = 36_000_000      # system clock frequency, in Hz
+FREQUENCY = 72_000_000      # system clock frequency, in Hz
+
+print("The D2XX connector is currently not supported.")
+sys.exit(-1)
 
 def check(f):
     if f != 0:
@@ -181,49 +184,6 @@ class EVE2(eve.EVE2):
     def addr(self, a):
         return struct.pack(">I", a)
 
-    def reset(self):
-        while True:
-            self.assert_reset(1)
-            time.sleep(0.001)
-            self.assert_reset(0)
-
-            def exchange(bb):
-                msg = struct.pack("<BH", 0x11, len(bb) - 1) + bb
-                self.raw_write(self.csel() + msg + self.cunsel()) # SCU wake
-                
-            # Set System PLL NS = 15 for 72MHz
-            exchange(bytes([0xFF, 0xE4, 0x0F, 0x00, 0x00]))
-            # Set System clock divider to 0x17 for 72MHz
-            exchange(bytes([0xFF, 0xE6, 0x17, 0x00, 0x00]))
-            # Set bypass BOOT_BYPASS_OTP, DDRTYPT_BYPASS_OTP and set BootCfgEn
-            exchange(bytes([0xFF, 0xE9, 0xe1, 0x00, 0x00]))
-            # Set DDR Type - 1333, DDR3L, 4096
-            exchange(bytes([0xFF, 0xEB, 0x08, 0x00, 0x00]))
-            # Set DDR, JT and AUD in Boot Control
-            exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]))
-            # Clear BootCfgEn
-            exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]))
-            # Perform a reset pulse
-            exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
-            time.sleep(.1)
-
-            msg = (struct.pack("<BH", 0x11, 3) + self.addr(0))
-            self.raw_write(self.csel() + msg)
-            n = 128
-            #self.raw_write(struct.pack("<BH", 0x20, n - 1))
-            while self.npending() < n:
-                pass
-            r = b''.join(self.raw_read(n))
-            print(r)
-            self.raw_write(self.cunsel())
-            if 1 in r:
-                while self.rd32(eve.REG_ID) != 0x7c:
-                    pass
-                print(f"Boot status: 0x{self.rd32(eve.BOOT_STATUS):x}")
-                if self.rd32(eve.BOOT_STATUS) == 0x522e2e2e:
-                    break
-            print("[Boot fail after reset, retrying...]")
-
     def rd(self, a, nn):
         if nn == 0:
             return b""
@@ -277,3 +237,46 @@ class EVE2(eve.EVE2):
             t -= n
             s = s[n:]
         self.raw_write(b''.join(ww))
+    def reset(self):
+        while True:
+            self.assert_reset(1)
+            time.sleep(0.001)
+            self.assert_reset(0)
+
+            def exchange(bb):
+                msg = struct.pack("<BH", 0x11, len(bb) - 1) + bb
+                self.raw_write(self.csel() + msg + self.cunsel()) # SCU wake
+                
+            # Set System PLL NS = 15 for 72MHz
+            exchange(bytes([0xFF, 0xE4, 0x0F, 0x00, 0x00]))
+            # Set System clock divider to 0x17 for 72MHz
+            exchange(bytes([0xFF, 0xE6, 0x17, 0x00, 0x00]))
+            # Set bypass BOOT_BYPASS_OTP, DDRTYPT_BYPASS_OTP and set BootCfgEn
+            exchange(bytes([0xFF, 0xE9, 0xe1, 0x00, 0x00]))
+            # Set DDR Type - 1333, DDR3L, 4096
+            exchange(bytes([0xFF, 0xEB, 0x08, 0x00, 0x00]))
+            # Set DDR, JT and AUD in Boot Control
+            exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]))
+            # Clear BootCfgEn
+            exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]))
+            # Perform a reset pulse
+            exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
+            time.sleep(.1)
+
+            msg = (struct.pack("<BH", 0x11, 3) + self.addr(0))
+            self.raw_write(self.csel() + msg)
+            n = 128
+            #self.raw_write(struct.pack("<BH", 0x20, n - 1))
+            while self.npending() < n:
+                pass
+            r = b''.join(self.raw_read(n))
+            print(r)
+            self.raw_write(self.cunsel())
+            if 1 in r:
+                while self.rd32(eve.REG_ID) != 0x7c:
+                    pass
+                print(f"Boot status: 0x{self.rd32(eve.BOOT_STATUS):x}")
+                if self.rd32(eve.BOOT_STATUS) == 0x522e2e2e:
+                    break
+            print("[Boot fail after reset, retrying...]")
+

@@ -108,6 +108,7 @@ class EVE2(eve.EVE2):
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
             time.sleep(.1)
+            
             self.slave.write(self.addr(0), start = True, stop = False)
             def recv(n):
                 return self.slave.read(n, start = False, stop = True)
