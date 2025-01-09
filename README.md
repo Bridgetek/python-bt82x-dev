@@ -2,7 +2,7 @@
 
 This python module and connector allow python to be used to communicate with a BT82x device using [pyftdi](https://github.com/eblot/pyftdi) and an FTDI MPSSE device using the [libMPSSE-SPI](https://ftdichip.com/software-examples/mpsse-projects/libmpsse-spi-examples/) library.
 
-The connector code supports the [UMFTPD2A](https://brtchip.com/product/umftpd2a/)_(see note 1)_ module from Bridgetek, USB to MPSSE cables such as the [C232HM](https://ftdichip.com/products/c232hm-edhsl-0/).
+The connector code supports the [UMFTPD2A](https://brtchip.com/product/umftpd2a/)_(see note 1)_ module from Bridgetek, USB to MPSSE cables such as the [VA800-SPI](https://www.digikey.com/en/htmldatasheets/production/1371434/0/0/1/va800a-spi) or [C232HM](https://ftdichip.com/products/c232hm-edhsl-0/).
 
 Support for FT4222H devices from FTDI may be added in future.
 
@@ -46,9 +46,9 @@ The header on the BT82x board has the following connections:
 | Pin | Name | Description |
 | --- | ----- | ---- |
 | 1 | SCK  | SPI SCK - Clock |
-| 2 | MOSI  | SPI MOSI - Master Out Slave In |
-| 3 | MISO  | SPI MISO - Master In Slave Out |
-| 4 | CS#  | SPI CS# Serial Chip Select signal, active LOW |
+| 2 | CS#  | SPI CS# Serial Chip Select signal, active LOW |
+| 3 | MOSI  | SPI MOSI - Master Out Slave In |
+| 4 | MISO  | SPI MISO - Master In Slave Out |
 | 5 | INT#  | Interrupt signal from BT82x, active LOW |
 | 6 | RESET#  | Powerdown signal from SPI host, active LOW |
 | 7 | NC  | no connection |
@@ -78,9 +78,9 @@ On UMFTPD2A the CN2 connector is a 12-pin 2.54 mm pitch through hole connector. 
 | Bus | Pin | Name |
 | --- | ----- | ---- |
 | MPSSE0 | CN2-1 | SCLK - Clock |
+| MPSSE3 | CN2-2 | CS - Serial Chip Select signal |
 | MPSSE1 | CN2-3 | MOSI - Master Out Slave In |
 | MPSSE2 | CN2-4 | MISO - Master In Slave Out |
-| MPSSE3 | CN2-2 | CS - Serial Chip Select signal |
 | MPSSE7 | CN2-10 | PD# - Powerdown signal |
 | N/A    | CN2-7  | Signal GND for SPI |
 
