@@ -2,11 +2,10 @@ import time
 import struct
 import argparse
 
-# See https://brtchip.com/wp-content/uploads/sites/3/2022/07/DS_UMFTPD2A.pdf
-# for SPI connection details on UMFTPD2A board.
-
-from pyftdi.spi import SpiController, SpiIOError
-from pyftdi.ftdi import Ftdi
+import ft4222
+from ft4222.SPI import Cpha, Cpol
+from ft4222.SPIMaster import Mode, Clock, SlaveSelect
+from ft4222.GPIO import Port, Dir
 
 import bteve2 as eve
 
@@ -14,20 +13,23 @@ FREQUENCY = 72_000_000      # system clock frequency, in Hz
 
 class EVE2(eve.EVE2):
     def __init__(self):
-        spi = SpiController()
 
         # Configure the first interface (IF/1) of the FTDI device as a SPI master
         try:
-            spi.configure('ftdi://ftdi:4232h/1')
+            # open 'device' with default description 'FT4222 A'
+            self.devA = ft4222.openByDescription('FT4222 A')
+            # and the second 'device' on the same chip
+            self.devB = ft4222.openByDescription('FT4222 B')
         except: 
-            raise Exception("Sorry, no FTDI FT4232H device for SPI master")
+            raise Exception("Sorry, no FTDI FT4222H device for SPI master")
 
-        # Get a port to a SPI slave w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz
-        self.slave = spi.get_port(cs=0, freq = 15E6, mode=0)
-        self.gpio = spi.get_gpio()
-        self.gpio.set_direction(0x80, 0x80)
-        spi.ftdi.set_latency_timer(1)
+        # init spi master
+        self.devA.spiMaster_Init(Mode.SINGLE, Clock.DIV_8, Cpol.IDLE_LOW, Cpha.CLK_LEADING, SlaveSelect.SS0)
+        # also use gpio
+        self.devB.gpio_Init(gpio0 = Dir.OUTPUT)
         self.boot()
+
+    transmit_buffer = bytearray()
 
     def setup_flash(self):
         pass
@@ -35,21 +37,43 @@ class EVE2(eve.EVE2):
     def sleepclocks(self, n):
         time.sleep(n / 72e6)
 
+    def transmit(self, end=True):
+        towrite = len(self.transmit_buffer)
+        # print("transmit ", self.transmit_buffer)
+        if (towrite > 0):
+            self.devA.spiMaster_SingleWrite(self.transmit_buffer, end)
+        else:
+            self.devA.spiMaster_EndTransaction()
+        self.transmit_buffer = bytearray()
+        return towrite
+
+    def append(self, data, end=True):
+        # print("append ", data)
+        self.transmit_buffer.extend(data)
+        # print("appended ", self.transmit_buffer)
+        towrite = len(self.transmit_buffer)
+        if (towrite >= 512):
+            self.transmit(end)
+        return towrite
+
     def addr(self, a):
         return struct.pack(">I", a)
 
     def rd(self, a, nn):
         assert (a & 3) == 0
         assert (nn & 3) == 0
+        
+        self.transmit(False)
+
         if nn == 0:
             return b""
         a1 = a + nn
         r = b''
         while a != a1:
             n = min(a1 - a, 32)
-            self.slave.write(self.addr(a), start = True, stop = False)
+            self.devA.spiMaster_SingleWrite(self.addr(a), False)
             def recv(n):
-                return self.slave.read(n, start = False, stop = False)
+                return self.devA.spiMaster_SingleRead(n, False)
             bb = recv(32 + n)
             if 1 in bb:             # Got READY byte in response
                 i = bb.index(1)
@@ -62,7 +86,7 @@ class EVE2(eve.EVE2):
                                     # Handle case of full response not received
             if len(response) < n:
                 response += recv(n - len(response))
-            self.slave.write(b'', start = False, stop = True)
+            self.devA.spiMaster_EndTransaction()
             a += n
             r += response
         return r
@@ -71,47 +95,45 @@ class EVE2(eve.EVE2):
         assert (a & 3) == 0
         t = len(s)
         assert (t & 3) == 0
-
-        while t:
-            n = min(0xf000, t)
-            self.slave.write(self.addr(a | (1 << 31)) + s[:n])
-            a += n
-            t -= n
-            s = s[n:]
+        self.append(self.addr(a | (1 << 31)))
+        self.append(s)
 
     def cs(self, v):
         if v:
-            self.slave.force_select(0)
+            # No action. CS automatically actioned.
+            pass
         else:
-            self.slave.force_select(1)
+            # End of transaction. Send cumulated buffer contents.
+            if self.transmit(True) == 0:
+                self.devA.spiMaster_EndTransaction()
 
     def reset(self):
+        self.devB.gpio_Write(Port.P0, 0)
+        time.sleep(.1)
+        self.devB.gpio_Write(Port.P0, 1)
+        time.sleep(.1)
+
         while 1:
-            # self.gpio.write(0x00)
-            # time.sleep(.1)
-            self.gpio.write(0x80)
-            # time.sleep(.1)
-
-            exchange = self.slave.exchange
+            exchange = self.devA.spiMaster_SingleWrite
             # Set System PLL NS = 15 for 576MHz
-            exchange(bytes([0xFF, 0xE4, 0x0F, 0x00, 0x00]))
+            exchange(bytes([0xFF, 0xE4, 0x0F, 0x00, 0x00]), True)
             # Set System clock divider to 0x17 for 72MHz
-            exchange(bytes([0xFF, 0xE6, 0x17, 0x00, 0x00]))
+            exchange(bytes([0xFF, 0xE6, 0x17, 0x00, 0x00]), True)
             # Set bypass BOOT_BYPASS_OTP, DDRTYPT_BYPASS_OTP and set BootCfgEn
-            exchange(bytes([0xFF, 0xE9, 0xe1, 0x00, 0x00]))
+            exchange(bytes([0xFF, 0xE9, 0xe1, 0x00, 0x00]), True)
             # Set DDR Type - 1333, DDR3L, 4096
-            exchange(bytes([0xFF, 0xEB, 0x08, 0x00, 0x00]))
+            exchange(bytes([0xFF, 0xEB, 0x08, 0x00, 0x00]), True)
             # Set DDR, JT and AUD in Boot Control
-            exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]))
+            exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]), True)
             # Clear BootCfgEn
-            exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]))
+            exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]), True)
             # Perform a reset pulse
-            exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
-            time.sleep(.1)
+            exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]), True)
+            time.sleep(.2)
 
-            self.slave.write(self.addr(0), start = True, stop = False)
+            self.devA.spiMaster_SingleWrite(self.addr(0), False)
             def recv(n):
-                return self.slave.read(n, start = False, stop = True)
+                return self.devA.spiMaster_SingleRead(n, True)
             bb = recv(128)
             t0 = time.monotonic_ns()
             fault = False
