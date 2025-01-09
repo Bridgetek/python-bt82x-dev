@@ -2,7 +2,7 @@
 
 This python module and connector allow python to be used to communicate with a BT82x device using [pyftdi](https://github.com/eblot/pyftdi) and an FTDI MPSSE device using the [libMPSSE-SPI](https://ftdichip.com/software-examples/mpsse-projects/libmpsse-spi-examples/) library.
 
-The connector code supports the [UMFTPD2A](https://brtchip.com/product/umftpd2a/)_(see note 1)_ module from Bridgetek, USB to MPSSE cables such as the [C232HM](https://ftdichip.com/products/c232hm-edhsl-0/).
+The connector code supports the [UMFTPD2A](https://brtchip.com/product/umftpd2a/)_(see note 1)_ module from Bridgetek, USB to MPSSE cables such as the [VA800-SPI](https://www.digikey.com/en/htmldatasheets/production/1371434/0/0/1/va800a-spi) or [C232HM](https://ftdichip.com/products/c232hm-edhsl-0/).
 
 Support for FT4222H devices from FTDI may be added in future.
 
