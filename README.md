@@ -18,7 +18,12 @@ All platforms will require a working up-to-date installation of __python 3.13.x_
 
 ```
 pip install pyftdi
+```
 
+for FT4222 , which is the on-board connector of VM820C module,  the ft4222 module of python shall be installed too: 
+
+```
+pip install ft4222
 ```
 
 ### Windows Setup
