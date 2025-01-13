@@ -145,8 +145,14 @@ This simple program demonstrates writing text on the screen, it parses arguments
 
 The format of the command is as follows:
 
+MPSSE example
 ```
-python simple.py --connector ft4232h "simple program to write to the screen" --font 25
+python simple.py --connector ft232h "simple program to write to the screen" --font 25
+```
+FT4222 example
+```
+python simple.py --connector ft4222module "simple program to write to the screen" --font 25
+
 ```
 
 The string in quotes is used in a CMD_TEXT call with the font number set in the `--font` parameter. Make sure that the font number is a valid ROM FONT.
