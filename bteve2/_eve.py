@@ -18,10 +18,6 @@ class _EVE:
     # high-speed device is therefore almost fully utilised (510 bytes)
     # without a short packet following.
     def flush(self):
-        chunk = 512 - 24
-        while len(self.buf) > chunk:
-            self.write(self.buf[:chunk])
-            self.buf = self.buf[chunk:]
         self.write(self.buf)
         self.buf = b''
 

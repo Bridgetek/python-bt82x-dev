@@ -2,11 +2,21 @@ import time
 import struct
 import argparse
 
-# See https://brtchip.com/wp-content/uploads/sites/3/2022/07/DS_UMFTPD2A.pdf
-# for SPI connection details on UMFTPD2A board.
-
+# Use the PyFtdi library to interface with an FT4232H device. See
+# https://eblot.github.io/pyftdi/ for more information.
+# "pip install pyftdi" to add the module to python.
 from pyftdi.spi import SpiController, SpiIOError
 from pyftdi.ftdi import Ftdi
+
+# IMPORTANT - WINDOWS
+# For use on Windows the libusb-win32 driver MUST be installed in place of
+# the FTDI driver. To do this, the easiest way is to use Zadig. See the
+# webpage and instructions at https://zadig.akeo.ie or
+# https://eblot.github.io/pyftdi/installation.html#windows
+
+# For use with the UMFTPD2A board (based on the FT4232H) see the schematics
+# in https://brtchip.com/wp-content/uploads/sites/3/2022/07/DS_UMFTPD2A.pdf
+# for the SPI connection details on UMFTPD2A board using the CN2 connector.
 
 import bteve2 as eve
 
@@ -19,8 +29,15 @@ class EVE2(eve.EVE2):
         # Configure the first interface (IF/1) of the FTDI device as a SPI master
         try:
             spi.configure('ftdi://ftdi:4232h/1')
+            print("Using Interface 1 on FT4232H")
         except: 
-            raise Exception("Sorry, no FTDI FT4232H device for SPI master")
+            # Configure the second interface (IF/2) of the FTDI device as a SPI master
+            try:
+                spi.configure('ftdi://ftdi:4232h/2')
+                print("Using Interface 2 on FT4232H")
+            except: 
+                raise Exception("Sorry, no FTDI FT4232H device for SPI master")
+        # Note MPSSE is required and there are 2 MPSSE channels on FT4232H.
 
         # Get a port to a SPI slave w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz
         self.slave = spi.get_port(cs=0, freq = 15E6, mode=0)

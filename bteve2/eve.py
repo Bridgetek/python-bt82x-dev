@@ -267,7 +267,7 @@ class EVE2:
         self.cmd_regwrite(REG_SO_FORMAT, surface.fmt)
         self.cmd_regwrite(REG_SO_EN, 1)
 
-        self.flush()
+        self.finish()
 
     # cmd_animdraw(int32_t ch)
     def cmd_animdraw(self, *args):

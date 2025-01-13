@@ -157,7 +157,7 @@ def getcustomfontinfo(gd, fontnumber, address, first_character = 32):
     if (fontnumber < getfontmax()):
         cache = getfontinfocache(gd, fontnumber, address, first_character)
         # Mark this font as a RAM font.
-        cache += (True, )
+        cache += (False, )
     else:
         cache = None
     return cache
@@ -318,7 +318,8 @@ def fontmagic(gd):
         print(f"Error: {args.font} not found.")
         parser.print_usage()
         sys.exit(1)
-    
+
+    print("Upload font file...")
     # Check for a relocatable font file. 
     format = int.from_bytes(dd[0:4], byteorder='big')
     if format == 0x44aa0001:
@@ -328,24 +329,28 @@ def fontmagic(gd):
     else:
         # Load normal assets in place directly.
         gd.cmd_inflate(address, 0)
+        print(f"length: {len(pad4(zlib.compress(dd)))}")
         gd.cc(pad4(zlib.compress(dd)))
-    gd.finish()
-    # Update the font table with the custom font.
-    gd.cmd_setfont(customfont, address, first_character)
     gd.finish()
 
     # Obtain details on custom installed fonts from RAM_G.
+    print("Get custom font info...")
     customfontcache = getcustomfontinfo(gd, customfont, address, first_character)
     assert(customfontcache)
+    print(customfontcache)
 
     # Obtain details of a ROM font.
+    print("Get ROM font info...")
     romfontcache = getromfontinfo(gd, romfont)
     assert(romfontcache)
 
+    print("Draw test screen...")
     # Start drawing test screen.
     gd.begin()
     gd.ClearColorRGB(64,72,64)
     gd.Clear(1,1,1)
+    # Update the font table with the custom font.
+    gd.cmd_setfont(customfont, address, first_character)
 
     if args.action == actions[0]:
         # Draw test text using the custom font.

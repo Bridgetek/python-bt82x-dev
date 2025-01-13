@@ -39,21 +39,21 @@ class EVE2(eve.EVE2):
 
     def transmit(self, end=True):
         towrite = len(self.transmit_buffer)
-        # print("transmit ", self.transmit_buffer)
         if (towrite > 0):
+            #print(f"transmit {towrite} {end}: ", end="")
+            #for ch in self.transmit_buffer:
+            #    print(f"{ch:02x} ", end="")
+            #print()
             self.devA.spiMaster_SingleWrite(self.transmit_buffer, end)
         else:
-            self.devA.spiMaster_EndTransaction()
+            if (end):
+                self.devA.spiMaster_EndTransaction()
         self.transmit_buffer = bytearray()
         return towrite
 
-    def append(self, data, end=True):
-        # print("append ", data)
+    def append(self, data, end=False):
         self.transmit_buffer.extend(data)
-        # print("appended ", self.transmit_buffer)
         towrite = len(self.transmit_buffer)
-        if (towrite >= 512):
-            self.transmit(end)
         return towrite
 
     def addr(self, a):
@@ -75,15 +75,16 @@ class EVE2(eve.EVE2):
             def recv(n):
                 return self.devA.spiMaster_SingleRead(n, False)
             bb = recv(32 + n)
-            if 1 in bb:             # Got READY byte in response
+            if 1 in bb:             
+                # Got READY byte in response
                 i = bb.index(1)
                 response = bb[i + 1:i + 1 + n]
             else:
-                                    # Poll for READY byte
+                # Poll for READY byte
                 while recv(1) == b'\x00':
                     pass
                 response = b''
-                                    # Handle case of full response not received
+            # Handle case of full response not received
             if len(response) < n:
                 response += recv(n - len(response))
             self.devA.spiMaster_EndTransaction()
@@ -104,8 +105,7 @@ class EVE2(eve.EVE2):
             pass
         else:
             # End of transaction. Send cumulated buffer contents.
-            if self.transmit(True) == 0:
-                self.devA.spiMaster_EndTransaction()
+            self.transmit(True)
 
     def reset(self):
         self.devB.gpio_Write(Port.P0, 0)

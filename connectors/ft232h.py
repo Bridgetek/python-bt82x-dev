@@ -2,11 +2,17 @@ import time
 import struct
 import argparse
 
-# See https://brtchip.com/wp-content/uploads/sites/3/2022/07/DS_UMFTPD2A.pdf
-# for SPI connection details on UMFTPD2A board.
-
+# Use the PyFtdi library to interface with an FT4232H device. See
+# https://eblot.github.io/pyftdi/ for more information.
+# "pip install pyftdi" to add the module to python.
 from pyftdi.spi import SpiController, SpiIOError
 from pyftdi.ftdi import Ftdi
+
+# IMPORTANT - WINDOWS
+# For use on Windows the libusb-win32 driver MUST be installed in place of
+# the FTDI driver. To do this, the easiest way is to use Zadig. See the
+# webpage and instructions at https://zadig.akeo.ie or
+# https://eblot.github.io/pyftdi/installation.html#windows
 
 import bteve2 as eve
 
