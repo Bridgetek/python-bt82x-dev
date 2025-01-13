@@ -333,6 +333,12 @@ def fontmagic(gd):
         gd.cc(pad4(zlib.compress(dd)))
     gd.finish()
 
+    # Update the font table with the custom font.
+    print("Setfont...")
+    gd.begin()
+    gd.cmd_setfont(customfont, address, first_character)
+    gd.swap()
+
     # Obtain details on custom installed fonts from RAM_G.
     print("Get custom font info...")
     customfontcache = getcustomfontinfo(gd, customfont, address, first_character)
@@ -349,8 +355,6 @@ def fontmagic(gd):
     gd.begin()
     gd.ClearColorRGB(64,72,64)
     gd.Clear(1,1,1)
-    # Update the font table with the custom font.
-    gd.cmd_setfont(customfont, address, first_character)
 
     if args.action == actions[0]:
         # Draw test text using the custom font.
