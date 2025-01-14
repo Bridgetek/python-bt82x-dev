@@ -99,6 +99,7 @@ def getfontinfocache(gd, fontnumber, fontptr, first_character = 32):
                     widths[ch + w] = (width4 >> (w * 8)) & 0xff
                     # Construct glyph pointer
                     glyphs[ch + w] = start_of_graphics + gptr + ((ch + w) * bmheight * bmwidth)
+        cell = False
     elif (format == 0x0200AAFF):
         # Extended format 2 font cache.
         # Get the font pixel sizes.
@@ -119,6 +120,7 @@ def getfontinfocache(gd, fontnumber, fontptr, first_character = 32):
                 cdptr = gd.rd32(optr + ((ch & 127) * 4))
                 glyphs[ch] = gd.rd32(cdptr)
                 widths[ch] = gd.rd32(cdptr + 4)
+        cell = False
     else:
         # Legacy font.
         # Get the font pixel sizes
@@ -140,15 +142,14 @@ def getfontinfocache(gd, fontnumber, fontptr, first_character = 32):
                 widths[ch + w] = (width4 >> (w * 8)) & 0xff
                 # Construct glyph pointer
                 glyphs[ch + w] = legacy_address_int + ((ch + w - first_character) * bmheight * bmwidth)
+        cell = True
 
-    return (fontnumber, first_character, width, height, widths, glyphs)
+    return (fontnumber, first_character, width, height, widths, glyphs, cell)
 
 def getromfontinfo(gd, fontnumber, first_character = 32):
     if isromfont(fontnumber):
         fontptr = getromfontptr(gd, fontnumber)
         cache = getfontinfocache(gd, fontnumber, fontptr, first_character)
-        # Mark this font as a ROM font.
-        cache += (True, )
     else:
         cache = None
     return cache
@@ -156,8 +157,6 @@ def getromfontinfo(gd, fontnumber, first_character = 32):
 def getcustomfontinfo(gd, fontnumber, address, first_character = 32):
     if (fontnumber < getfontmax()):
         cache = getfontinfocache(gd, fontnumber, address, first_character)
-        # Mark this font as a RAM font.
-        cache += (False, )
     else:
         cache = None
     return cache
@@ -174,7 +173,7 @@ def getwidth(fontcache):
 
 # Rotate a text string by 90 degrees clockwise.
 def cmd_textrotate(gd, x, y, fontcache, text):
-    (handle, first_character, width, height, widths, glyphs, rom) = fontcache
+    (handle, first_character, width, height, widths, glyphs, cell) = fontcache
     if (family == "BT82x") and False: # ignore regions for now.
         gd.cmd_region() # BT82x
     else:
@@ -194,8 +193,8 @@ def cmd_textrotate(gd, x, y, fontcache, text):
 
     x1,y1 = x,y
     for ch in text:
-        if rom:
-            # This is a ROM font.
+        if cell:
+            # This is a Legacy font.
             if (y > 511) or (x > 511):
                 gd.VertexTranslateX(x)
                 gd.VertexTranslateY(y)
@@ -223,7 +222,7 @@ def cmd_textrotate(gd, x, y, fontcache, text):
 
 # Zoom a text string by a factor.
 def cmd_textzoom(gd, x, y, fontcache, zoom, text):
-    (handle, first_character, width, height, widths, glyphs, rom) = fontcache
+    (handle, first_character, width, height, widths, glyphs, cell) = fontcache
     if (family == "BT82x") and False: # ignore regions for now.
         gd.cmd_region() # BT82x
     else:
@@ -243,7 +242,7 @@ def cmd_textzoom(gd, x, y, fontcache, zoom, text):
 
     x1,y1 = x,y
     for ch in text:
-        if rom:
+        if cell:
             # This is a ROM font.
             if (y > 511) or (x > 511):
                 gd.VertexTranslateX(x)
@@ -329,7 +328,6 @@ def fontmagic(gd):
     else:
         # Load normal assets in place directly.
         gd.cmd_inflate(address, 0)
-        print(f"length: {len(pad4(zlib.compress(dd)))}")
         gd.cc(pad4(zlib.compress(dd)))
     gd.finish()
 
@@ -355,6 +353,8 @@ def fontmagic(gd):
     gd.begin()
     gd.ClearColorRGB(64,72,64)
     gd.Clear(1,1,1)
+    # Restore properties of custom font.
+    gd.cmd_setfont(customfont, address, first_character)
 
     if args.action == actions[0]:
         # Draw test text using the custom font.
