@@ -1,22 +1,22 @@
 # Python BT82x Development
 
-This python module and connector allow python to be used to communicate with a BT82x device using FT4232H, FT232H and FT4222H devices. 
+This python module and interface connectors allow python to be used to communicate with a BT82x device using FT4232H, FT232H or FT4222H devices. 
 
-The FT4232H and FT232H methods use the **MPSSE** feature of the devices to communicate over SPI to the BT82x. The **FT4222H** has built-in SPI hardware and controller.
+The FT4232H and FT232H methods use the **[MPSSE Interface](#mpsse-interface)** of the devices to communicate over SPI to the BT82x. The **[FT4222H Interface](#ft4222h-interface)** has built-in SPI hardware and controller.
 
-## MPSSE
+## MPSSE Interface
 
 For MPSSE devices the [pyftdi](https://github.com/eblot/pyftdi) module for python and the [libMPSSE-SPI](https://ftdichip.com/software-examples/mpsse-projects/libmpsse-spi-examples/) library are required. 
 
 The connector code supports the [UMFTPD2A](https://brtchip.com/product/umftpd2a/)_(see note 1)_ module from Bridgetek, USB to MPSSE cables such as the [VA800-SPI](https://www.digikey.com/en/htmldatasheets/production/1371434/0/0/1/va800a-spi) or [C232HM](https://ftdichip.com/products/c232hm-edhsl-0/).
 
-On Windows systems the software connection from pyftdi to the FTDI MPSSE device requires [libusb](https://sourceforge.net/projects/libusb-win32/) drivers which can be easily installed by the [Zadig](https://zadig.akeo.ie/) utility.
+The connector `ft4232h` supports the quad-channel FT4232H devices and the connector `ft232h` supports the single-channel FT232H devices.
 
 _Note 1_: _A pin header and jumper cables are required to interface the CN2 connector to the BT82x development board._
 
 ### Software Setup
 
-All platforms will require a working up-to-date installation of __python 3.13.x__ or later. These instructions assume the use of __pip__ to install required packages.
+All platforms will require a working up-to-date installation of __python 3.13.x__ or later. These instructions assume the use of __pip__ to install required pyftdi package.
 
 ```
 pip install pyftdi
@@ -24,11 +24,11 @@ pip install pyftdi
 
 This code may also be used with [circuitpython](https://circuitpython.org/), however __this is not yet supported__.
 
-### Windows Setup
+#### Windows Setup
 
 To connunicate with the MPSSE interface on Windows the standard FTDI drivers cannot be used. These must be replaced with a libusb driver in order for pyftdi to access the device directly. It is not necessary to replace the drivers for all the interfaces on the FTDI devices, just the one used for MPSSE.
 
-The Zadig utility is a handy utility that will replace a driver with libusb. Click on the menu item "Options", then "List all Devices". For a UMFTPD2A board,from the drop-down box select __UMFTPD2A (Interface 1)__ and for the driver choose __libusb-win32__, then click "Replace Driver".
+The [Zadig](https://zadig.akeo.ie/) utility is a handy utility that will replace a driver with libusb. Click on the menu item "Options", then "List all Devices". For a UMFTPD2A board,from the drop-down box select __UMFTPD2A (Interface 1)__ and for the driver choose __libusb-win32__, then click "Replace Driver".
 
 ![Zadig screenshot](docs/zadig.png)
 
@@ -36,7 +36,7 @@ It may be neccessary to reboot the PC or remove and replug the MPSSE device. Onc
 
 ![Device Manager screenshot](docs/devman.png)
 
-### Linux Setup
+#### Linux Setup
 
 *These instructions are incomplete!* The built-in Linux drivers for FTDI devices need to be disabled for the libusb driver to be invoked.
 
@@ -87,15 +87,15 @@ On UMFTPD2A the CN2 connector is a 12-pin 2.54 mm pitch through hole connector. 
 | MPSSE7 | CN2-10 | PD# - Powerdown signal |
 | N/A    | CN2-7  | Signal GND for SPI |
 
-## FT4222H
+## FT4222H Interface
 
-The FT4222 device is supported using the [ft4222](https://msrelectronics.gitlab.io/python-ft4222/index.html) module for python and the [libFT4222](https://ftdichip.com/software-examples/ft4222h-software-examples/) library.
+The FT4222 device is supported using the [python-ft4222](https://msrelectronics.gitlab.io/python-ft4222/index.html) module for python and the [libFT4222](https://ftdichip.com/software-examples/ft4222h-software-examples/) library from FTDI.
 
-The connector code supports for FT4222H devices from FTDI.
+The connector `ft4222module` supports for FT4222H devices from FTDI.
 
-## Software Setup
+### Software Setup
 
-All platforms will require a working up-to-date installation of __python 3.13.x__ or later. These instructions assume the use of __pip__ to install required packages.
+All platforms will require a working up-to-date installation of __python 3.13.x__ or later. These instructions assume the use of __pip__ to install required python-ft4222 package.
 
 ```
 pip install ft4222
@@ -112,6 +112,7 @@ This code may also be used with [circuitpython](https://circuitpython.org/), how
 | docs | Documentation and images for documentation |
 | apprunner.py | Wrapper code to setup library, connector and application |
 | simple.py | Simple example code |
+| fontmagic.py | Simple example code demonstrating scaling and rotating fonts |
 
 ### apprunner
 
@@ -125,7 +126,7 @@ This makes a module for the BT82x interface allowing calls from python to be enc
 
 To run the python code and connect to a BT82x a connector is required. The connector is selected in the parameters to the example programs. It opens a port to the device that makes the SPI signals and sets-up the target device. API interfaces for `reset`, `wr`, `rd`, `cs` functions are required. 
 
-There are supported connectors for [FT4232H (`ft4232h.py`)](connectors/ft4232h.py), [FT232H (`ft232h.py`)](connectors/ft232h.py), [FT4222H (`ft4222module.py`)](connectors/ft4222module.py). The FT4232H connector uses the second MPSSE interface (USB Interface 1) in line with the CN2 connector on the UMFTPD2A board.
+There are supported connectors for [FT4232H (`ft4232h.py`)](connectors/ft4232h.py), [FT232H (`ft232h.py`)](connectors/ft232h.py), [FT4222H (`ft4222module.py`)](connectors/ft4222module.py). The FT4232H connector uses the first MPSSE interface, if it fails to open that then the second MPSSE interface (USB Interface 1) is used. The the CN2 connector on the UMFTPD2A board is connected to the second MPSSE interface.
 
 Connectors to other transports are simple to make. The `reset` function must be able to setup the BT82x in line with the provided code in supported connectors. The use of Chip Select in the `cs` function is required rather than automatic action of chip select on some devices.
 
