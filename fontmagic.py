@@ -324,11 +324,11 @@ def fontmagic(gd):
     if format == 0x44aa0001:
         # Use loadasset for relocatable assets.
         gd.cmd_loadasset(address, 0)
-        gd.cc(pad4(dd))
+        gd.ram_cmd(pad4(dd))
     else:
         # Load normal assets in place directly.
         gd.cmd_inflate(address, 0)
-        gd.cc(pad4(zlib.compress(dd)))
+        gd.ram_cmd(pad4(zlib.compress(dd)))
     gd.finish()
 
     # Update the font table with the custom font.

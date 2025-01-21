@@ -29,32 +29,11 @@ class EVE2(eve.EVE2):
         self.devB.gpio_Init(gpio0 = Dir.OUTPUT)
         self.boot()
 
-    transmit_buffer = bytearray()
-
     def setup_flash(self):
         pass
 
     def sleepclocks(self, n):
         time.sleep(n / 72e6)
-
-    def transmit(self, end=True):
-        towrite = len(self.transmit_buffer)
-        if (towrite > 0):
-            #print(f"transmit {towrite} {end}: ", end="")
-            #for ch in self.transmit_buffer:
-            #    print(f"{ch:02x} ", end="")
-            #print()
-            self.devA.spiMaster_SingleWrite(self.transmit_buffer, end)
-        else:
-            if (end):
-                self.devA.spiMaster_EndTransaction()
-        self.transmit_buffer = bytearray()
-        return towrite
-
-    def append(self, data, end=False):
-        self.transmit_buffer.extend(data)
-        towrite = len(self.transmit_buffer)
-        return towrite
 
     def addr(self, a):
         return struct.pack(">I", a)
@@ -63,7 +42,7 @@ class EVE2(eve.EVE2):
         assert (a & 3) == 0
         assert (nn & 3) == 0
         
-        self.transmit(False)
+        self.devA.spiMaster_EndTransaction()
 
         if nn == 0:
             return b""
@@ -92,12 +71,16 @@ class EVE2(eve.EVE2):
             r += response
         return r
 
-    def wr(self, a, s):
+    def wr(self, a, s, inc=True):
+        _ = inc
         assert (a & 3) == 0
         t = len(s)
         assert (t & 3) == 0
-        self.append(self.addr(a | (1 << 31)))
-        self.append(s)
+        self.devA.spiMaster_SingleWrite(self.addr(a | (1 << 31)), False)
+        if t > 0:
+            self.devA.spiMaster_SingleWrite(s, False)
+        else:
+            self.devA.spiMaster_EndTransaction()
 
     def cs(self, v):
         if v:
@@ -105,7 +88,7 @@ class EVE2(eve.EVE2):
             pass
         else:
             # End of transaction. Send cumulated buffer contents.
-            self.transmit(True)
+            self.devA.spiMaster_EndTransaction()
 
     def reset(self):
         self.devB.gpio_Write(Port.P0, 0)

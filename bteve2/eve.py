@@ -142,10 +142,11 @@ class EVE2:
         return self.space == FIFO_MAX
 
     # Write data to the co-processor RAM_CMD space. First checks to see if
-    # there is sufficient space.            
+    # there is sufficient space.
+    # Buffer here and write in batches in the connector.
     def write(self, ss):
         self.reserve(len(ss))
-        self.wr(REG_CMDB_WRITE, ss)
+        self.wr(REG_CMDB_WRITE, ss, inc=False)
         self.space -= len(ss)
 
     # Start a display list in the co-processor.

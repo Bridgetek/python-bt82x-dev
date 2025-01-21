@@ -2,7 +2,7 @@ import struct
 
 class _EVE:
 
-    # Add commands and data to the co-processor bufffer.
+    # Add commands to the co-processor buffer.
     # It is only sent when flush is called.
     def cc(self, s):
         assert (len(s) % 4) == 0
@@ -33,6 +33,24 @@ class _EVE:
     def cmd(self, num, fmt, args):
         self.c4(0xffffff00 | num)
         self.cc(struct.pack(fmt, *args))
+
+    # Send an arbirtary block of data to the co-processor buffer.
+    # This can cope with data sizes larger than the buffer.
+    def ram_cmd(self, s):
+        # Pad data to align
+        while len(s) % 4:
+            s += b'\x00'
+        # Clear currently stored buffer.
+        self.finish(False)
+        n = len(s)
+        while n > 0:
+            chunk = min(1024, n)
+            self.cs(True)
+            self.buf = s[:chunk]
+            self.finish(False)
+            self.cs(False)
+            s = s[chunk:]
+            n -= chunk
 
     # The basic graphics instructions for Display Lists.
 

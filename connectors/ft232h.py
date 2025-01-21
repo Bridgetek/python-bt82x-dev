@@ -73,15 +73,17 @@ class EVE2(eve.EVE2):
             r += response
         return r
 
-    def wr(self, a, s):
+    def wr(self, a, s, inc=True):
         assert (a & 3) == 0
         t = len(s)
         assert (t & 3) == 0
 
         while t:
-            n = min(0xf000, t)
+            # Write in 4kB bursts
+            n = min(0x1000, t)
             self.slave.write(self.addr(a | (1 << 31)) + s[:n])
-            a += n
+            if inc: 
+                a += n
             t -= n
             s = s[n:]
 
