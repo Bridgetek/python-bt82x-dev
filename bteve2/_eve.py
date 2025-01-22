@@ -89,7 +89,7 @@ class _EVE:
     def BitmapTransformF(self, f):
         self.c4((26 << 24) | ((f & 16777215)))
     def BitmapZOrder(self,o):
-        self.c4((51 << 24) | (o & 255UL))
+        self.c4((51 << 24) | (o & 255))
     def BlendFunc(self, src,dst):
         self.c4((11 << 24) | ((src & 7) << 3) | ((dst & 7)))
     def Call(self, dest):
