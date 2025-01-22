@@ -88,6 +88,8 @@ class _EVE:
         self.c4((25 << 24) | ((p & 1) << 17) | ((e & 131071)))
     def BitmapTransformF(self, f):
         self.c4((26 << 24) | ((f & 16777215)))
+    def BitmapZOrder(self,o):
+        self.c4((51 << 24) | (o & 255UL))
     def BlendFunc(self, src,dst):
         self.c4((11 << 24) | ((src & 7) << 3) | ((dst & 7)))
     def Call(self, dest):
@@ -124,8 +126,12 @@ class _EVE:
         self.c4((45 << 24))
     def PaletteSource(self, addr):
         self.c4((42 << 24) | (((addr) & 4194303)))
+    def PaletteSourceH(self, addr):
+        self.c4((50 << 24) | (((addr >> 24) & 255)))
     def PointSize(self, size):
         self.c4((13 << 24) | ((int(8 * size) & 8191)))
+    def Region(self,y,h,dest):
+        self.c4((52 << 24) | ((y & 63) << 18) | ((h & 63 ) << 12) | (dest & 4095))
     def RestoreContext(self):
         self.c4((35 << 24))
     def Return(self):
@@ -145,7 +151,7 @@ class _EVE:
     def TagMask(self, mask):
         self.c4((20 << 24) | ((mask & 1)))
     def Tag(self, s):
-        self.c4((3 << 24) | ((s & 255)))
+        self.c4((3 << 24) | ((s & 0xffffff)))
     def VertexFormat(self, frac):
         self.c4((39 << 24) | (frac & 7))
         self.Vertex2f = [
