@@ -19,7 +19,7 @@ read/write to the EVE2 hardware.
 
     reset()          Strobe the reset pin
     rd(a, n)         Read bytes
-    wr(a, s)         Write bytes
+    wr(a, s, inc)    Write bytes
 
 It has 2 subclasses, EVE2 and _EVE. 
 
