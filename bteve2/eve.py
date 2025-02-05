@@ -701,7 +701,7 @@ class EVE2:
         
     # cmd_sdattach(uint32_t options, uint32_t result)
     def cmd_sdattach(self, *args):
-        return self.cmdr(0x6e, 'I', args)
+        return self.cmdr(0x6e, 'II', args)
 
     # cmd_sdblockread(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
     def cmd_sdblockread(self, *args):
