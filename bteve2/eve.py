@@ -168,9 +168,7 @@ class EVE2:
     # wait for the co-processor to complete.
     # Note that this will be synchronised with the frame rate.
     def finish(self, wait = True):
-        self.cs(True)
         self.flush()
-        self.cs(False)
         if wait:
             while not self.is_finished():
                 pass

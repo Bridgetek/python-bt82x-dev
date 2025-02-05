@@ -1,24 +1,34 @@
 import struct
 
+from .registers import CMDBUF_SIZE
+FIFO_MAX = (CMDBUF_SIZE - 4) # Maximum reported free space in the EVE command FIFO
+
 class _EVE:
 
     # Add commands to the co-processor buffer.
-    # It is only sent when flush is called.
+    # It is only sent when flush is called or the buffer exceeds
+    # the size of the FIFO.
     def cc(self, s):
         assert (len(s) % 4) == 0
         self.buf += s
+        # Flush the co-processor buffer to the EVE device.
+        n = len(self.buf)
+        if n >= FIFO_MAX:
+            chunk = min(FIFO_MAX, n)
+            self.cs(True)
+            self.write(self.buf[:chunk])
+            self.cs(False)
+            self.buf = self.buf[chunk:]
 
     def register(self, sub):
         self.buf = b''
         getattr(sub, 'write') # Confirm that there is a write method
 
     # Send the co-processor buffer to the EVE device.
-    # Chunks are sized to account for 12 bytes of MPSSE preable and
-    # 12 bytes after the data. The 512 byte packet size of the FTDI
-    # high-speed device is therefore almost fully utilised (510 bytes)
-    # without a short packet following.
     def flush(self):
+        self.cs(True)
         self.write(self.buf)
+        self.cs(False)
         self.buf = b''
 
     # Send a 32-bit value to the EVE.
@@ -44,10 +54,10 @@ class _EVE:
         self.finish(False)
         n = len(s)
         while n > 0:
-            chunk = min(1024, n)
+            chunk = min((1024 * 16) - 16, n)
             self.cs(True)
             self.buf = s[:chunk]
-            self.finish(False)
+            self.flush()
             self.cs(False)
             s = s[chunk:]
             n -= chunk
