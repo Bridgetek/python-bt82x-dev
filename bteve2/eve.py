@@ -226,7 +226,7 @@ class EVE2:
             s = f.read(512)
             if not s:
                 return
-            self.cc(align4(s))
+            self.ram_cmd(align4(s))
 
     # Setup the EVE registers to match the surface created.
     def panel(self, surface):
