@@ -5,8 +5,6 @@ import argparse
 
 import math
 import sys
-import bteve2 as eve
-import apprunner
 import time
 import struct
 import gc
@@ -31,6 +29,9 @@ if family == "BT82x":
 else:
     # This loads FT80x, FT81x, BT81x family definitions.
     import bteve as eve
+
+# Target EVE device.
+family = "BT82x"
 
 from assets import teapot_trackball
 
