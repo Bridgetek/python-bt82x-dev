@@ -110,9 +110,12 @@ This code may also be used with [circuitpython](https://circuitpython.org/), how
 | bteve2 | Module and library code for BT82x |
 | connectors | Code to interface between library code and hardware |
 | docs | Documentation and images for documentation |
+| common | Common files shared between demos |
 | apprunner.py | Wrapper code to setup library, connector and application |
 | simple.py | Simple example code |
 | fontmagic.py | Simple example code demonstrating scaling and rotating fonts |
+| segment.py | Simple seven segment demo code |
+| b2tf.py | Advanced seven segment demo code |
 
 ### apprunner
 
