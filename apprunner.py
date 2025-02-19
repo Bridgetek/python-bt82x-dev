@@ -6,6 +6,7 @@ import importlib
 import bteve2 as eve
 
 def run(app, minimal = False):
+    progname = sys.argv[0]
     width = 1920
     height = 1200
     parser = argparse.ArgumentParser(description="EVE demo")
@@ -13,6 +14,7 @@ def run(app, minimal = False):
     parser.add_argument("--width", default=str(width), help="panel width in pixels")
     parser.add_argument("--height", default=str(height), help="panel height in pixels")
     (args, rem) = parser.parse_known_args()
+    rem.insert(0, progname)
     sys.argv = rem
 
     width = int(args.width, 0)

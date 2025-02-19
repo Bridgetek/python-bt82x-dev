@@ -26,10 +26,11 @@ class _EVE:
 
     # Send the co-processor buffer to the EVE device.
     def flush(self):
-        self.cs(True)
-        self.write(self.buf)
-        self.cs(False)
-        self.buf = b''
+        if (len(self.buf)):
+            self.cs(True)
+            self.write(self.buf)
+            self.cs(False)
+            self.buf = b''
 
     # Send a 32-bit value to the EVE.
     def c4(self, i):
@@ -51,14 +52,12 @@ class _EVE:
         while len(s) % 4:
             s += b'\x00'
         # Clear currently stored buffer.
-        self.finish(False)
+        self.flush()
         n = len(s)
         while n > 0:
             chunk = min((1024 * 16) - 16, n)
-            self.cs(True)
             self.buf = s[:chunk]
             self.flush()
-            self.cs(False)
             s = s[chunk:]
             n -= chunk
 

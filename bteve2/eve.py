@@ -126,7 +126,6 @@ class EVE2:
         self.space = self.rd32(REG_CMDB_SPACE)
         if self.space & 1:
             message = self.rd(RAM_HIMEM, 256).strip(b'\x00').decode('ascii')
-            # print('message', repr(message))
             raise CoprocessorException(message)
 
     # Wait until a specified amount of space is available in the co-processor
@@ -169,13 +168,18 @@ class EVE2:
     # Note that this will be synchronised with the frame rate.
     def finish(self, wait = True):
         self.flush()
+        self.cs(False)
         if wait:
             while not self.is_finished():
                 pass
 
     # Recover from a coprocessor exception.
     def recover(self):
+        #self.flush()
+        #self.cs(False)
+        self.cs(True)
         self.wr32(REG_CMD_READ, 0)
+        self.cs(False)
         # Instructions are write REG_CMD_READ as zero then
         # wait for REG_CMD_WRITE to become zero.
         while True:
@@ -195,7 +199,7 @@ class EVE2:
 
     # For operations that return a result code in the last argument
     def result(self):
-        self.cc(b'    ')
+        self.cc(b'\00\00\00\00')
         return self.previous()
 
     # Send a 'C' string to the command buffer.
@@ -249,7 +253,7 @@ class EVE2:
             s = f.read(512)
             if not s:
                 return
-            self.ram_cmd(align4(s))
+            self.ram_cmd(s)
 
     # Command that returns a value as a result from the CMDB.
     def cmdr(self, code, fmt, args):

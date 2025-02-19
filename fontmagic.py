@@ -284,7 +284,7 @@ def fontmagic(gd):
                         help="address to load the custom font file in RAM_G")
     parser.add_argument("-l", "--first-character", default="32", 
                         help="first character in font file for \"Legacy\" fonts")
-    args = parser.parse_args(sys.argv)
+    args = parser.parse_args(sys.argv[1:])
 
     # Test parameters.
     if args.address:

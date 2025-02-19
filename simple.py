@@ -27,7 +27,7 @@ def simple(gd):
     parser = argparse.ArgumentParser(description="EVE simple demo")
     parser.add_argument("text", help="text to write")
     parser.add_argument("--font", help="font number", default="24")
-    args = parser.parse_args(sys.argv)
+    args = parser.parse_args(sys.argv[1:])
 
     if args.font:
         font = int(args.font, 0)

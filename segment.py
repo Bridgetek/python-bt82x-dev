@@ -32,7 +32,7 @@ def segment(gd):
     parser = argparse.ArgumentParser(description="EVE simple demo")
     parser.add_argument("number", help="number to write")
     parser.add_argument("--size", help="number size", default=str(size))
-    args = parser.parse_args(sys.argv)
+    args = parser.parse_args(sys.argv[1:])
 
     if args.size:
         size = int(args.size, 0)

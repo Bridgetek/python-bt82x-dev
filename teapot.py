@@ -129,6 +129,7 @@ def teapot(gd):
         # Write the VERTEX2F commands to RAMG
         gd.cmd_memwrite(0, len(vxybuf))
         gd.ram_cmd(vxybuf)
+        gd.finish()
 
         gd.begin()
         gd.Clear()
