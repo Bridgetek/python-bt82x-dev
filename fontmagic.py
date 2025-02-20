@@ -96,9 +96,9 @@ def getfontinfocache(gd, fontnumber, fontptr, first_character = 32):
                 # Read character width as a 32 bit word.
                 width4 = gd.rd32(wptr + (ch & 127))
                 for w in range(0, 4):
-                    widths[ch + w] = (width4 >> (w * 8)) & 0xff
+                    widths[(page * 128) + ch + w] = (width4 >> (w * 8)) & 0xff
                     # Construct glyph pointer
-                    glyphs[ch + w] = start_of_graphics + gptr + ((ch + w) * bmheight * bmwidth)
+                    glyphs[(page * 128) + ch + w] = start_of_graphics + gptr + ((ch + w) * bmheight * bmwidth)
         cell = False
     elif (format == 0x0200AAFF):
         # Extended format 2 font cache.
@@ -116,10 +116,12 @@ def getfontinfocache(gd, fontnumber, fontptr, first_character = 32):
         # This only takes the unkerned character width.
         for page in range(0, N // 128):
             optr = gd.rd32(fontptr + 44 + (page * 4))
-            for ch in range(0, 127):
-                cdptr = gd.rd32(optr + ((ch & 127) * 4))
-                glyphs[ch] = gd.rd32(cdptr)
-                widths[ch] = gd.rd32(cdptr + 4)
+            # Skip unused pages.
+            if (optr): 
+                for ch in range(0, 127):
+                    cdptr = gd.rd32(optr + ((ch & 127) * 4))
+                    glyphs[(page * 128) + ch] = gd.rd32(cdptr)
+                    widths[(page * 128) + ch] = gd.rd32(cdptr + 4)
         cell = False
     else:
         # Legacy font.
