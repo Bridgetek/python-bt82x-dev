@@ -322,8 +322,8 @@ def fontmagic(gd):
 
     print("Upload font file...")
     # Check for a relocatable font file. 
-    format = int.from_bytes(dd[0:4], byteorder='big')
-    if format == 0x44aa0001:
+    format = int.from_bytes(dd[0:4], byteorder='little')
+    if format == 0x0100aa44:
         # Use loadasset for relocatable assets.
         gd.cmd_loadasset(address, 0)
         gd.ram_cmd(pad4(dd))
@@ -332,12 +332,18 @@ def fontmagic(gd):
         gd.cmd_inflate(address, 0)
         gd.ram_cmd(pad4(zlib.compress(dd)))
     gd.finish()
+    """print(f"0x{address:x}: 0x{gd.rd32(address):08x} 0x{gd.rd32(address+4):08x} 0x{gd.rd32(address+8):08x} 0x{gd.rd32(address+12):08x}")"""
 
     # Update the font table with the custom font.
     print("Setfont...")
     gd.begin()
     gd.cmd_setfont(customfont, address, first_character)
     gd.swap()
+
+    """print(f"0x{address:x}: ")
+    for i in range(0, 256, 4):
+        print(f"{int.from_bytes(gd.rd(address + i, 4), byteorder='little', signed=False):08x} ", end="")
+    print()"""
 
     # Obtain details on custom installed fonts from RAM_G.
     print("Get custom font info...")
