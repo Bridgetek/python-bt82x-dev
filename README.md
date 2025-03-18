@@ -2,7 +2,11 @@
 
 This python module and interface connectors allow python to be used to communicate with a BT82x device using FT4232H, FT232H or FT4222H devices. 
 
-The FT4232H and FT232H methods use the **[MPSSE Interface](#mpsse-interface)** of the devices to communicate over SPI to the BT82x. The **[FT4222H Interface](#ft4222h-interface)** has built-in SPI hardware and controller.
+The FT4232H and FT232H methods use the **[MPSSE Interface](#mpsse-interface)** of the devices to communicate over SPI to the BT82x. The **[FT4222H Interface](#ft4222h-interface)** has built-in SPI hardware and controller.  
+
+The BT82X based module [VM820C]([https://brtchip.com/wp-content/uploads/2025/01/DS_VM820C-1.pdf](https://brtchip.com/product/vm820c/) is the targeted hardware of this repo. 
+It is equipped with [FT4222H Interface](#ft4222h-interface) on board for SPI connection with PC through USB.  
+To work with MPSSE interface,  please refer to the [VM820C datasheet](https://brtchip.com/wp-content/uploads/2025/01/DS_VM820C-1.pdf)
 
 ## MPSSE Interface
 
