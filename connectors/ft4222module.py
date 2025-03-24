@@ -1,8 +1,9 @@
 import time
 import struct
+import sys
 import argparse
 
-import ft4222
+from ft4222 import ft4222, SysClock
 from ft4222.SPI import Cpha, Cpol
 from ft4222.SPIMaster import Mode, Clock, SlaveSelect
 from ft4222.GPIO import Port, Dir
@@ -12,6 +13,8 @@ import bteve2 as eve
 FREQUENCY = 72_000_000      # system clock frequency, in Hz
 
 class EVE2(eve.EVE2):
+    multi_mode = False
+
     def __init__(self):
 
         # Configure the first interface (IF/1) of the FTDI device as a SPI master
@@ -24,7 +27,9 @@ class EVE2(eve.EVE2):
             raise Exception("Sorry, no FTDI FT4222H device for SPI master")
 
         # init spi master
-        self.devA.spiMaster_Init(Mode.SINGLE, Clock.DIV_8, Cpol.IDLE_LOW, Cpha.CLK_LEADING, SlaveSelect.SS0)
+        self.devA.spiMaster_Init(Mode.SINGLE, Clock.DIV_4, Cpol.IDLE_LOW, Cpha.CLK_LEADING, SlaveSelect.SS0)
+        self.devA.setClock(SysClock.CLK_80)   # system clock = 80Mhz
+
         # also use gpio
         self.devB.gpio_Init(gpio0 = Dir.OUTPUT)
         self.boot()
@@ -50,19 +55,30 @@ class EVE2(eve.EVE2):
         r = b''
         while a != a1:
             n = min(a1 - a, 32)
-            self.devA.spiMaster_SingleWrite(self.addr(a), False)
-            def recv(n):
-                return self.devA.spiMaster_SingleRead(n, False)
-            bb = recv(32 + n)
-            if 1 in bb:             
-                # Got READY byte in response
-                i = bb.index(1)
-                response = bb[i + 1:i + 1 + n]
+            if self.multi_mode:
+                bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 32 + n)
+                if 1 in bb:
+                    # Got READY byte in response
+                    i = bb.index(1)
+                    response = bb[i + 1:i + 1 + n]
+                else:
+                    # There is no recovery here.
+                    print("recover")
+                    response = b''
             else:
-                # Poll for READY byte
-                while recv(1) == b'\x00':
-                    pass
-                response = b''
+                self.devA.spiMaster_SingleWrite(self.addr(a), False)
+                def recv(n):
+                    return self.devA.spiMaster_SingleRead(n, False)
+                bb = recv(32 + n)
+                if 1 in bb:
+                    # Got READY byte in response
+                    i = bb.index(1)
+                    response = bb[i + 1:i + 1 + n]
+                else:
+                    # Recovery: Poll for READY byte
+                    while recv(1) == b'\x00':
+                        pass
+                    response = b''
             # Handle case of full response not received
             if len(response) < n:
                 response += recv(n - len(response))
@@ -76,11 +92,19 @@ class EVE2(eve.EVE2):
         assert (a & 3) == 0
         t = len(s)
         assert (t & 3) == 0
-        self.devA.spiMaster_SingleWrite(self.addr(a | (1 << 31)), False)
-        if t > 0:
-            self.devA.spiMaster_SingleWrite(s, False)
-        else:
-            self.devA.spiMaster_EndTransaction()
+        while t:
+            n = min(0xf000, t)
+            if self.multi_mode:
+                self.devA.spiMaster_MultiReadWrite(b'', self.addr(a | (1 << 31)) + s[:n], 0)
+            else:
+                self.devA.spiMaster_SingleWrite(self.addr(a | (1 << 31)), False)
+                if t > 0:
+                    self.devA.spiMaster_SingleWrite(s[:n], True)
+                else:
+                    self.devA.spiMaster_EndTransaction()
+            a += n
+            t -= n
+            s = s[n:]
 
     def cs(self, v):
         if v:
@@ -112,6 +136,8 @@ class EVE2(eve.EVE2):
             exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]), True)
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]), True)
+            # Set ACTIVE
+            exchange(bytes([0x00, 0x00, 0x00, 0x00, 0x00]), True)
             time.sleep(.2)
 
             self.devA.spiMaster_SingleWrite(self.addr(0), False)
@@ -119,6 +145,7 @@ class EVE2(eve.EVE2):
                 return self.devA.spiMaster_SingleRead(n, True)
             bb = recv(128)
             t0 = time.monotonic_ns()
+            
             fault = False
             if 1 in bb:
                 # Wait for the REG_ID register to be set to 0x7c to
@@ -133,6 +160,23 @@ class EVE2(eve.EVE2):
                 if actual != FREQUENCY:
                     print(f"[Requested {FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
                     continue
-                return
+                break
 
             print(f"[Boot fail after reset, retrying...]")
+
+        parser = argparse.ArgumentParser(description="ft4222 module")
+        parser.add_argument("--mode", help="spi mode", default="0")     # 0: single, 1: dual, 2: quad
+        (args, rem) = parser.parse_known_args(sys.argv[1:])
+
+        if args.mode:
+            spi_mode = int(args.mode, 0)
+            # Enable Dual/Quad SPI
+            if spi_mode in [1,2]:
+                cfg = self.rd32(eve.SYS_CFG) & ~(0x3 << 8)
+                # Turn SPI_WIDTH to DUAL/QUAD
+                cfg = cfg | (spi_mode << 8)
+                self.wr32(eve.SYS_CFG, cfg)
+                # Instruct ft4222 library to switch to Dual/Quad SPI
+                self.devA.spiMaster_SetLines(Mode.DUAL if spi_mode == 1 else Mode.QUAD)
+                # change to multi mode
+                self.multi_mode = True

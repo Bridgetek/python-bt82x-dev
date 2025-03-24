@@ -96,9 +96,9 @@ def getfontinfocache(gd, fontnumber, fontptr, first_character = 32):
                 # Read character width as a 32 bit word.
                 width4 = gd.rd32(wptr + (ch & 127))
                 for w in range(0, 4):
-                    widths[ch + w] = (width4 >> (w * 8)) & 0xff
+                    widths[(page * 128) + ch + w] = (width4 >> (w * 8)) & 0xff
                     # Construct glyph pointer
-                    glyphs[ch + w] = start_of_graphics + gptr + ((ch + w) * bmheight * bmwidth)
+                    glyphs[(page * 128) + ch + w] = start_of_graphics + gptr + ((ch + w) * bmheight * bmwidth)
         cell = False
     elif (format == 0x0200AAFF):
         # Extended format 2 font cache.
@@ -116,10 +116,12 @@ def getfontinfocache(gd, fontnumber, fontptr, first_character = 32):
         # This only takes the unkerned character width.
         for page in range(0, N // 128):
             optr = gd.rd32(fontptr + 44 + (page * 4))
-            for ch in range(0, 127):
-                cdptr = gd.rd32(optr + ((ch & 127) * 4))
-                glyphs[ch] = gd.rd32(cdptr)
-                widths[ch] = gd.rd32(cdptr + 4)
+            # Skip unused pages.
+            if (optr): 
+                for ch in range(0, 127):
+                    cdptr = gd.rd32(optr + ((ch & 127) * 4))
+                    glyphs[(page * 128) + ch] = gd.rd32(cdptr)
+                    widths[(page * 128) + ch] = gd.rd32(cdptr + 4)
         cell = False
     else:
         # Legacy font.
@@ -284,7 +286,7 @@ def fontmagic(gd):
                         help="address to load the custom font file in RAM_G")
     parser.add_argument("-l", "--first-character", default="32", 
                         help="first character in font file for \"Legacy\" fonts")
-    args = parser.parse_args(sys.argv)
+    args = parser.parse_args(sys.argv[1:])
 
     # Test parameters.
     if args.address:
@@ -320,8 +322,8 @@ def fontmagic(gd):
 
     print("Upload font file...")
     # Check for a relocatable font file. 
-    format = int.from_bytes(dd[0:4], byteorder='big')
-    if format == 0x44aa0001:
+    format = int.from_bytes(dd[0:4], byteorder='little')
+    if format == 0x0100aa44:
         # Use loadasset for relocatable assets.
         gd.cmd_loadasset(address, 0)
         gd.ram_cmd(pad4(dd))
@@ -330,12 +332,18 @@ def fontmagic(gd):
         gd.cmd_inflate(address, 0)
         gd.ram_cmd(pad4(zlib.compress(dd)))
     gd.finish()
+    """print(f"0x{address:x}: 0x{gd.rd32(address):08x} 0x{gd.rd32(address+4):08x} 0x{gd.rd32(address+8):08x} 0x{gd.rd32(address+12):08x}")"""
 
     # Update the font table with the custom font.
     print("Setfont...")
     gd.begin()
     gd.cmd_setfont(customfont, address, first_character)
     gd.swap()
+
+    """print(f"0x{address:x}: ")
+    for i in range(0, 256, 4):
+        print(f"{int.from_bytes(gd.rd(address + i, 4), byteorder='little', signed=False):08x} ", end="")
+    print()"""
 
     # Obtain details on custom installed fonts from RAM_G.
     print("Get custom font info...")

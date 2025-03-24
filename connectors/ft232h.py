@@ -81,7 +81,7 @@ class EVE2(eve.EVE2):
         while t:
             # Write in 4kB bursts
             n = min(0x1000, t)
-            self.slave.write(self.addr(a | (1 << 31)) + s[:n])
+            self.slave.write(self.addr(a | (1 << 31)) + s[:n], start = True, stop = True)
             if inc: 
                 a += n
             t -= n
@@ -116,7 +116,7 @@ class EVE2(eve.EVE2):
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
             time.sleep(.1)
-            
+
             self.slave.write(self.addr(0), start = True, stop = False)
             def recv(n):
                 return self.slave.read(n, start = False, stop = True)

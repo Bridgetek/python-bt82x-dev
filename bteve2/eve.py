@@ -126,7 +126,6 @@ class EVE2:
         self.space = self.rd32(REG_CMDB_SPACE)
         if self.space & 1:
             message = self.rd(RAM_HIMEM, 256).strip(b'\x00').decode('ascii')
-            # print('message', repr(message))
             raise CoprocessorException(message)
 
     # Wait until a specified amount of space is available in the co-processor
@@ -169,9 +168,39 @@ class EVE2:
     # Note that this will be synchronised with the frame rate.
     def finish(self, wait = True):
         self.flush()
+        self.cs(False)
         if wait:
             while not self.is_finished():
                 pass
+
+    # Recover from a coprocessor exception.
+    def recover(self):
+        #self.flush()
+        #self.cs(False)
+        self.cs(True)
+        self.wr32(REG_CMD_READ, 0)
+        self.cs(False)
+        # Instructions are write REG_CMD_READ as zero then
+        # wait for REG_CMD_WRITE to become zero.
+        while True:
+            writeptr = self.rd32(REG_CMD_WRITE)
+            if (writeptr == 0): break;
+
+    # Return the result field of the preceding command
+    def previous(self, fmt = "I"):
+        self.finish()
+        size = struct.calcsize(fmt)
+        offset = (self.rd32(REG_CMD_READ) - size) & FIFO_MAX
+        r = struct.unpack(fmt, self.rd(RAM_CMD + offset, size))
+        if len(r) == 1:
+            return r[0]
+        else:
+            return r
+
+    # For operations that return a result code in the last argument
+    def result(self):
+        self.cc(b'\00\00\00\00')
+        return self.previous()
 
     # Send a 'C' string to the command buffer.
     def cstring(self, s):
@@ -224,7 +253,16 @@ class EVE2:
             s = f.read(512)
             if not s:
                 return
-            self.ram_cmd(align4(s))
+            self.ram_cmd(s)
+
+    # Command that returns a value as a result from the CMDB.
+    def cmdr(self, code, fmt, args):
+        self.cmd(code, fmt, args)
+        return self.result()
+
+    # Command used to setup LVDSTX registers.
+    def cmd_apbwrite(self, *args):
+        self.cmd(0x63, 'II', args)
 
     # Setup the EVE registers to match the surface created.
     def panel(self, surface):
@@ -258,7 +296,6 @@ class EVE2:
         extsyncmode = 3
         TXPLLDiv = 0x03
         self.cmd_apbwrite(LVDSPLL_CFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
-
         self.cmd_apbwrite(LVDS_EN, 7) # Enable PLL
 
         self.cmd_regwrite(REG_SO_MODE, extsyncmode)
@@ -287,14 +324,6 @@ class EVE2:
     # cmd_animxy(int32_t ch, int16_t x, int16_t y)
     def cmd_animxy(self, *args):
         self.cmd(0x4e, 'ihh', args)
-
-    # cmd_apbread(uint32_t dest, uint32_t addr)
-    def cmd_apbread(self, *args):
-        self.cmd(0x62, 'II', args)
-
-    # cmd_apbwrite(uint32_t addr, uint32_t v)
-    def cmd_apbwrite(self, *args):
-        self.cmd(0x63, 'II', args)
 
     # cmd_append(uint32_t ptr, uint32_t num)
     def cmd_append(self, *args):
@@ -350,10 +379,6 @@ class EVE2:
     def cmd_copylist(self, *args):
         self.cmd(0x88, 'I', args)
 
-    # cmd_crc(uint32_t ptr)
-    def cmd_crc(self, *args):
-        self.cmd(0x03, 'I', args)
-
     # cmd_ddrshutdown()
     def cmd_ddrshutdown(self, *args):
         self.cmd0(0x65)
@@ -377,14 +402,6 @@ class EVE2:
     # cmd_endlist()
     def cmd_endlist(self, *args):
         self.cmd0(0x5d)
-
-    # cmd_evaluate(uint32_t addr, uint32_t u)
-    def cmd_evaluate(self, *args):
-        self.cmd(0x72, 'II', args)
-
-    # cmd_execute(uint32_t ptr, uint32_t result)
-    def cmd_execute(self, *args):
-        self.cmd(0x05, 'II', args)
 
     # cmd_fence()
     def cmd_fence(self, *args):
@@ -488,10 +505,6 @@ class EVE2:
         self.cmd(0x2f, 'iiiiii', (0,0,0,0,0,0))
         return tuple([x/0x10000 for x in self.previous("6i")])
 
-    # cmd_getpoint(uint32_t sx, uint32_t sy)
-    def cmd_getpoint(self, *args):
-        self.cmd(0x06, 'II', args)
-
     # cmd_getprops(uint32_t ptr, uint32_t w, uint32_t h)
     def cmd_getprops(self):
         self.cmd(0x22, 'III', (0,0,0))
@@ -500,22 +513,6 @@ class EVE2:
     # cmd_getptr(uint32_t result)
     def cmd_getptr(self):
         self.cmd(0x20, 'I', (0,))
-        return self.previous()
-
-    def previous(self, fmt = "I"):
-        # Return the result field of the preceding command
-        self.finish()
-        size = struct.calcsize(fmt)
-        offset = (self.rd32(REG_CMD_READ) - size) & FIFO_MAX
-        r = struct.unpack(fmt, self.rd(RAM_CMD + offset, size))
-        if len(r) == 1:
-            return r[0]
-        else:
-            return r
-
-    def result(self):
-        # For operations that return a result code in the last argument
-        self.cc(b'    ')
         return self.previous()
 
     # cmd_glow(int16_t x, int16_t y, int16_t w, int16_t h)
@@ -567,10 +564,6 @@ class EVE2:
     def cmd_loadimage(self, *args):
         self.cmd(0x21, 'II', args)
 
-    # cmd_loadpatch(uint32_t options!)
-    def cmd_loadpatch(self, *args):
-        self.cmd(0x82, 'I', args)
-
     # cmd_loadwav(uint32_t dst, uint32_t options!)
     def cmd_loadwav(self, *args):
         self.cmd(0x85, 'II', args)
@@ -614,14 +607,6 @@ class EVE2:
     # cmd_number(int16_t x, int16_t y, int16_t font, uint16_t options, int32_t n)
     def cmd_number(self, *args):
         self.cmd(0x2a, 'hhhHi', args)
-
-    # cmd_otprd(uint32_t dst, uint32_t src, uint32_t num, uint32_t result)
-    def cmd_otprd(self, *args):
-        self.cmd(0x74, 'IIII', args)
-
-    # cmd_otpwr(uint32_t dst, uint32_t src, uint32_t num, uint32_t result)
-    def cmd_otpwr(self, *args):
-        self.cmd(0x75, 'IIII', args)
 
     # cmd_playvideo(uint32_t options!)
     def cmd_playvideo(self, *args):
@@ -695,10 +680,6 @@ class EVE2:
     def cmd_scrollbar(self, *args):
         self.cmd(0x0f, 'hhhhHHHH', args)
 
-    def cmdr(self, code, fmt, args):
-        self.cmd(code, fmt, args)
-        return self.result()
-        
     # cmd_sdattach(uint32_t options, uint32_t result)
     def cmd_sdattach(self, *args):
         return self.cmdr(0x6e, 'II', args)
@@ -706,10 +687,6 @@ class EVE2:
     # cmd_sdblockread(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
     def cmd_sdblockread(self, *args):
         return self.cmdr(0x6f, 'III', args)
-
-    # cmd_sdblockwrite(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
-    def cmd_sdblockwrite(self, *args):
-        return self.cmdr(0x70, 'III', args)
 
     # cmd_setbase(uint32_t b)
     def cmd_setbase(self, *args):
@@ -751,10 +728,6 @@ class EVE2:
     def cmd_snapshot(self, *args):
         self.cmd(0x1d, 'I', args)
 
-    # cmd_softboot(uint32_t mode)
-    def cmd_softboot(self, *args):
-        self.cmd(0x61, 'I', args)
-
     # cmd_spinner(int16_t x, int16_t y, uint16_t style, uint16_t scale)
     def cmd_spinner(self, *args):
         self.cmd(0x14, 'hhHH', args)
@@ -791,18 +764,6 @@ class EVE2:
         label = (args[6].encode() + b'\xff' + args[7].encode())
         self.fstring((label,) + args[8:])
 
-    # cmd_touch_transform(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2, uint16_t result)
-    def cmd_touch_transform(self, *args):
-        self.cmd(0x1e, 'iiiiiiiiiiiiHH', args + (0,))
-
-    # cmd_touchrd(uint32_t addr, uint32_t num)
-    def cmd_touchrd(self, *args):
-        self.cmd(0x76, 'II', args)
-
-    # cmd_touchwr(uint32_t num!)
-    def cmd_touchwr(self, *args):
-        self.cmd(0x77, 'I', args)
-
     # cmd_track(int16_t x, int16_t y, int16_t w, int16_t h, int16_t tag)
     def cmd_track(self, *args):
         self.cmd(0x28, 'hhhhhH', args + (0,))
@@ -835,46 +796,3 @@ class EVE2:
     def cmd_watchdog(self, *args):
         self.cmd(0x83, 'I', args)
 
-    # cmd_workarea(uint32_t ptr)
-    def cmd_workarea(self, *args):
-        self.cmd(0x6c, 'I', args)
-        # Some higher-level functions
-
-"""
-class MoviePlayer:
-    def __init__(self, gd, f, mf_base = 0xf0000, mf_size = 0x8000):
-        self.gd = gd
-        self.f = f
-        self.mf_base = mf_base
-        self.mf_size = mf_size
-
-        gd.cmd_mediafifo(mf_base, mf_size)
-        self.wp = 0
-        gd.cmd_regwrite(REG_MEDIAFIFO_WRITE, 0)
-
-    def play(self):
-        gd = self.gd
-        gd.cmd_playvideo(OPT_MEDIAFIFO | OPT_FULLSCREEN | OPT_NOTEAR)
-        gd.cmd_nop()
-        gd.flush()
-        while not gd.is_idle():
-            self.service()
-        gd.finish()
-        
-    def service(self):
-        gd = self.gd
-
-        rp = gd.rd32(REG_MEDIAFIFO_READ)
-        fullness = (self.wp - rp) % self.mf_size
-        SZ = 2048
-        # print("rp=%x wp=%x" % (rp, self.wp))
-        while fullness < (self.mf_size - SZ):
-            s = self.f.read(SZ)
-            if not s:
-                return
-            # print("Writing %x to %x" % (len(s), self.mf_base + self.wp))
-            gd.wr(self.mf_base + self.wp, s)
-            self.wp = (self.wp + len(s)) % self.mf_size
-            gd.wr32(REG_MEDIAFIFO_WRITE, self.wp)
-            fullness += len(s)
-"""
