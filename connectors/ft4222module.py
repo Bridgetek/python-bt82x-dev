@@ -1,8 +1,9 @@
 import time
 import struct
+import sys
 import argparse
 
-import ft4222
+from ft4222 import ft4222, SysClock
 from ft4222.SPI import Cpha, Cpol
 from ft4222.SPIMaster import Mode, Clock, SlaveSelect
 from ft4222.GPIO import Port, Dir
@@ -12,7 +13,7 @@ import bteve2 as eve
 FREQUENCY = 72_000_000      # system clock frequency, in Hz
 
 class EVE2(eve.EVE2):
-    quad = False
+    multi_mode = False
 
     def __init__(self):
 
@@ -26,7 +27,9 @@ class EVE2(eve.EVE2):
             raise Exception("Sorry, no FTDI FT4222H device for SPI master")
 
         # init spi master
-        self.devA.spiMaster_Init(Mode.SINGLE, Clock.DIV_8, Cpol.IDLE_LOW, Cpha.CLK_LEADING, SlaveSelect.SS0)
+        self.devA.spiMaster_Init(Mode.SINGLE, Clock.DIV_4, Cpol.IDLE_LOW, Cpha.CLK_LEADING, SlaveSelect.SS0)
+        self.devA.setClock(SysClock.CLK_80)   # system clock = 80Mhz
+
         # also use gpio
         self.devB.gpio_Init(gpio0 = Dir.OUTPUT)
         self.boot()
@@ -52,7 +55,7 @@ class EVE2(eve.EVE2):
         r = b''
         while a != a1:
             n = min(a1 - a, 32)
-            if self.quad:
+            if self.multi_mode:
                 bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 32 + n)
                 if 1 in bb:
                     # Got READY byte in response
@@ -89,14 +92,19 @@ class EVE2(eve.EVE2):
         assert (a & 3) == 0
         t = len(s)
         assert (t & 3) == 0
-        if self.quad:
-            self.devA.spiMaster_MultiReadWrite(b'', self.addr(a | (1 << 31)) + s, 0)
-        else:
-            self.devA.spiMaster_SingleWrite(self.addr(a | (1 << 31)), False)
-            if t > 0:
-                self.devA.spiMaster_SingleWrite(s, False)
+        while t:
+            n = min(0xf000, t)
+            if self.multi_mode:
+                self.devA.spiMaster_MultiReadWrite(b'', self.addr(a | (1 << 31)) + s[:n], 0)
             else:
-                self.devA.spiMaster_EndTransaction()
+                self.devA.spiMaster_SingleWrite(self.addr(a | (1 << 31)), False)
+                if t > 0:
+                    self.devA.spiMaster_SingleWrite(s[:n], True)
+                else:
+                    self.devA.spiMaster_EndTransaction()
+            a += n
+            t -= n
+            s = s[n:]
 
     def cs(self, v):
         if v:
@@ -128,6 +136,8 @@ class EVE2(eve.EVE2):
             exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]), True)
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]), True)
+            # Set ACTIVE
+            exchange(bytes([0x00, 0x00, 0x00, 0x00, 0x00]), True)
             time.sleep(.2)
 
             self.devA.spiMaster_SingleWrite(self.addr(0), False)
@@ -154,13 +164,19 @@ class EVE2(eve.EVE2):
 
             print(f"[Boot fail after reset, retrying...]")
 
-        # Enable Quad SPI
-        cfg = self.rd32(eve.SYS_CFG)
-        # Turn SPI_WIDTH to 0x2 for Quad SPI
-        cfg = cfg | (2 << 8)
-        self.wr32(eve.SYS_CFG, cfg)
-        # Instruct ft4222 library to switch to Quad SPI
-        self.devA.spiMaster_SetLines(Mode.QUAD)
-        # Remember the change
-        self.quad = True
+        parser = argparse.ArgumentParser(description="ft4222 module")
+        parser.add_argument("--mode", help="spi mode", default="0")     # 0: single, 1: dual, 2: quad
+        (args, rem) = parser.parse_known_args(sys.argv[1:])
 
+        if args.mode:
+            spi_mode = int(args.mode, 0)
+            # Enable Dual/Quad SPI
+            if spi_mode in [1,2]:
+                cfg = self.rd32(eve.SYS_CFG) & ~(0x3 << 8)
+                # Turn SPI_WIDTH to DUAL/QUAD
+                cfg = cfg | (spi_mode << 8)
+                self.wr32(eve.SYS_CFG, cfg)
+                # Instruct ft4222 library to switch to Dual/Quad SPI
+                self.devA.spiMaster_SetLines(Mode.DUAL if spi_mode == 1 else Mode.QUAD)
+                # change to multi mode
+                self.multi_mode = True

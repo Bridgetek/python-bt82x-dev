@@ -171,9 +171,14 @@ MPSSE example
 ```
 python simple.py --connector ft232h "simple program to write to the screen" --font 25
 ```
-FT4222 example
+FT4222 example in single mode (--mode 0)
 ```
 python simple.py --connector ft4222module "simple program to write to the screen" --font 25
+
+```
+FT4222 example in dual mode (--mode 1) or quad mode (--mode 2)
+```
+python simple.py --connector ft4222module "simple program to write to the screen" --font 25 --mode 2
 
 ```
 
