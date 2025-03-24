@@ -12,7 +12,7 @@ To work with MPSSE interface,  please refer to the [VM820C datasheet](https://br
 
 For MPSSE devices the [pyftdi](https://github.com/eblot/pyftdi) module for python and the [libMPSSE-SPI](https://ftdichip.com/software-examples/mpsse-projects/libmpsse-spi-examples/) library are required. 
 
-The connector code supports the [UMFTPD2A](https://brtchip.com/product/umftpd2a/)_(see note 1)_ module from Bridgetek, USB to MPSSE cables such as the [VA800-SPI](https://www.digikey.com/en/htmldatasheets/production/1371434/0/0/1/va800a-spi) or [C232HM](https://ftdichip.com/products/c232hm-edhsl-0/).
+The **connector code** `"connectors/ft4232h.py"` is compatible with the [UMFTPD2A](https://brtchip.com/product/umftpd2a/) _(see note 1)_ module from Bridgetek,  whereas `"connectors/ft232h.py"` supports **USB-to-MPSSE** cables like the [VA800-SPI](https://www.digikey.com/en/htmldatasheets/production/1371434/0/0/1/va800a-spi) and [C232HM](https://ftdichip.com/products/c232hm-edhsl-0/).
 
 The connector `ft4232h` supports the quad-channel FT4232H devices and the connector `ft232h` supports the single-channel FT232H devices.
 
