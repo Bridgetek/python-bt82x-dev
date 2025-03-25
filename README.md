@@ -123,7 +123,7 @@ This code may also be used with [circuitpython](https://circuitpython.org/), how
 
 ### apprunner
 
-This is a wrapper program the selects the command line parameters and chooses a connector. It establishes a module for the BT82x API library and then calls the example program with the graphics descriptor (`gd`) and EVE definitions (`eve`) setup.
+This is a wrapper program that selects the command line parameters and chooses a connector. It establishes a module for the BT82x API library and then calls the example program with the graphics descriptor (`gd`) and EVE definitions (`eve`) setup.
 
 ### bteve2
 

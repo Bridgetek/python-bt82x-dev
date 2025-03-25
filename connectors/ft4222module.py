@@ -167,6 +167,8 @@ class EVE2(eve.EVE2):
         parser = argparse.ArgumentParser(description="ft4222 module")
         parser.add_argument("--mode", help="spi mode", default="0")     # 0: single, 1: dual, 2: quad
         (args, rem) = parser.parse_known_args(sys.argv[1:])
+        # Extract --mode and keep the rest in sys.argv
+        sys.argv = [sys.argv[0]] + rem
 
         if args.mode:
             spi_mode = int(args.mode, 0)
