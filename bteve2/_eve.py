@@ -11,6 +11,7 @@ class _EVE:
     def cc(self, s):
         assert (len(s) % 4) == 0
         self.buf += s
+        assert (len(self.buf) % 4) == 0
         # Flush the co-processor buffer to the EVE device.
         n = len(self.buf)
         if n >= FIFO_MAX:
@@ -55,7 +56,7 @@ class _EVE:
         self.flush()
         n = len(s)
         while n > 0:
-            chunk = min((1024 * 16) - 16, n)
+            chunk = min((1024 * 15), n)
             self.buf = s[:chunk]
             self.flush()
             s = s[chunk:]
@@ -109,18 +110,22 @@ class _EVE:
         self.c4((15 << 24) | ((alpha & 255)))
     def ClearColorRGB(self, red,green,blue):
         self.c4((2 << 24) | ((red & 255) << 16) | ((green & 255) << 8) | ((blue & 255)))
+    def ClearColor(self, c):
+        self.c4((2 << 24) | (c&0xffffff))
     def Clear(self, c = 1,s = 1,t = 1):
         self.c4((38 << 24) | ((c & 1) << 2) | ((s & 1) << 1) | ((t & 1)))
     def ClearStencil(self, s):
         self.c4((17 << 24) | ((s & 255)))
     def ClearTag(self, s):
-        self.c4((18 << 24) | ((s & 255)))
+        self.c4((18 << 24) | ((s & 0xffffff)))
     def ColorA(self, alpha):
         self.c4((16 << 24) | ((alpha & 255)))
     def ColorMask(self, r,g,b,a):
         self.c4((32 << 24) | ((r & 1) << 3) | ((g & 1) << 2) | ((b & 1) << 1) | ((a & 1)))
     def ColorRGB(self, red,green,blue):
         self.c4((4 << 24) | ((red & 255) << 16) | ((green & 255) << 8) | ((blue & 255)))
+    def Color(self, c):
+        self.c4((4 << 24) | (c&0xffffff))
     def Display(self):
         self.c4((0 << 24))
     def End(self):

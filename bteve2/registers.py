@@ -533,3 +533,65 @@ TOUCH_TSC2007                  = 5
 ULAW_SAMPLES                   = 1
 YCBCR                          = 28
 ZERO                           = 0
+
+# ext-sevenseg
+# Option to draw a decimal point to the immediate right of the 7 segment.
+OPT_DECIMAL = 0x10
+# Option to draw a time colon to the immediate right of the 7 segment.
+OPT_TIMECOLON = 0x20
+# Option of BCD number to show in segments.
+OPT_NUMBER = 0x0f
+# Mask for above options and vc.OPT_FILL
+OPT_SEGMENTMASK = 0x2030
+
+# ext-dialogs
+# The amount of alpha to apply to the background box rectangle 
+# behind the text of the message. Set to zero to not apply
+# any alpha.
+OPT_MSGBGALPHA = 0x00ff
+# Option to place the message box in the top third of the screen.
+# This is useful to allow space to draw feedback buttons below.
+OPT_MSGTOP = 0x0200
+# Option to place the message box in the bottom third of the screen.
+# This is useful to allow space to draw feedback buttons above.
+OPT_MSGBOTTOM = 0x0400
+# Option to place the message box aligned to the top or bottom edge of the screen.
+# This gives maximum space below or above the message.
+OPT_MSGEDGE = 0x0800
+
+# ext-keyboard
+# Option to extend edge keys to fill spaces.
+OPT_EXTEND_EDGE = 0x1000
+# Option to not expand space character to maximum extent.
+OPT_NO_EXTEND_SPACE = 0x2000
+# Options to map special key tags and use premade text instead of mapped font character.
+OPT_MAP_SPECIAL_KEYS = 0x4000 # Ret, Del, Esc, Aa, ?123, Abc
+# Option to invert colours of special keys.
+OPT_INVERT_SPECIAL = 0x8000
+
+# Option to show key with matching tag code in this byte as pressed.
+OPT_PRESSED = 0x00ff
+# Definition of value of return key.
+KEY_RETURN = 13
+# Definition of value of backspace\delete key.
+KEY_DEL = 8
+# Definition of value of tab key.
+KEY_TAB = 9
+# Definition of value of escape key.
+KEY_ESC = 27
+# Definition of value of shift key.
+KEY_SHIFT = 1
+# Definition of value of alpha key.
+KEY_ALPHA = 2
+# Definition of value of number key.
+KEY_NUMBER = 3
+# Definition of value of symbol key.
+KEY_SYMBOLNUM = 4
+# Definition of value of symbol key.
+KEY_SYMBOLS = 5
+# Definition of value of caps lock key.
+KEY_CAPS = 6
+# Definition of value of alt key.
+KEY_ALT = 11
+# Definition of value of ctrl key.
+KEY_CTRL = 12

@@ -240,9 +240,11 @@ class EVE2:
             with open(fn, "rb") as f:
                 self.wr(REG_TOUCH_TRANSFORM_A, f.read())
         except FileNotFoundError:
+            self.cmd_dlstart()
             self.Clear()
             self.cmd_text(self.w // 2, self.h // 2, 34, OPT_CENTER, "Tap the dot")
             self.cmd_calibrate(0)
+            self.finish()
             self.cmd_dlstart()
             with open(fn, "wb") as f:
                 f.write(self.rd(REG_TOUCH_TRANSFORM_A, 24))
@@ -795,4 +797,89 @@ class EVE2:
     # cmd_watchdog(uint32_t init_val)
     def cmd_watchdog(self, *args):
         self.cmd(0x83, 'I', args)
+
+    # PATCH commands
+
+    # cmd_loadpatch(uint32_t options)
+    def cmd_loadpatch(self, *args):
+        self.cmd(0x82, 'I', args)
+
+    # cmd_region(void)
+    def cmd_region(self, *args):
+        self.cmd0(0x8f)
+
+    # cmd_endregion(int16_t x, int16_t y, int16_t w, int16_t h)
+    def cmd_endregion(self, *args):
+        self.cmd(0x90, 'hhhh', args)
+
+    # cmd_sdblockwrite(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
+    def cmd_sdblockwrite(self, *args):
+        return self.cmdr(0x70, 'III', args)
+
+    # cmd_fswrite (uint32_t dst, const char* filename, uint32_t result)
+    def cmd_fswrite(self, dst, filename):
+        self.cmd(0x93, 'I', (dst,))
+        self.cstring(filename)
+        return self.result()
+
+    # cmd_fsfile (uint32_t size, const char* filename, uint32_t result)
+    def cmd_fsfile(self, size, filename):
+        self.cmd(0x94, 'I', (size,))
+        self.cstring(filename)
+        return self.result()
+
+    # cmd_fssnapshot (uint32_t temp, const char* filename, uint32_t result)
+    def cmd_fssnapshot(self, temp, filename):
+        self.cmd(0x95, 'I', (temp,))
+        self.cstring(filename)
+        return self.result()
+
+    # cmd_fscropshot (uint32_t temp, const char* filename, uint32_t result)
+    def cmd_fscropshot(self, temp, filename, x, y, w, h):
+        self.cmd(0x95, 'I', (temp,))
+        self.cstring(filename)
+        self.cc(struct.pack('hhHH', x, y, w, h))
+        return self.result()
+
+    # cmd_textscale(int16_t x, int16_t y, int16_t font, uint16_t options, uint32_t scale, const char* s)
+    def cmd_textscale(self, *args):
+        self.cmd(0x95, 'hhhHI', args[:5])
+        self.fstring(args[5:])
+
+    # cmd_textangle(int16_t x, int16_t y, int16_t font, uint16_t options, uint32_t angle, const char* s)
+    def cmd_textangle(self, *args):
+        self.cmd(0x96, 'hhhHI', args[:5])
+        self.fstring(args[5:])
+
+    # cmd_textticker(int16_t x, int16_t y, uint16_t w, uint16_t h, int16_t font, uint16_t options, uint32_t pos, const char* s)
+    def cmd_textticker(self, *args):
+        self.cmd(0x97, 'hhHHhHi', args[:7])
+        self.fstring(args[7:])
+
+    # cmd_textsize(int16_t font, uint16_t options, const char* s, uint16_t w, uint16_t h)
+    def cmd_textsize(self, *args):
+        self.cmd(0xaa, 'hH', args[:2])
+        self.fstring(args[2:])
+        return self.result()
+
+    # cmd_keyboard(int16_t x, int16_t y, uint16_t w, uint16_t h, int16_t font, uint16_t options, const char* s)
+    def cmd_keyboard(self, *args):
+        self.cmd(0x9b, 'hhHHhH', args[:6])
+        self.fstring(args[6:])
+
+    # cmd_memoryinit(uint32_t address, uint32_t size)
+    def cmd_memoryinit(self,*args):
+        self.cmd(0x9c, "II", args)
+
+    # cmd_memorymalloc(uint32_t size, uint32_t address)
+    def cmd_memorymalloc(self, *args):
+        return self.cmdr(0x9d, "I", args)
+
+    # cmd_memoryfree(uint32_t address, uint32_t size)
+    def cmd_memoryfree(self, *args):
+        return self.cmdr(0x9e, "I", args)
+
+    # cmd_memorybitmap(uint16_t fmt, uint16_t w, uint16_t h, uint16_t resv, uint32_t address)
+    def cmd_memorybitmap(self, *args):
+        return self.cmdr(0xa9, "HhhH", args)
 

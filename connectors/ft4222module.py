@@ -51,12 +51,13 @@ class EVE2(eve.EVE2):
         a1 = a + nn
         r = b''
         while a != a1:
-            n = min(a1 - a, 32)
+            n = min(a1 - a, 128)
             if self.quad:
-                bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 32 + n)
+                bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 128 + n)
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
+                    if i >= 32: print(f"Oh dear {i}")
                     response = bb[i + 1:i + 1 + n]
                 else:
                     # There is no recovery here.
@@ -66,7 +67,7 @@ class EVE2(eve.EVE2):
                 self.devA.spiMaster_SingleWrite(self.addr(a), False)
                 def recv(n):
                     return self.devA.spiMaster_SingleRead(n, False)
-                bb = recv(32 + n)
+                bb = recv(128 + n)
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
@@ -78,10 +79,12 @@ class EVE2(eve.EVE2):
                     response = b''
             # Handle case of full response not received
             if len(response) < n:
+                print("Padd")
                 response += recv(n - len(response))
             self.devA.spiMaster_EndTransaction()
             a += n
             r += response
+            print(".", end="")
         return r
 
     def wr(self, a, s, inc=True):
@@ -158,9 +161,9 @@ class EVE2(eve.EVE2):
         cfg = self.rd32(eve.SYS_CFG)
         # Turn SPI_WIDTH to 0x2 for Quad SPI
         cfg = cfg | (2 << 8)
-        self.wr32(eve.SYS_CFG, cfg)
+        #self.wr32(eve.SYS_CFG, cfg)
         # Instruct ft4222 library to switch to Quad SPI
-        self.devA.spiMaster_SetLines(Mode.QUAD)
+        #self.devA.spiMaster_SetLines(Mode.QUAD)
         # Remember the change
-        self.quad = True
+        #self.quad = True
 
