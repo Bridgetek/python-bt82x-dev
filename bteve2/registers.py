@@ -355,7 +355,6 @@ CTOUCH_MODE_EXTENDED           = 0
 DECR                           = 4
 DLSWAP_DONE                    = 0
 DLSWAP_FRAME                   = 2
-DLSWAP_LINE                    = 1
 DREG_DDR_DISABLED_BIT          = 4
 DREG_DDR_ENABLED_BIT           = 5
 DST_ALPHA                      = 3
