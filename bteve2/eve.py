@@ -566,10 +566,6 @@ class EVE2:
     def cmd_loadimage(self, *args):
         self.cmd(0x21, 'II', args)
 
-    # cmd_loadpatch(uint32_t options)
-    def cmd_loadpatch(self, *args):
-        self.cmd(0x82, 'I', args)
-
     # cmd_loadwav(uint32_t dst, uint32_t options!)
     def cmd_loadwav(self, *args):
         self.cmd(0x85, 'II', args)
@@ -887,3 +883,10 @@ class EVE2:
     def cmd_memorybitmap(self, *args):
         return self.cmdr(0xa9, "HhhH", args)
 
+    # cmd_plotdraw(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)
+    def cmd_plotdraw(self, *args):
+        self.cmd(0xab, "IHHhhII", args)
+
+    # cmd_plotstream(uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale")
+    def cmd_plotstream(self, *args):
+        self.cmd(0xac, "HHhhII", args)

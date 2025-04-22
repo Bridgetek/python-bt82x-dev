@@ -327,13 +327,13 @@ ULAW_SAMPLES                   = 1
 YCBCR                          = 28
 ZERO                           = 0
 
-# ext-sevenseg
+# patch-sevenseg
 OPT_DECIMAL                    = 0x10   #   Option to draw a decimal point to the immediate right of the 7 segment.
 OPT_TIMECOLON                  = 0x20   # Option to draw a time colon to the immediate right of the 7 segment.
 OPT_NUMBER                     = 0x0f   # Option of BCD number to show in segments.
 OPT_SEGMENTMASK                = 0x2030 # Mask for above options and vc.OPT_FILL
 
-# ext-dialogs
+# patch-dialogs
 # The amount of alpha to apply to the background box rectangle 
 # behind the text of the message. Set to zero to not apply
 # any alpha.
@@ -348,7 +348,7 @@ OPT_MSGBOTTOM                  = 0x0400
 # This gives maximum space below or above the message.
 OPT_MSGEDGE                    = 0x0800   
 
-# ext-keyboard
+# patch-keyboard
 OPT_EXTEND_EDGE                = 0x1000 # Option to extend edge keys to fill spaces.
 OPT_NO_EXTEND_SPACE            = 0x2000 # Option to not expand space character to maximum extent.
 OPT_MAP_SPECIAL_KEYS           = 0x4000 # Options to map special key tags and use premade text instead of mapped font character (Ret, Del, Esc, Aa, ?123, Abc)
@@ -366,3 +366,9 @@ KEY_SYMBOLS                    = 5      # Definition of value of symbol key.
 KEY_CAPS                       = 6      # Definition of value of caps lock key.
 KEY_ALT                        = 11     # Definition of value of alt key.
 KEY_CTRL                       = 12     # Definition of value of ctrl key.
+
+# patch-plotgraph
+OPT_PLOTHORIZONTAL             = 0      # Option to plot graph horizontally, data on Y-axis
+OPT_PLOTVERTICAL               = 1      # Option to plot graph vertically, data on X-axis
+OPT_PLOTFILTER                 = 2      # Option to remove duplicate points
+OPT_PLOTINVERT                 = 4      # Option to invert data
