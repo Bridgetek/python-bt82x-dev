@@ -125,7 +125,7 @@ class EVE2:
     def getspace(self):
         self.space = self.rd32(REG_CMDB_SPACE)
         if self.space & 1:
-            message = self.rd(RAM_HIMEM, 256).strip(b'\x00').decode('ascii')
+            message = self.rd(RAM_REPORT, 256).strip(b'\x00').decode('ascii')
             raise CoprocessorException(message)
 
     # Wait until a specified amount of space is available in the co-processor
