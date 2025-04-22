@@ -1,5 +1,5 @@
 # Typical command line:
-# python segment --connector ft4222module 12345678 --size 100
+# python segment.py --connector ft4222module 12345678 --size 100
 import sys
 import argparse
 

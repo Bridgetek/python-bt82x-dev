@@ -2,13 +2,17 @@
 
 This python module and interface connectors allow python to be used to communicate with a BT82x device using FT4232H, FT232H or FT4222H devices. 
 
-The FT4232H and FT232H methods use the **[MPSSE Interface](#mpsse-interface)** of the devices to communicate over SPI to the BT82x. The **[FT4222H Interface](#ft4222h-interface)** has built-in SPI hardware and controller.
+The FT4232H and FT232H methods use the **[MPSSE Interface](#mpsse-interface)** of the devices to communicate over SPI to the BT82x. The **[FT4222H Interface](#ft4222h-interface)** has built-in SPI hardware and controller.  
+
+The BT82X based module [VM820C](https://brtchip.com/product/vm820c/) is the targeted hardware of this repo. 
+It is equipped with [FT4222H Interface](#ft4222h-interface) on board for SPI connection with PC through USB.  
+To work with MPSSE interface,  please refer to the [VM820C datasheet](https://brtchip.com/wp-content/uploads/2025/01/DS_VM820C-1.pdf)
 
 ## MPSSE Interface
 
 For MPSSE devices the [pyftdi](https://github.com/eblot/pyftdi) module for python and the [libMPSSE-SPI](https://ftdichip.com/software-examples/mpsse-projects/libmpsse-spi-examples/) library are required. 
 
-The connector code supports the [UMFTPD2A](https://brtchip.com/product/umftpd2a/)_(see note 1)_ module from Bridgetek, USB to MPSSE cables such as the [VA800-SPI](https://www.digikey.com/en/htmldatasheets/production/1371434/0/0/1/va800a-spi) or [C232HM](https://ftdichip.com/products/c232hm-edhsl-0/).
+The **connector code** `"connectors/ft4232h.py"` is compatible with the [UMFTPD2A](https://brtchip.com/product/umftpd2a/) _(see note 1)_ module from Bridgetek,  whereas `"connectors/ft232h.py"` supports **USB-to-MPSSE** cables like the [VA800-SPI](https://www.digikey.com/en/htmldatasheets/production/1371434/0/0/1/va800a-spi) and [C232HM](https://ftdichip.com/products/c232hm-edhsl-0/).
 
 The connector `ft4232h` supports the quad-channel FT4232H devices and the connector `ft232h` supports the single-channel FT232H devices.
 
@@ -119,7 +123,7 @@ This code may also be used with [circuitpython](https://circuitpython.org/), how
 
 ### apprunner
 
-This is a wrapper program the selects the command line parameters and chooses a connector. It establishes a module for the BT82x API library and then calls the example program with the graphics descriptor (`gd`) and EVE definitions (`eve`) setup.
+This is a wrapper program that selects the command line parameters and chooses a connector. It establishes a module for the BT82x API library and then calls the example program with the graphics descriptor (`gd`) and EVE definitions (`eve`) setup.
 
 ### bteve2
 
@@ -167,9 +171,14 @@ MPSSE example
 ```
 python simple.py --connector ft232h "simple program to write to the screen" --font 25
 ```
-FT4222 example
+FT4222 example in single mode (--mode 0)
 ```
 python simple.py --connector ft4222module "simple program to write to the screen" --font 25
+
+```
+FT4222 example in dual mode (--mode 1) or quad mode (--mode 2)
+```
+python simple.py --connector ft4222module "simple program to write to the screen" --font 25 --mode 2
 
 ```
 

@@ -128,12 +128,6 @@ class EVE2:
             message = self.rd(RAM_REPORT, 256).strip(b'\x00').decode('ascii')
             raise CoprocessorException(message)
 
-    # Wait until a specified amount of space is available in the co-processor
-    # RAM_CMD space.
-    def reserve(self, n):
-        while self.space < n:
-            self.getspace()
-
     # Return True if the co-processor RAM_CMD space is empty (FIFO_MAX 
     # remaining).
     def is_finished(self):
@@ -144,9 +138,15 @@ class EVE2:
     # there is sufficient space.
     # Buffer here and write in batches in the connector.
     def write(self, ss):
-        self.reserve(len(ss))
-        self.wr(REG_CMDB_WRITE, ss, inc=False)
-        self.space -= len(ss)
+        i = 0
+        while i < len(ss):
+            send = ss[i:i+self.space]
+            i += self.space
+            self.wr(REG_CMDB_WRITE, send, inc=False)
+            self.space -= len(send)
+            if i < len(ss):
+                self.sleepclocks(10000)
+                self.getspace()
 
     # Start a display list in the co-processor.
     def begin(self):
@@ -565,6 +565,10 @@ class EVE2:
     # cmd_loadimage(uint32_t ptr, uint32_t options!)
     def cmd_loadimage(self, *args):
         self.cmd(0x21, 'II', args)
+
+    # cmd_loadpatch(uint32_t options)
+    def cmd_loadpatch(self, *args):
+        self.cmd(0x82, 'I', args)
 
     # cmd_loadwav(uint32_t dst, uint32_t options!)
     def cmd_loadwav(self, *args):
