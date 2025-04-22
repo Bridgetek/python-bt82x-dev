@@ -564,6 +564,10 @@ class EVE2:
     def cmd_loadimage(self, *args):
         self.cmd(0x21, 'II', args)
 
+    # cmd_loadpatch(uint32_t options)
+    def cmd_loadpatch(self, *args):
+        self.cmd(0x82, 'I', args)
+
     # cmd_loadwav(uint32_t dst, uint32_t options!)
     def cmd_loadwav(self, *args):
         self.cmd(0x85, 'II', args)
