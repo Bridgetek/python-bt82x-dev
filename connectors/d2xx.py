@@ -275,8 +275,8 @@ class EVE2(eve.EVE2):
             if 1 in r:
                 while self.rd32(eve.REG_ID) != 0x7c:
                     pass
-                print(f"Boot status: 0x{self.rd32(eve.BOOT_STATUS):x}")
-                if self.rd32(eve.BOOT_STATUS) == 0x522e2e2e:
+                print(f"Boot status: 0x{self.rd32(eve.REG_BOOT_STATUS):x}")
+                if self.rd32(eve.REG_BOOT_STATUS) == 0x522e2e2e:
                     break
             print("[Boot fail after reset, retrying...]")
 

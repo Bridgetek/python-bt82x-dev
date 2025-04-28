@@ -155,10 +155,10 @@ class EVE2(eve.EVE2):
                 # Wait for the REG_ID register to be set to 0x7c to
                 while self.rd32(eve.REG_ID) != 0x7c:
                     pass
-                while not fault and self.rd32(eve.BOOT_STATUS) != 0x522e2e2e:
+                while not fault and self.rd32(eve.REG_BOOT_STATUS) != 0x522e2e2e:
                     fault = 1e-9 * (time.monotonic_ns() - t0) > 0.1
                 if fault:
-                    print(f"[Timeout waiting for BOOT_STATUS, stuck at {self.rd32(eve.BOOT_STATUS):08x}, retrying...]")
+                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.REG_BOOT_STATUS):08x}, retrying...]")
                     continue
                 actual = self.rd32(eve.REG_FREQUENCY)
                 if actual != FREQUENCY:

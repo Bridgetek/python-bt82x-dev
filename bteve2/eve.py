@@ -297,8 +297,8 @@ class EVE2:
         # 0: 1 pixel single // 1: 2 pixel single // 2: 2 pixel dual // 3: 4 pixel dual
         extsyncmode = 3
         TXPLLDiv = 0x03
-        self.cmd_apbwrite(LVDSPLL_CFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
-        self.cmd_apbwrite(LVDS_EN, 7) # Enable PLL
+        self.cmd_apbwrite(REG_LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
+        self.cmd_apbwrite(REG_LVDSTX_EN, 7) # Enable PLL
 
         self.cmd_regwrite(REG_SO_MODE, extsyncmode)
         self.cmd_regwrite(REG_SO_SOURCE, surface.addr)
