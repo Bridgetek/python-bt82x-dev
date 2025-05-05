@@ -684,7 +684,7 @@ class EVE2:
 
     # cmd_sdattach(uint32_t options, uint32_t result)
     def cmd_sdattach(self, *args):
-        return self.cmdr(0x6e, 'II', args)
+        return self.cmdr(0x6e, 'I', args)
 
     # cmd_sdblockread(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
     def cmd_sdblockread(self, *args):
@@ -883,9 +883,9 @@ class EVE2:
     def cmd_memorybitmap(self, *args):
         return self.cmdr(0xa9, "HhhH", args)
 
-    # cmd_plotdraw(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)
+    # cmd_plotdraw(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale, uint32_t threshold)
     def cmd_plotdraw(self, *args):
-        self.cmd(0xab, "IHHhhII", args)
+        self.cmd(0xab, "IHHhhIII", args)
 
     # cmd_plotstream(uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale")
     def cmd_plotstream(self, *args):

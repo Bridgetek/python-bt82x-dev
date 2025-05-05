@@ -373,6 +373,7 @@ KEY_CTRL                       = 12     # Definition of value of ctrl key.
 
 # patch-plotgraph
 OPT_PLOTHORIZONTAL             = 0      # Option to plot graph horizontally, data on Y-axis
-OPT_PLOTVERTICAL               = 1      # Option to plot graph vertically, data on X-axis
-OPT_PLOTFILTER                 = 2      # Option to remove duplicate points
-OPT_PLOTINVERT                 = 4      # Option to invert data
+OPT_PLOTVERTICAL               = 0x1000 # Option to plot graph vertically, data on X-axis
+OPT_PLOTFILTER                 = 0x2000 # Option to remove duplicate points
+OPT_PLOTINVERT                 = 0x4000 # Option to invert data
+OPT_PLOTOVERLAY                = 0x8000 # Option to create subtracetive overlay bitmap

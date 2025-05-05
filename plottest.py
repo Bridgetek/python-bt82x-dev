@@ -37,7 +37,7 @@ def plottest(gd):
 
     print("Loading patch")
     gd.cmd_loadpatch(0)
-    with open("assets/plot.patch", "rb") as f:
+    with open("assets/patch-0.1.patch", "rb") as f:
         gd.load(f)
     gd.finish()
     print("Getting patch version")
@@ -45,26 +45,6 @@ def plottest(gd):
     if len(message) == 0:
         raise (f"Failed to get text patch version {t:ver}")
     print(message)
-
-    # Option to plot graph horizontally, data on Y-axis
-    eve.OPT_PLOTHORIZONTAL = 0
-    # Option to plot graph vertically, data on X-axis
-    eve.OPT_PLOTVERTICAL = 1 
-    # Option to remove duplicate points
-    eve.OPT_PLOTFILTER = 2 
-    # Option to invert data
-    eve.OPT_PLOTINVERT = 4
-    # cmd_plotdraw(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)
-    def cmd_plotdraw(a, l, o, x, y, sx, sy):
-        gd.cc(struct.pack("IIHHhhII", 0xffffffab, a, l, o, x, y, sx, sy))
-    gd.cmd_plotdraw = cmd_plotdraw
-
-    gd.begin()
-    gd.Clear()
-    gd.ColorRGB(255, 255, 255)
-
-    gd.ClearColorRGB(30, 30, 90)
-    gd.Clear(1,1,1)
 
     arr = bytes([
             # Offset 0x00000000 to 0x00000400
@@ -162,15 +142,21 @@ def plottest(gd):
     # Program graph data into RAM_G
     for i,a in enumerate(arrint):
         gd.wr32(i * 4, a)
-    
+
+    gd.begin()
+    gd.Clear()
+    gd.ColorRGB(255, 255, 255)
+    gd.ClearColorRGB(30, 30, 90)
+    gd.Clear(1,1,1)
+
     gd.VertexFormat(0)
     gd.ColorRGB(0, 255,0)
     gd.LineWidth(2)
-    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTHORIZONTAL, 14, 10, 0x14000, 0x18000)
+    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTHORIZONTAL, 14, 10, 0x14000, 0x18000, 0x18000)
     gd.ColorRGB(255,0,0)
-    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTHORIZONTAL | eve.OPT_PLOTFILTER, 0, 0, 0x14000, 0x18000)
+    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTHORIZONTAL | eve.OPT_PLOTFILTER, 0, 0, 0x14000, 0x18000, 0x18000)
     gd.ColorRGB(0, 255,0)
-    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTVERTICAL | eve.OPT_PLOTINVERT | eve.OPT_PLOTFILTER, 100, 2, 0x28000, 0xe000)
+    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTVERTICAL | eve.OPT_PLOTINVERT | eve.OPT_PLOTFILTER, 100, 2, 0x28000, 0xe000, 0x18000)
 
     gd.Display()
     gd.swap()

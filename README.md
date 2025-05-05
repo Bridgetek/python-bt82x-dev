@@ -123,6 +123,7 @@ This code may also be used with [circuitpython](https://circuitpython.org/), how
 | teapot.py | 3D teapot rotation demo code |
 | bitmap-split-merge.py | Simple bitmap split/merge demo code |
 | bitmap-crop.py | Simple bitmap crop demo code |
+| plottest.py | Simple plot graph demo code |
 
 ### apprunner
 
