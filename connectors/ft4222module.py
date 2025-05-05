@@ -54,14 +54,13 @@ class EVE2(eve.EVE2):
         a1 = a + nn
         r = b''
         while a != a1:
-
             n = min(a1 - a, 32)
             if self.multi_mode:
                 bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 32 + n)
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
-                    if i >= 32: print(f"Oh dear {i}")
+                    #if i >= 32: print(f"Oh dear {i}")
                     response = bb[i + 1:i + 1 + n]
                 else:
                     # There is no recovery here.
@@ -83,12 +82,12 @@ class EVE2(eve.EVE2):
                     response = b''
             # Handle case of full response not received
             if len(response) < n:
-                print("Padd")
+                #print("Padd")
                 response += recv(n - len(response))
             self.devA.spiMaster_EndTransaction()
             a += n
             r += response
-            print(".", end="")
+            #print(".", end="")
         return r
 
     def wr(self, a, s, inc=True):
@@ -178,10 +177,10 @@ class EVE2(eve.EVE2):
             spi_mode = int(args.mode, 0)
             # Enable Dual/Quad SPI
             if spi_mode in [1,2]:
-                cfg = self.rd32(eve.SYS_CFG) & ~(0x3 << 8)
+                cfg = self.rd32(eve.REG_SYS_CFG) & ~(0x3 << 8)
                 # Turn SPI_WIDTH to DUAL/QUAD
                 cfg = cfg | (spi_mode << 8)
-                self.wr32(eve.SYS_CFG, cfg)
+                self.wr32(eve.REG_SYS_CFG, cfg)
                 # Instruct ft4222 library to switch to Dual/Quad SPI
                 self.devA.spiMaster_SetLines(Mode.DUAL if spi_mode == 1 else Mode.QUAD)
                 # change to multi mode

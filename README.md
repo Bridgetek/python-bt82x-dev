@@ -120,6 +120,9 @@ This code may also be used with [circuitpython](https://circuitpython.org/), how
 | fontmagic.py | Simple example code demonstrating scaling and rotating fonts |
 | segment.py | Simple seven segment demo code |
 | b2tf.py | Advanced seven segment demo code |
+| teapot.py | 3D teapot rotation demo code |
+| bitmap-split-merge.py | Simple bitmap split/merge demo code |
+| bitmap-crop.py | Simple bitmap crop demo code |
 
 ### apprunner
 
