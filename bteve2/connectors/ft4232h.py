@@ -23,7 +23,10 @@ import bteve2 as eve
 FREQUENCY = 72_000_000      # system clock frequency, in Hz
 
 class EVE2(eve.EVE2):
+
     def __init__(self):
+        print("Initialise FT4232H interface")
+
         spi = SpiController()
 
         # Configure the first interface (IF/1) of the FTDI device as a SPI master
@@ -36,6 +39,7 @@ class EVE2(eve.EVE2):
                 spi.configure('ftdi://ftdi:4232h/2')
                 print("Using Interface 2 on FT4232H")
             except: 
+                print("Has the libusb-win32 driver been installed for the connector board?")
                 raise Exception("Sorry, no FTDI FT4232H device for SPI master")
         # Note MPSSE is required and there are 2 MPSSE channels on FT4232H.
 
@@ -44,7 +48,6 @@ class EVE2(eve.EVE2):
         self.gpio = spi.get_gpio()
         self.gpio.set_direction(0x80, 0x80)
         spi.ftdi.set_latency_timer(1)
-        self.boot()
 
     def setup_flash(self):
         pass
@@ -122,11 +125,13 @@ class EVE2(eve.EVE2):
             exchange(bytes([0xFF, 0xEB, 0x08, 0x00, 0x00]))
             # Set DDR, JT and AUD in Boot Control
             exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]))
-            # Clear BootCfgEn
+            # CLEAR BootCfgEn
             exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]))
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
-            time.sleep(.1)
+            # Set ACTIVE
+            exchange(bytes([0x00, 0x00, 0x00, 0x00, 0x00]))
+            time.sleep(.2)
 
             self.slave.write(self.addr(0), start = True, stop = False)
             def recv(n):
@@ -136,14 +141,14 @@ class EVE2(eve.EVE2):
             fault = False
             if 1 in bb:
                 # Wait for the REG_ID register to be set to 0x7c to
-                while self.rd32(eve.REG_ID) != 0x7c:
+                while self.rd32(eve.REG.ID) != 0x7c:
                     pass
-                while not fault and self.rd32(eve.REG_BOOT_STATUS) != 0x522e2e2e:
+                while not fault and self.rd32(eve.REG.BOOT_STATUS) != 0x522e2e2e:
                     fault = 1e-9 * (time.monotonic_ns() - t0) > 0.1
                 if fault:
-                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.REG_BOOT_STATUS):08x}, retrying...]")
+                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.REG.BOOT_STATUS):08x}, retrying...]")
                     continue
-                actual = self.rd32(eve.REG_FREQUENCY)
+                actual = self.rd32(eve.REG.FREQUENCY)
                 if actual != FREQUENCY:
                     print(f"[Requested {FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
                     continue

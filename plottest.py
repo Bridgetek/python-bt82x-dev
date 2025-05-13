@@ -36,12 +36,12 @@ else:
 def plottest(gd):
 
     print("Loading patch")
-    gd.cmd_loadpatch(0)
+    gd.CMD_LOADPATCH(0)
     with open("assets/plot.patch", "rb") as f:
         gd.load(f)
-    gd.finish()
+    gd.LIB_AwaitCoProEmpty()
     print("Getting patch version")
-    message = gd.rd(eve.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
+    message = gd.rd(eve.REG.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
     if len(message) == 0:
         raise (f"Failed to get text patch version {t:ver}")
     print(message)
@@ -54,17 +54,17 @@ def plottest(gd):
     eve.OPT_PLOTFILTER = 2 
     # Option to invert data
     eve.OPT_PLOTINVERT = 4
-    # cmd_plotdraw(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)
-    def cmd_plotdraw(a, l, o, x, y, sx, sy):
+    # CMD_PLOTDRAW(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)
+    def CMD_PLOTDRAW(a, l, o, x, y, sx, sy):
         gd.cc(struct.pack("IIHHhhII", 0xffffffab, a, l, o, x, y, sx, sy))
-    gd.cmd_plotdraw = cmd_plotdraw
+    gd.CMD_PLOTDRAW = CMD_PLOTDRAW
 
-    gd.begin()
-    gd.Clear()
-    gd.ColorRGB(255, 255, 255)
+    gd.CMD_DLSTART()
+    gd.CLEAR()
+    gd.COLOR_RGB(255, 255, 255)
 
-    gd.ClearColorRGB(30, 30, 90)
-    gd.Clear(1,1,1)
+    gd.CLEAR_COLOR_RGB(30, 30, 90)
+    gd.CLEAR(1,1,1)
 
     arr = bytes([
             # Offset 0x00000000 to 0x00000400
@@ -163,17 +163,17 @@ def plottest(gd):
     for i,a in enumerate(arrint):
         gd.wr32(i * 4, a)
     
-    gd.VertexFormat(0)
-    gd.ColorRGB(0, 255,0)
-    gd.LineWidth(2)
-    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTHORIZONTAL, 14, 10, 0x14000, 0x18000)
-    gd.ColorRGB(255,0,0)
-    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTHORIZONTAL | eve.OPT_PLOTFILTER, 0, 0, 0x14000, 0x18000)
-    gd.ColorRGB(0, 255,0)
-    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTVERTICAL | eve.OPT_PLOTINVERT | eve.OPT_PLOTFILTER, 100, 2, 0x28000, 0xe000)
+    gd.VERTEX_FORMAT(0)
+    gd.COLOR_RGB(0, 255,0)
+    gd.LINE_WIDTH(2)
+    gd.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTHORIZONTAL, 14, 10, 0x14000, 0x18000)
+    gd.COLOR_RGB(255,0,0)
+    gd.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTHORIZONTAL | eve.OPT_PLOTFILTER, 0, 0, 0x14000, 0x18000)
+    gd.COLOR_RGB(0, 255,0)
+    gd.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTVERTICAL | eve.OPT_PLOTINVERT | eve.OPT_PLOTFILTER, 100, 2, 0x28000, 0xe000)
 
-    gd.Display()
-    gd.swap()
-    gd.finish()
+    gd.DISPLAY()
+    gd.CMD_SWAP()
+    gd.LIB_AwaitCoProEmpty()
 
 apprunner.run(plottest)

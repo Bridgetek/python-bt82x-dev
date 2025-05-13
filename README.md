@@ -133,7 +133,7 @@ This makes a module for the BT82x interface allowing calls from python to be enc
 
 To run the python code and connect to a BT82x a connector is required. The connector is selected in the parameters to the example programs. It opens a port to the device that makes the SPI signals and sets-up the target device. API interfaces for `reset`, `wr`, `rd`, `cs` functions are required. 
 
-There are supported connectors for [FT4232H (`ft4232h.py`)](connectors/ft4232h.py), [FT232H (`ft232h.py`)](connectors/ft232h.py), [FT4222H (`ft4222module.py`)](connectors/ft4222module.py). The FT4232H connector uses the first MPSSE interface, if it fails to open that then the second MPSSE interface (USB Interface 1) is used. The the CN2 connector on the UMFTPD2A board is connected to the second MPSSE interface.
+There are supported connectors for [FT4232H (`ft4232h.py`)](bteve2/connectors/ft4232h.py), [FT232H (`ft232h.py`)](bteve2/connectors/ft232h.py), [FT4222H (`ft4222module.py`)](bteve2/connectors/ft4222module.py). The FT4232H connector uses the first MPSSE interface, if it fails to open that then the second MPSSE interface (USB Interface 1) is used. The the CN2 connector on the UMFTPD2A board is connected to the second MPSSE interface.
 
 Connectors to other transports are simple to make. The `reset` function must be able to setup the BT82x in line with the provided code in supported connectors. The use of Chip Select in the `cs` function is required rather than automatic action of chip select on some devices.
 
@@ -151,12 +151,13 @@ import bteve2 as eve
 
 def simple(gd):
     # Start drawing test screen.
-    gd.begin()
-    gd.ClearColorRGB(64,72,64)
-    gd.Clear(1,1,1)
+    gd.CMD_DLSTART()
+    gd.CLEAR_COLOR_RGB(64,72,64)
+    gd.CLEAR(1,1,1)
 
-    gd.Display()
-    gd.swap()
+    gd.DISPLAY()
+    gd.CMD_SWAP()
+    gd.LIB_AwaitCoProEmpty()
     
 apprunner.run(simple)
 ```

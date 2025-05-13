@@ -87,7 +87,7 @@ class EVE2(eve.EVE2):
             self.transfer(bytes([0xFF, 0xEB, 0x08, 0x00, 0x00]))
             # Set DDR, JT and AUD in Boot Control
             self.transfer(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]))
-            # Clear BootCfgEn
+            # CLEAR BootCfgEn
             self.transfer(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]))
             # Perform a reset pulse
             self.transfer(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
@@ -170,11 +170,11 @@ def run(app, minimal = False):
     if minimal == False:
         gd.cmd0(0)
 
-        gd.cmd_regwrite(eve.REG_SC0_SIZE, 2)
-        gd.cmd_regwrite(eve.REG_SC0_PTR0, 10 << 20)
-        gd.cmd_regwrite(eve.REG_SC0_PTR1, 18 << 20)
+        gd.CMD_REGWRITE(eve.REG_SC0_SIZE, 2)
+        gd.CMD_REGWRITE(eve.REG_SC0_PTR0, 10 << 20)
+        gd.CMD_REGWRITE(eve.REG_SC0_PTR1, 18 << 20)
         gd.panel(eve.Surface(eve.SWAPCHAIN_0, eve.RGB8, 1920, 1200))
-        gd.finish()
-
+        gd.LIB_AwaitCoProEmpty()
+    
     app(gd)
-    gd.finish()
+    gd.LIB_AwaitCoProEmpty()

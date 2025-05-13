@@ -1,13 +1,13 @@
 import struct
 import array
+import sys
+import importlib
 from collections import namedtuple
 
-from .registers import *
+from .registers import * 
 
 class CoprocessorException(Exception):
     pass
-
-FIFO_MAX = (CMDBUF_SIZE - 4) # Maximum reported free space in the EVE command FIFO
 
 _B0 = b'\x00'
 
@@ -66,38 +66,42 @@ _Inputs = namedtuple(
     ))
 
 class EVE2:
+
+    FIFO_MAX = (REG.CMDBUF_SIZE - 4) # Maximum reported free space in the EVE command FIFO
+
     """
     Co-processor commands are defined in this file and begin with "cmd_".
 
     Typically the library will be called like this:
-        gd.begin()
-        gd.ClearColorRGB(64,72,64)
-        gd.Clear(1,1,1)
-        gd.cmd_text(10, 10, 25, 0, "Hello, World!")
+        gd.CMD_DLSTART()
+        gd.CLEAR_COLOR_RGB(64,72,64)
+        gd.CLEAR(1,1,1)
+        gd.CMD_TEXT(10, 10, 25, 0, "Hello, World!")
         # Send CMD_SWAP then wait for the co-processor to finish.
-        gd.swap() 
+        gd.CMD_SWAP()
+        gd.LIB_AwaitCoProEmpty() 
 
     However, if required the display list can be ended with finish
-        gd.begin()
-        gd.ClearColorRGB(64,72,64)
-        gd.Clear(1,1,1)
-        gd.cmd_text(10, 10, 25, 0, "Hello, World!")
+        gd.CMD_DLSTART()
+        gd.CLEAR_COLOR_RGB(64,72,64)
+        gd.CLEAR(1,1,1)
+        gd.CMD_TEXT(10, 10, 25, 0, "Hello, World!")
         # Send CMD_SWAP to the display list.
-        gd.cmd_swap()
+        gd.CMD_SWAP()
         # Wait for the co-processor to finish.
-        gd.finish()
+        gd.LIB_AwaitCoProEmpty()
     
     More advanced usage can have multiple display lists sent to the 
     co-processor.
 
-        gd.begin()
-        gd.ClearColorRGB(64,72,64)
-        gd.Clear(1,1,1)
-        gd.cmd_text(10, 10, 25, 0, "Hello, World!")
+        gd.CMD_DLSTART()
+        gd.CLEAR_COLOR_RGB(64,72,64)
+        gd.CLEAR(1,1,1)
+        gd.CMD_TEXT(10, 10, 25, 0, "Hello, World!")
         # Send CMD_SWAP to the display list.
-        gd.cmd_swap()
+        gd.CMD_SWAP()
         # Start the co-processor, but do not wait to finish.
-        gd.finish(False)
+        gd.LIB_AwaitCoProEmpty()
         # Perform some processing for a long time in parallel to the
         # co-processor working.
         long_time_routine()
@@ -108,6 +112,7 @@ class EVE2:
 
     # Reset and wait until the co-processor is ready.
     def boot(self):
+        print("Booting")
         self.reset()
         self.getspace()
 
@@ -123,16 +128,16 @@ class EVE2:
     # When the co-processor is idle this will be FIFO_MAX.
     # Note: when bit 0 is set then the co-processor has encountered an error.
     def getspace(self):
-        self.space = self.rd32(REG_CMDB_SPACE)
+        self.space = self.rd32(REG.CMDB_SPACE)
         if self.space & 1:
-            message = self.rd(RAM_REPORT, 256).strip(b'\x00').decode('ascii')
+            message = self.rd(REG.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
             raise CoprocessorException(message)
 
     # Return True if the co-processor RAM_CMD space is empty (FIFO_MAX 
     # remaining).
     def is_finished(self):
         self.getspace()
-        return self.space == FIFO_MAX
+        return self.space == self.FIFO_MAX
 
     # Write data to the co-processor RAM_CMD space. First checks to see if
     # there is sufficient space.
@@ -140,25 +145,38 @@ class EVE2:
     def write(self, ss):
         i = 0
         while i < len(ss):
-            send = ss[i:i+self.space]
+            send = ss[i:i + self.space]
             i += self.space
-            self.wr(REG_CMDB_WRITE, send, inc=False)
+            self.wr(self.REG.CMDB_WRITE, send, inc=False)
             self.space -= len(send)
             if i < len(ss):
                 self.sleepclocks(10000)
                 self.getspace()
 
     # Start a display list in the co-processor.
-    def begin(self):
-        self.cmd_dlstart()
-        self.cmd_loadidentity()
+    def LIB_BeginCoProList(self):
+        pass
+
+    def LIB_EndCoProList(self):
+        pass
+
+    def LIB_AwaitCoProEmpty(self):
+        self.finish(True)
+
+    def EVE_LIB_GetResult(self):
+        return self.previous(1)
+    
+    def LIB_GetCoProException(self):
+        return self.rd(REG.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
+
+    #def LIB_WriteDataToRAMG(self, )
 
     # Perform a swap command in the co-processor. 
     # This will optionally call the finish function to send the data to
     # the co-processor then wait for it to complete.
     def swap(self, finish = True):
-        self.Display()
-        self.cmd_swap()
+        self.DISPLAY()
+        self.CMD_SWAP()
         if finish:
             self.finish()
 
@@ -178,20 +196,20 @@ class EVE2:
         #self.flush()
         #self.cs(False)
         self.cs(True)
-        self.wr32(REG_CMD_READ, 0)
+        self.wr32(self.REG.CMD_READ, 0)
         self.cs(False)
         # Instructions are write REG_CMD_READ as zero then
         # wait for REG_CMD_WRITE to become zero.
         while True:
-            writeptr = self.rd32(REG_CMD_WRITE)
+            writeptr = self.rd32(self.REG.CMD_WRITE)
             if (writeptr == 0): break;
 
     # Return the result field of the preceding command
     def previous(self, fmt = "I"):
         self.finish()
         size = struct.calcsize(fmt)
-        offset = (self.rd32(REG_CMD_READ) - size) & FIFO_MAX
-        r = struct.unpack(fmt, self.rd(RAM_CMD + offset, size))
+        offset = (self.rd32(self.REG.CMD_READ) - size) & self.FIFO_MAX
+        r = struct.unpack(fmt, self.rd(REG.RAM_CMD + offset, size))
         if len(r) == 1:
             return r[0]
         else:
@@ -217,9 +235,9 @@ class EVE2:
     # Read the touch inputs.
     def get_inputs(self):
         self.finish()
-        t = _Touch(*struct.unpack("hhHHhhhhhhhhI", self.rd(REG_TOUCH_RAW_XY, 28)))
+        t = _Touch(*struct.unpack("hhHHhhhhhhhhI", self.rd(self.REG.TOUCH_RAW_XY, 28)))
 
-        r = _Tracker(*struct.unpack("HH", self.rd(REG_TRACKER, 4)))
+        r = _Tracker(*struct.unpack("HH", self.rd(self.REG.TRACKER, 4)))
 
         if not hasattr(self, "prev_touching"):
             self.prev_touching = False
@@ -238,16 +256,16 @@ class EVE2:
 
         try:
             with open(fn, "rb") as f:
-                self.wr(REG_TOUCH_TRANSFORM_A, f.read())
+                self.wr(self.REG.TOUCH_TRANSFORM_A, f.read())
         except FileNotFoundError:
-            self.cmd_dlstart()
-            self.Clear()
-            self.cmd_text(self.w // 2, self.h // 2, 34, OPT_CENTER, "Tap the dot")
-            self.cmd_calibrate(0)
-            self.finish()
-            self.cmd_dlstart()
+            self.CMD_DLSTART()
+            self.CLEAR()
+            self.CMD_TEXT(self.w // 2, self.h // 2, 34, OPT_CENTER, "Tap the dot")
+            self.CMD_CALIBRATE(0)
+            self.LIB_AwaitCoProEmpty()
+            self.CMD_DLSTART()
             with open(fn, "wb") as f:
-                f.write(self.rd(REG_TOUCH_TRANSFORM_A, 24))
+                f.write(self.rd(self.REG.TOUCH_TRANSFORM_A, 24))
 
     # Load from a file-like into the command buffer.
     def load(self, f):
@@ -263,630 +281,804 @@ class EVE2:
         return self.result()
 
     # Command used to setup LVDSTX registers.
-    def cmd_apbwrite(self, *args):
+    def CMD_APBWRITE(self, *args):
         self.cmd(0x63, 'II', args)
 
     # Setup the EVE registers to match the surface created.
     def panel(self, surface):
-        self.cmd_rendertarget(*surface)
-        self.Clear()
-        self.swap()
-        self.cmd_graphicsfinish()
+        self.CMD_RENDERTARGET(*surface)
+        self.CLEAR()
+        self.CMD_SWAP()
+        self.CMD_GRAPHICSFINISH()
+        self.LIB_AwaitCoProEmpty()
 
         (self.w, self.h) = (surface.w, surface.h)
 
         horcy = self.w + 180
         vercy = self.h + 45 # 1210-1280
-        self.cmd_regwrite(REG_GPIO, 0x80)
-        self.cmd_regwrite(REG_DISP, 1)
+        self.CMD_REGWRITE(self.REG.GPIO, 0x80)
+        self.CMD_REGWRITE(self.REG.DISP, 1)
 
-        self.cmd_regwrite(REG_HCYCLE, horcy)
-        self.cmd_regwrite(REG_HSIZE, self.w)
-        self.cmd_regwrite(REG_HOFFSET, 50)
-        self.cmd_regwrite(REG_HSYNC0, 0)
-        self.cmd_regwrite(REG_HSYNC1, 30)
+        self.CMD_REGWRITE(self.REG.HCYCLE, horcy)
+        self.CMD_REGWRITE(self.REG.HSIZE, self.w)
+        self.CMD_REGWRITE(self.REG.HOFFSET, 50)
+        self.CMD_REGWRITE(self.REG.HSYNC0, 0)
+        self.CMD_REGWRITE(self.REG.HSYNC1, 30)
 
-        self.cmd_regwrite(REG_VCYCLE, vercy)
-        self.cmd_regwrite(REG_VSIZE, self.h)
-        self.cmd_regwrite(REG_VOFFSET, 10)
-        self.cmd_regwrite(REG_VSYNC0, 0)
-        self.cmd_regwrite(REG_VSYNC1, 3)
+        self.CMD_REGWRITE(self.REG.VCYCLE, vercy)
+        self.CMD_REGWRITE(self.REG.VSIZE, self.h)
+        self.CMD_REGWRITE(self.REG.VOFFSET, 10)
+        self.CMD_REGWRITE(self.REG.VSYNC0, 0)
+        self.CMD_REGWRITE(self.REG.VSYNC1, 3)
 
-        self.cmd_regwrite(REG_PCLK_POL, 0)
+        self.CMD_REGWRITE(self.REG.PCLK_POL, 0)
 
         # 0: 1 pixel single // 1: 2 pixel single // 2: 2 pixel dual // 3: 4 pixel dual
         extsyncmode = 3
         TXPLLDiv = 0x03
-        self.cmd_apbwrite(REG_LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
-        self.cmd_apbwrite(REG_LVDSTX_EN, 7) # Enable PLL
+        self.CMD_APBWRITE(self.REG.LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
+        self.CMD_APBWRITE(self.REG.LVDSTX_EN, 7) # Enable PLL
 
-        self.cmd_regwrite(REG_SO_MODE, extsyncmode)
-        self.cmd_regwrite(REG_SO_SOURCE, surface.addr)
-        self.cmd_regwrite(REG_SO_FORMAT, surface.fmt)
-        self.cmd_regwrite(REG_SO_EN, 1)
+        self.CMD_REGWRITE(self.REG.SO_MODE, extsyncmode)
+        self.CMD_REGWRITE(self.REG.SO_SOURCE, surface.addr)
+        self.CMD_REGWRITE(self.REG.SO_FORMAT, surface.fmt)
+        self.CMD_REGWRITE(self.REG.SO_EN, 1)
 
-        self.finish()
+        self.LIB_AwaitCoProEmpty()
 
-    # cmd_animdraw(int32_t ch)
-    def cmd_animdraw(self, *args):
+    # FIFO_MAX = (_REG.CMDBUF_SIZE - 4) # Maximum reported free space in the EVE command FIFO
+
+    # Add commands to the co-processor buffer.
+    # It is only sent when flush is called or the buffer exceeds
+    # the size of the FIFO.
+    def cc(self, s):
+        assert (len(s) % 4) == 0
+        self.buf += s
+        assert (len(self.buf) % 4) == 0
+        # Flush the co-processor buffer to the EVE device.
+        n = len(self.buf)
+        if n >= self.FIFO_MAX:
+            chunk = min(self.FIFO_MAX, n)
+            self.cs(True)
+            self.write(self.buf[:chunk])
+            self.cs(False)
+            self.buf = self.buf[chunk:]
+
+    def register(self, sub):
+        self.buf = b''
+        getattr(sub, 'write') # Confirm that there is a write method
+
+    # Send the co-processor buffer to the EVE device.
+    def flush(self):
+        if (len(self.buf)):
+            self.cs(True)
+            self.write(self.buf)
+            self.cs(False)
+            self.buf = b''
+
+    # Send a 32-bit value to the EVE.
+    def c4(self, i):
+        self.cc(struct.pack("I", i))
+
+    # Send a 32-bit basic graphic command to the EVE.
+    def cmd0(self, num):
+        self.c4(0xffffff00 | num)
+
+    # Send a 32-bit basic graphic command and parameters to the EVE.
+    def cmd(self, num, fmt, args):
+        self.c4(0xffffff00 | num)
+        self.cc(struct.pack(fmt, *args))
+
+    # Send an arbirtary block of data to the co-processor buffer.
+    # This can cope with data sizes larger than the buffer.
+    def ram_cmd(self, s):
+        # Pad data to align
+        while len(s) % 4:
+            s += b'\x00'
+        # CLEAR currently stored buffer.
+        self.flush()
+        n = len(s)
+        while n > 0:
+            chunk = min((1024 * 15), n)
+            self.buf = s[:chunk]
+            self.flush()
+            s = s[chunk:]
+            n -= chunk
+
+    # The basic graphics instructions for DISPLAY Lists.
+    def ALPHA_FUNC(self, func,ref):
+        self.c4((9 << 24) | ((func & 7) << 8) | ((ref & 255)))
+    def BEGIN(self, prim):
+        self.c4((31 << 24) | ((prim & 15)))
+    def BITMAP_EXT_FORMAT(self, fmt):
+        self.c4((46 << 24) | (fmt & 65535))
+    def BITMAP_HANDLE(self, handle):
+        self.c4((5 << 24) | ((handle & 63)))
+    def BITMAP_LAYOUT(self, format,linestride,height):
+        self.c4((7 << 24) | ((format & 31) << 19) | ((linestride & 1023) << 9) | ((height & 511)))
+    def BITMAP_LAYOUT_H(self, linestride,height):
+        self.c4((40 << 24) | (((linestride) & 3) << 2) | (((height) & 3)))
+    def BITMAP_SIZE(self, filter,wrapx,wrapy,width,height):
+        self.c4((8 << 24) | ((filter & 1) << 20) | ((wrapx & 1) << 19) | ((wrapy & 1) << 18) | ((width & 511) << 9) | ((height & 511)))
+    def BITMAP_SIZE_H(self, width,height):
+        self.c4((41 << 24) | (((width) & 3) << 2) | (((height) & 3)))
+    def BITMAP_SOURCE(self, addr):
+        self.c4((1 << 24) | ((addr & 0xffffff)))
+    def BITMAP_SOURCE_H(self, addr):
+        self.c4((49 << 24) | ((addr & 0xff)))
+    def BITMAP_SWIZZLE(self, r, g, b, a):
+        self.c4((47 << 24) | ((r & 7) << 9) | ((g & 7) << 6) | ((b & 7) << 3) | ((a & 7)))
+    def BITMAP_TRANSFORM_A(self, p, a):
+        self.c4((21 << 24) | ((p & 1) << 17) | ((a & 131071)))
+    def BITMAP_TRANSFORM_B(self, p, b):
+        self.c4((22 << 24) | ((p & 1) << 17) | ((b & 131071)))
+    def BITMAP_TRANSFORM_C(self, c):
+        self.c4((23 << 24) | ((c & 16777215)))
+    def BITMAP_TRANSFORM_D(self, p, d):
+        self.c4((24 << 24) | ((p & 1) << 17) | ((d & 131071)))
+    def BITMAP_TRANSFORM_E(self, p, e):
+        self.c4((25 << 24) | ((p & 1) << 17) | ((e & 131071)))
+    def BITMAP_TRANSFORM_F(self, f):
+        self.c4((26 << 24) | ((f & 16777215)))
+    def BITMAP_ZORDER(self,o):
+        self.c4((51 << 24) | (o & 255))
+    def BLEND_FUNC(self, src,dst):
+        self.c4((11 << 24) | ((src & 7) << 3) | ((dst & 7)))
+    def CALL(self, dest):
+        self.c4((29 << 24) | ((dest & 65535)))
+    def CELL(self, cell):
+        self.c4((6 << 24) | ((cell & 127)))
+    def CLEAR_COLOR_A(self, alpha):
+        self.c4((15 << 24) | ((alpha & 255)))
+    def CLEAR_COLOR_RGB(self, red,green,blue):
+        self.c4((2 << 24) | ((red & 255) << 16) | ((green & 255) << 8) | ((blue & 255)))
+    def CLEAR_COLOR(self, c):
+        self.c4((2 << 24) | (c&0xffffff))
+    def CLEAR(self, c = 1,s = 1,t = 1):
+        self.c4((38 << 24) | ((c & 1) << 2) | ((s & 1) << 1) | ((t & 1)))
+    def CLEAR_STENCIL(self, s):
+        self.c4((17 << 24) | ((s & 255)))
+    def CLEAR_TAG(self, s):
+        self.c4((18 << 24) | ((s & 0xffffff)))
+    def COLOR_A(self, alpha):
+        self.c4((16 << 24) | ((alpha & 255)))
+    def COLOR_MASK(self, r,g,b,a):
+        self.c4((32 << 24) | ((r & 1) << 3) | ((g & 1) << 2) | ((b & 1) << 1) | ((a & 1)))
+    def COLOR_RGB(self, red,green,blue):
+        self.c4((4 << 24) | ((red & 255) << 16) | ((green & 255) << 8) | ((blue & 255)))
+    def COLOR(self, c):
+        self.c4((4 << 24) | (c&0xffffff))
+    def DISPLAY(self):
+        self.c4((0 << 24))
+    def END(self):
+        self.c4((33 << 24))
+    def JUMP(self, dest):
+        self.c4((30 << 24) | ((dest & 65535)))
+    def LINE_WIDTH(self, width):
+        self.c4((14 << 24) | ((int(8 * width) & 4095)))
+    def MACRO(self, m):
+        self.c4((37 << 24) | ((m & 1)))
+    def NOP(self):
+        self.c4((45 << 24))
+    def PALETTE_SOURCE(self, addr):
+        self.c4((42 << 24) | (((addr) & 4194303)))
+    def PALETTE_SOURCE_H(self, addr):
+        self.c4((50 << 24) | (((addr >> 24) & 255)))
+    def POINT_SIZE(self, size):
+        self.c4((13 << 24) | ((int(8 * size) & 8191)))
+    def REGION(self,y,h,dest):
+        self.c4((52 << 24) | ((y & 63) << 18) | ((h & 63 ) << 12) | (dest & 4095))
+    def RESTORE_CONTEXT(self):
+        self.c4((35 << 24))
+    def RETURN(self):
+        self.c4((36 << 24))
+    def SAVE_CONTEXT(self):
+        self.c4((34 << 24))
+    def SCISSOR_SIZE(self, width,height):
+        self.c4((28 << 24) | ((width & 4095) << 12) | ((height & 4095)))
+    def SCISSOR_XY(self, x,y):
+        self.c4((27 << 24) | ((x & 2047) << 11) | ((y & 2047)))
+    def STENCIL_FUNC(self, func,ref,mask):
+        self.c4((10 << 24) | ((func & 7) << 16) | ((ref & 255) << 8) | ((mask & 255)))
+    def STENCIL_MASK(self, mask):
+        self.c4((19 << 24) | ((mask & 255)))
+    def STENCIL_OP(self, sfail,spass):
+        self.c4((12 << 24) | ((sfail & 7) << 3) | ((spass & 7)))
+    def TAG_MASK(self, mask):
+        self.c4((20 << 24) | ((mask & 1)))
+    def TAG(self, s):
+        self.c4((3 << 24) | ((s & 0xffffff)))
+    def VERTEX_FORMAT(self, frac):
+        self.c4((39 << 24) | (frac & 7))
+    def VERTEX2F(self, x, y):
+        self.c4(0x40000000 | ((int(x) & 32767) << 15) | (int(y) & 32767))
+    def VERTEX2II(self, x, y, handle = 0, cell = 0):
+        self.c4((2 << 30) | ((int(x) & 511) << 21) | ((int(y) & 511) << 12) | ((handle & 31) << 7) | ((cell & 127)))
+    def VERTEX_TRANSLATE_X(self, x):
+        self.c4((43 << 24) | (((int(16 * x)) & 131071)))
+    def VERTEX_TRANSLATE_Y(self, y):
+        self.c4((44 << 24) | (((int(16 * y)) & 131071)))
+
+    # CMD_ANIMDRAW(int32_t ch)
+    def CMD_ANIMDRAW(self, *args):
         self.cmd(0x4f, 'i', args)
 
-    # cmd_animframe(int16_t x, int16_t y, uint32_t aoptr, uint32_t frame)
-    def cmd_animframe(self, *args):
+    # CMD_ANIMFRAME(int16_t x, int16_t y, uint32_t aoptr, uint32_t frame)
+    def CMD_ANIMFRAME(self, *args):
         self.cmd(0x5e, 'hhII', args)
 
-    # cmd_animstart(int32_t ch, uint32_t aoptr, uint32_t loop)
-    def cmd_animstart(self, *args):
+    # CMD_ANIMSTART(int32_t ch, uint32_t aoptr, uint32_t loop)
+    def CMD_ANIMSTART(self, *args):
         self.cmd(0x5f, 'iII', args)
 
-    # cmd_animstop(int32_t ch)
-    def cmd_animstop(self, *args):
+    # CMD_ANIMSTOP(int32_t ch)
+    def CMD_ANIMSTOP(self, *args):
         self.cmd(0x4d, 'i', args)
 
-    # cmd_animxy(int32_t ch, int16_t x, int16_t y)
-    def cmd_animxy(self, *args):
+    # CMD_ANIMXY(int32_t ch, int16_t x, int16_t y)
+    def CMD_ANIMXY(self, *args):
         self.cmd(0x4e, 'ihh', args)
 
-    # cmd_append(uint32_t ptr, uint32_t num)
-    def cmd_append(self, *args):
+    # CMD_APPEND(uint32_t ptr, uint32_t num)
+    def CMD_APPEND(self, *args):
         self.cmd(0x1c, 'II', args)
 
-    # cmd_appendf(uint32_t ptr, uint32_t num)
-    def cmd_appendf(self, *args):
+    # CMD_APPENDF(uint32_t ptr, uint32_t num)
+    def CMD_APPENDF(self, *args):
         self.cmd(0x52, 'II', args)
 
-    # cmd_arc(int16_t x, int16_t y, uint16_t r0, uint16_t r1, uint16_t a0, uint16_t a1)
-    def cmd_arc(self, x, y, r0, r1, a0, a1):
+    # CMD_ARC(int16_t x, int16_t y, uint16_t r0, uint16_t r1, uint16_t a0, uint16_t a1)
+    def CMD_ARC(self, x, y, r0, r1, a0, a1):
         self.cmd(0x87, 'hhHHHH', (x, y, r0, r1, furmans(a0), furmans(a1)))
 
-    # cmd_bgcolor(uint32_t c)
-    def cmd_bgcolor(self, *args):
+    # CMD_BGCOLOR(uint32_t c)
+    def CMD_BGCOLOR(self, *args):
         self.cmd(0x07, 'I', args)
 
-    # cmd_bitmap_transform(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2, uint16_t result)
-    def cmd_bitmap_transform(self, *args):
+    # CMD_BITMAP_TRANSFORM(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2, uint16_t result)
+    def CMD_BITMAP_TRANSFORM(self, *args):
         self.cmd(0x1f, 'iiiiiiiiiiiiHH', args + (0,))
 
-    # cmd_button(int16_t x, int16_t y, int16_t w, int16_t h, int16_t font, uint16_t options, const char* s)
-    def cmd_button(self, *args):
+    # CMD_BUTTON(int16_t x, int16_t y, int16_t w, int16_t h, int16_t font, uint16_t options, const char* s)
+    def CMD_BUTTON(self, *args):
         self.cmd(0x0b, 'hhhhhH', args[:6])
         self.fstring(args[6:])
 
-    # cmd_calibrate(uint32_t result)
-    def cmd_calibrate(self, *args):
+    # CMD_CALIBRATE(uint32_t result)
+    def CMD_CALIBRATE(self, *args):
         self.cmd0(0x13)
         return self.result()
 
-    # cmd_calibratesub(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t result)
-    def cmd_calibratesub(self, *args):
+    # CMD_CALIBRATESUB(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t result)
+    def CMD_CALIBRATESUB(self, *args):
         self.cmd(0x56, 'HHHHI', args)
 
-    # cmd_calllist(uint32_t a)
-    def cmd_calllist(self, *args):
+    # CMD_CALLLIST(uint32_t a)
+    def CMD_CALLLIST(self, *args):
         self.cmd(0x5b, 'I', args)
 
-    # cmd_cgradient(uint32_t shape, int16_t x, int16_t y, int16_t w, int16_t h, uint32_t rgb0, uint32_t rgb1)
-    def cmd_cgradient(self, *args):
+    # CMD_CGRADIENT(uint32_t shape, int16_t x, int16_t y, int16_t w, int16_t h, uint32_t rgb0, uint32_t rgb1)
+    def CMD_CGRADIENT(self, *args):
         self.cmd(0x8a, 'IhhhhII', args)
 
-    # cmd_clock(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t h, uint16_t m, uint16_t s, uint16_t ms)
-    def cmd_clock(self, *args):
+    # CMD_CLOCK(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t h, uint16_t m, uint16_t s, uint16_t ms)
+    def CMD_CLOCK(self, *args):
         self.cmd(0x12, 'hhhHHHHH', args)
 
-    # cmd_coldstart()
-    def cmd_coldstart(self, *args):
+    # CMD_COLDSTART()
+    def CMD_COLDSTART(self, *args):
         self.cmd0(0x2e)
 
-    # cmd_copylist(uint32_t dst)
-    def cmd_copylist(self, *args):
+    # CMD_COPYLIST(uint32_t dst)
+    def CMD_COPYLIST(self, *args):
         self.cmd(0x88, 'I', args)
 
-    # cmd_ddrshutdown()
-    def cmd_ddrshutdown(self, *args):
+    # CMD_DDRSHUTDOWN()
+    def CMD_DDRSHUTDOWN(self, *args):
         self.cmd0(0x65)
 
-    # cmd_ddrstartup()
-    def cmd_ddrstartup(self, *args):
+    # CMD_DDRSTARTUP()
+    def CMD_DDRSTARTUP(self, *args):
         self.cmd0(0x66)
 
-    # cmd_dial(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t val)
-    def cmd_dial(self, x, y, r, options, val):
+    # CMD_DIAL(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t val)
+    def CMD_DIAL(self, x, y, r, options, val):
         self.cmd(0x29, "hhhHI", (x, y, r, options, furmans(val)))
 
-    # cmd_dlstart()
-    def cmd_dlstart(self, *args):
+    # CMD_DLSTART()
+    def CMD_DLSTART(self, *args):
         self.cmd0(0x00)
 
-    # cmd_enableregion(uint32_t en)
-    def cmd_enableregion(self, *args):
+    # CMD_ENABLEREGION(uint32_t en)
+    def CMD_ENABLEREGION(self, *args):
         self.cmd(0x7e, 'I', args)
 
-    # cmd_endlist()
-    def cmd_endlist(self, *args):
+    # CMD_ENDLIST()
+    def CMD_ENDLIST(self, *args):
         self.cmd0(0x5d)
 
-    # cmd_fence()
-    def cmd_fence(self, *args):
+    # CMD_FENCE()
+    def CMD_FENCE(self, *args):
         self.cmd0(0x68)
 
-    # cmd_fgcolor(uint32_t c)
-    def cmd_fgcolor(self, *args):
+    # CMD_FGCOLOR(uint32_t c)
+    def CMD_FGCOLOR(self, *args):
         self.cmd(0x08, 'I', args)
 
-    # cmd_fillwidth(uint32_t s)
-    def cmd_fillwidth(self, *args):
+    # CMD_FILLWIDTH(uint32_t s)
+    def CMD_FILLWIDTH(self, *args):
         self.cmd(0x51, 'I', args)
 
-    # cmd_flashattach()
-    def cmd_flashattach(self, *args):
+    # CMD_FLASHATTACH()
+    def CMD_FLASHATTACH(self, *args):
         self.cmd0(0x43)
 
-    # cmd_flashdetach()
-    def cmd_flashdetach(self, *args):
+    # CMD_FLASHDETACH()
+    def CMD_FLASHDETACH(self, *args):
         self.cmd0(0x42)
 
-    # cmd_flasherase()
-    def cmd_flasherase(self, *args):
+    # CMD_FLASHERASE()
+    def CMD_FLASHERASE(self, *args):
         self.cmd0(0x3e)
 
-    # cmd_flashfast(uint32_t result)
-    def cmd_flashfast(self):
+    # CMD_FLASHFAST(uint32_t result)
+    def CMD_FLASHFAST(self):
         return self.cmdr(0x44, "", ())
 
-    # cmd_flashprogram(uint32_t dest, uint32_t src, uint32_t num)
-    def cmd_flashprogram(self, *args):
+    # CMD_FLASHPROGRAM(uint32_t dest, uint32_t src, uint32_t num)
+    def CMD_FLASHPROGRAM(self, *args):
         self.cmd(0x64, 'III', args)
 
-    # cmd_flashread(uint32_t dest, uint32_t src, uint32_t num)
-    def cmd_flashread(self, *args):
+    # CMD_FLASHREAD(uint32_t dest, uint32_t src, uint32_t num)
+    def CMD_FLASHREAD(self, *args):
         self.cmd(0x40, 'III', args)
 
-    # cmd_flashsource(uint32_t ptr)
-    def cmd_flashsource(self, *args):
+    # CMD_FLASHSOURCE(uint32_t ptr)
+    def CMD_FLASHSOURCE(self, *args):
         self.cmd(0x48, 'I', args)
 
-    # cmd_flashspidesel()
-    def cmd_flashspidesel(self, *args):
+    # CMD_FLASHSPIDESEL()
+    def CMD_FLASHSPIDESEL(self, *args):
         self.cmd0(0x45)
 
-    # cmd_flashspirx(uint32_t ptr, uint32_t num)
-    def cmd_flashspirx(self, *args):
+    # CMD_FLASHSPIRX(uint32_t ptr, uint32_t num)
+    def CMD_FLASHSPIRX(self, *args):
         self.cmd(0x47, 'II', args)
 
-    # cmd_flashspitx(uint32_t num!)
-    def cmd_flashspitx(self, *args):
+    # CMD_FLASHSPITX(uint32_t num!)
+    def CMD_FLASHSPITX(self, *args):
         self.cmd(0x46, 'I', args)
 
-    # cmd_flashupdate(uint32_t dest, uint32_t src, uint32_t num)
-    def cmd_flashupdate(self, *args):
+    # CMD_FLASHUPDATE(uint32_t dest, uint32_t src, uint32_t num)
+    def CMD_FLASHUPDATE(self, *args):
         self.cmd(0x41, 'III', args)
 
-    # cmd_flashwrite(uint32_t ptr, uint32_t num!)
-    def cmd_flashwrite(self, *args):
+    # CMD_FLASHWRITE(uint32_t ptr, uint32_t num!)
+    def CMD_FLASHWRITE(self, *args):
         self.cmd(0x3f, 'II', args)
 
-    # cmd_fsdir(uint32_t dst, uint32_t num, const char* path, uint32_t result)
-    def cmd_fsdir(self, dst, num, path):
+    # CMD_FSDIR(uint32_t dst, uint32_t num, const char* path, uint32_t result)
+    def CMD_FSDIR(self, dst, num, path):
         self.cmd(0x8e, 'II', (dst, num))
         self.cstring(path)
         return self.result()
 
-    # cmd_fsoptions(uint32_t options)
-    def cmd_fsoptions(self, *args):
+    # CMD_FSOPTIONS(uint32_t options)
+    def CMD_FSOPTIONS(self, *args):
         self.cmd(0x6d, 'I', args)
 
-    # cmd_fsread(uint32_t dst, const char* filename, uint32_t result)
-    def cmd_fsread(self, dst, filename):
+    # CMD_FSREAD(uint32_t dst, const char* filename, uint32_t result)
+    def CMD_FSREAD(self, dst, filename):
         self.cmd(0x71, 'I', (dst,))
         self.cstring(filename)
         return self.result()
 
-    # cmd_fssize(const char* filename, uint32_t size)
-    def cmd_fssize(self, filename):
+    # CMD_FSSIZE(const char* filename, uint32_t size)
+    def CMD_FSSIZE(self, filename):
         self.cmd0(0x80)
         self.cstring(filename)
         return self.result()
 
-    # cmd_fssource(const char* filename, uint32_t result)
-    def cmd_fssource(self, filename):
+    # CMD_FSSOURCE(const char* filename, uint32_t result)
+    def CMD_FSSOURCE(self, filename):
         self.cmd0(0x7f)
         self.cstring(filename)
         return self.result()
 
-    # cmd_gauge(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t major, uint16_t minor, uint16_t val, uint16_t range)
-    def cmd_gauge(self, *args):
+    # CMD_GAUGE(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t major, uint16_t minor, uint16_t val, uint16_t range)
+    def CMD_GAUGE(self, *args):
         self.cmd(0x11, 'hhhHHHHH', args)
 
-    # cmd_getimage(uint32_t source, uint32_t fmt, uint32_t w, uint32_t h, uint32_t palette)
-    def cmd_getimage(self, *args):
+    # CMD_GETIMAGE(uint32_t source, uint32_t fmt, uint32_t w, uint32_t h, uint32_t palette)
+    def CMD_GETIMAGE(self, *args):
         self.cmd(0x58, 'IIIII', (0,0,0,0,0))
         return self.previous("IIiiI")
 
-    # cmd_getmatrix(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f)
-    def cmd_getmatrix(self):
+    # CMD_GETMATRIX(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f)
+    def CMD_GETMATRIX(self):
         self.cmd(0x2f, 'iiiiii', (0,0,0,0,0,0))
         return tuple([x/0x10000 for x in self.previous("6i")])
 
-    # cmd_getprops(uint32_t ptr, uint32_t w, uint32_t h)
-    def cmd_getprops(self):
+    # CMD_GETPROPS(uint32_t ptr, uint32_t w, uint32_t h)
+    def CMD_GETPROPS(self):
         self.cmd(0x22, 'III', (0,0,0))
         return self.previous("Iii")
 
-    # cmd_getptr(uint32_t result)
-    def cmd_getptr(self):
+    # CMD_GETPTR(uint32_t result)
+    def CMD_GETPTR(self):
         self.cmd(0x20, 'I', (0,))
         return self.previous()
 
-    # cmd_glow(int16_t x, int16_t y, int16_t w, int16_t h)
-    def cmd_glow(self, *args):
+    # CMD_GLOW(int16_t x, int16_t y, int16_t w, int16_t h)
+    def CMD_GLOW(self, *args):
         self.cmd(0x8b, 'hhhh', args)
 
-    # cmd_gradcolor(uint32_t c)
-    def cmd_gradcolor(self, *args):
+    # CMD_GRADCOLOR(uint32_t c)
+    def CMD_GRADCOLOR(self, *args):
         self.cmd(0x30, 'I', args)
 
-    # cmd_gradient(int16_t x0, int16_t y0, uint32_t rgb0, int16_t x1, int16_t y1, uint32_t rgb1)
-    def cmd_gradient(self, *args):
+    # CMD_GRADIENT(int16_t x0, int16_t y0, uint32_t rgb0, int16_t x1, int16_t y1, uint32_t rgb1)
+    def CMD_GRADIENT(self, *args):
         self.cmd(0x09, 'hhIhhI', args)
 
-    # cmd_gradienta(int16_t x0, int16_t y0, uint32_t argb0, int16_t x1, int16_t y1, uint32_t argb1)
-    def cmd_gradienta(self, *args):
+    # CMD_GRADIENTA(int16_t x0, int16_t y0, uint32_t argb0, int16_t x1, int16_t y1, uint32_t argb1)
+    def CMD_GRADIENTA(self, *args):
         self.cmd(0x50, 'hhIhhI', args)
 
-    # cmd_graphicsfinish()
-    def cmd_graphicsfinish(self, *args):
+    # CMD_GRAPHICSFINISH()
+    def CMD_GRAPHICSFINISH(self, *args):
         self.cmd0(0x6b)
 
-    # cmd_i2sstartup(uint32_t freq)
-    def cmd_i2sstartup(self, *args):
+    # CMD_I2SSTARTUP(uint32_t freq)
+    def CMD_I2SSTARTUP(self, *args):
         self.cmd(0x69, 'I', args)
 
-    # cmd_inflate(uint32_t ptr, uint32_t options!)
-    def cmd_inflate(self, *args):
+    # CMD_INFLATE(uint32_t ptr, uint32_t options!)
+    def CMD_INFLATE(self, *args):
         self.cmd(0x4a, 'II', args)
 
-    # cmd_interrupt(uint32_t ms)
-    def cmd_interrupt(self, *args):
+    # CMD_INTERRUPT(uint32_t ms)
+    def CMD_INTERRUPT(self, *args):
         self.cmd(0x02, 'I', args)
 
-    # cmd_keys(int16_t x, int16_t y, int16_t w, int16_t h, int16_t font, uint16_t options, const char* s)
-    def cmd_keys(self, *args):
+    # CMD_KEYS(int16_t x, int16_t y, int16_t w, int16_t h, int16_t font, uint16_t options, const char* s)
+    def CMD_KEYS(self, *args):
         self.cmd(0x0c, 'hhhhhH', args[:6])
         self.fstring(args[6:])
 
-    # cmd_loadasset(uint32_t ptr, uint32_t options!)
-    def cmd_loadasset(self, *args):
+    # CMD_LOADASSET(uint32_t ptr, uint32_t options!)
+    def CMD_LOADASSET(self, *args):
         self.cmd(0x81, 'II', args)
 
-    # cmd_loadidentity()
-    def cmd_loadidentity(self, *args):
+    # CMD_LOADIDENTITY()
+    def CMD_LOADIDENTITY(self, *args):
         self.cmd0(0x23)
 
-    # cmd_loadimage(uint32_t ptr, uint32_t options!)
-    def cmd_loadimage(self, *args):
+    # CMD_LOADIMAGE(uint32_t ptr, uint32_t options!)
+    def CMD_LOADIMAGE(self, *args):
         self.cmd(0x21, 'II', args)
 
-    # cmd_loadwav(uint32_t dst, uint32_t options!)
-    def cmd_loadwav(self, *args):
+    # CMD_LOADWAV(uint32_t dst, uint32_t options!)
+    def CMD_LOADWAV(self, *args):
         self.cmd(0x85, 'II', args)
 
-    # cmd_logo()
-    def cmd_logo(self, *args):
+    # CMD_LOGO()
+    def CMD_LOGO(self, *args):
         self.cmd0(0x2d)
 
-    # cmd_mediafifo(uint32_t ptr, uint32_t size)
-    def cmd_mediafifo(self, *args):
+    # CMD_MEDIAFIFO(uint32_t ptr, uint32_t size)
+    def CMD_MEDIAFIFO(self, *args):
         self.cmd(0x34, 'II', args)
 
-    # cmd_memcpy(uint32_t dest, uint32_t src, uint32_t num)
-    def cmd_memcpy(self, *args):
+    # CMD_MEMCPY(uint32_t dest, uint32_t src, uint32_t num)
+    def CMD_MEMCPY(self, *args):
         self.cmd(0x1b, 'III', args)
 
-    # cmd_memcrc(uint32_t ptr, uint32_t num, uint32_t result)
-    def cmd_memcrc(self, *args):
+    # CMD_MEMCRC(uint32_t ptr, uint32_t num, uint32_t result)
+    def CMD_MEMCRC(self, *args):
         return self.cmdr(0x16, 'II', args)
 
-    # cmd_memset(uint32_t ptr, uint32_t value, uint32_t num)
-    def cmd_memset(self, *args):
+    # CMD_MEMSET(uint32_t ptr, uint32_t value, uint32_t num)
+    def CMD_MEMSET(self, *args):
         self.cmd(0x19, 'III', args)
 
-    # cmd_memwrite(uint32_t ptr, uint32_t num!)
-    def cmd_memwrite(self, *args):
+    # CMD_MEMWRITE(uint32_t ptr, uint32_t num!)
+    def CMD_MEMWRITE(self, *args):
         self.cmd(0x18, 'II', args)
 
-    # cmd_memzero(uint32_t ptr, uint32_t num)
-    def cmd_memzero(self, *args):
+    # CMD_MEMZERO(uint32_t ptr, uint32_t num)
+    def CMD_MEMZERO(self, *args):
         self.cmd(0x1a, 'II', args)
 
-    # cmd_newlist(uint32_t a)
-    def cmd_newlist(self, *args):
+    # CMD_NEWLIST(uint32_t a)
+    def CMD_NEWLIST(self, *args):
         self.cmd(0x5c, 'I', args)
 
-    # cmd_nop()
-    def cmd_nop(self, *args):
+    # CMD_NOP()
+    def CMD_NOP(self, *args):
         self.cmd0(0x53)
 
-    # cmd_number(int16_t x, int16_t y, int16_t font, uint16_t options, int32_t n)
-    def cmd_number(self, *args):
+    # CMD_NUMBER(int16_t x, int16_t y, int16_t font, uint16_t options, int32_t n)
+    def CMD_NUMBER(self, *args):
         self.cmd(0x2a, 'hhhHi', args)
 
-    # cmd_playvideo(uint32_t options!)
-    def cmd_playvideo(self, *args):
+    # CMD_PLAYVIDEO(uint32_t options!)
+    def CMD_PLAYVIDEO(self, *args):
         self.cmd(0x35, 'I', args)
 
-    # cmd_playwav(uint32_t options!)
-    def cmd_playwav(self, *args):
+    # CMD_PLAYWAV(uint32_t options!)
+    def CMD_PLAYWAV(self, *args):
         self.cmd(0x79, 'I', args)
 
-    # cmd_progress(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t options, uint16_t val, uint16_t range)
-    def cmd_progress(self, *args):
+    # CMD_PROGRESS(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t options, uint16_t val, uint16_t range)
+    def CMD_PROGRESS(self, *args):
         self.cmd(0x0d, 'hhhhHHHH', args + (0,))
 
-    # cmd_regread(uint32_t ptr, uint32_t result)
-    def cmd_regread(self, *args):
+    # CMD_REGREAD(uint32_t ptr, uint32_t result)
+    def CMD_REGREAD(self, *args):
         return self.cmdr(0x17, 'I', args)
 
-    # cmd_regwrite(uint32_t dst, uint32_t value)
-    def cmd_regwrite(self, *args):
+    # CMD_REGWRITE(uint32_t dst, uint32_t value)
+    def CMD_REGWRITE(self, *args):
         self.cmd(0x86, 'II', args)
 
-    # cmd_rendertarget(uint32_t a, uint16_t fmt, int16_t w, int16_t h)
-    def cmd_rendertarget(self, *args):
+    # CMD_RENDERTARGET(uint32_t a, uint16_t fmt, int16_t w, int16_t h)
+    def CMD_RENDERTARGET(self, *args):
         self.cmd(0x8d, 'IHhhH', args + (0,))
 
-    # cmd_resetfonts()
-    def cmd_resetfonts(self, *args):
+    # CMD_RESETFONTS()
+    def CMD_RESETFONTS(self, *args):
         self.cmd0(0x4c)
 
-    # cmd_restorecontext()
-    def cmd_restorecontext(self, *args):
+    # CMD_RESTORECONTEXT()
+    def CMD_RESTORECONTEXT(self, *args):
         self.cmd0(0x7d)
 
-    # cmd_result(uint32_t dst)
-    def cmd_result(self, *args):
+    # CMD_RESULT(uint32_t dst)
+    def CMD_RESULT(self, *args):
         self.cmd(0x89, 'I', args)
 
-    # cmd_return()
-    def cmd_return(self, *args):
+    # CMD_RETURN()
+    def CMD_RETURN(self, *args):
         self.cmd0(0x5a)
 
-    # cmd_romfont(uint32_t font, uint32_t romslot)
-    def cmd_romfont(self, *args):
+    # CMD_ROMFONT(uint32_t font, uint32_t romslot)
+    def CMD_ROMFONT(self, *args):
         self.cmd(0x39, 'II', args)
 
-    # cmd_rotate(int32_t a)
-    def cmd_rotate(self, a):
+    # CMD_ROTATE(int32_t a)
+    def CMD_ROTATE(self, a):
         self.cmd(0x26, 'i', (furmans(a),))
 
-    # cmd_rotatearound(int32_t x, int32_t y, int32_t a, int32_t s)
-    def cmd_rotatearound(self, *args):
+    # CMD_ROTATEAROUND(int32_t x, int32_t y, int32_t a, int32_t s)
+    def CMD_ROTATEAROUND(self, *args):
         self.cmd(0x4b, 'iiii', args)
 
-    # cmd_runanim(uint32_t waitmask, uint32_t play)
-    def cmd_runanim(self, *args):
+    # CMD_RUNANIM(uint32_t waitmask, uint32_t play)
+    def CMD_RUNANIM(self, *args):
         self.cmd(0x60, 'II', args)
 
-    # cmd_savecontext()
-    def cmd_savecontext(self, *args):
+    # CMD_SAVECONTEXT()
+    def CMD_SAVECONTEXT(self, *args):
         self.cmd0(0x7c)
 
-    # cmd_scale(int32_t sx, int32_t sy)
-    def cmd_scale(self, sx, sy):
+    # CMD_SCALE(int32_t sx, int32_t sy)
+    def CMD_SCALE(self, sx, sy):
         self.cmd(0x25, 'ii', (f16(sx), f16(sy)))
 
-    # cmd_screensaver()
-    def cmd_screensaver(self, *args):
+    # CMD_SCREENSAVER()
+    def CMD_SCREENSAVER(self, *args):
         self.cmd0(0x2b)
 
-    # cmd_scrollbar(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t options, uint16_t val, uint16_t size, uint16_t range)
-    def cmd_scrollbar(self, *args):
+    # CMD_SCROLLBAR(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t options, uint16_t val, uint16_t size, uint16_t range)
+    def CMD_SCROLLBAR(self, *args):
         self.cmd(0x0f, 'hhhhHHHH', args)
 
-    # cmd_sdattach(uint32_t options, uint32_t result)
-    def cmd_sdattach(self, *args):
+    # CMD_SDATTACH(uint32_t options, uint32_t result)
+    def CMD_SDATTACH(self, *args):
         return self.cmdr(0x6e, 'II', args)
 
-    # cmd_sdblockread(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
-    def cmd_sdblockread(self, *args):
+    # CMD_SDBLOCKREAD(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
+    def CMD_SDBLOCKREAD(self, *args):
         return self.cmdr(0x6f, 'III', args)
 
-    # cmd_setbase(uint32_t b)
-    def cmd_setbase(self, *args):
+    # CMD_SETBASE(uint32_t b)
+    def CMD_SETBASE(self, *args):
         self.cmd(0x33, 'I', args)
 
-    # cmd_setbitmap(uint32_t source, uint16_t fmt, uint16_t w, uint16_t h)
-    def cmd_setbitmap(self, *args):
+    # CMD_SETBITMAP(uint32_t source, uint16_t fmt, uint16_t w, uint16_t h)
+    def CMD_SETBITMAP(self, *args):
         self.cmd(0x3d, 'IHHHH', args + (0,))
 
-    # cmd_setfont(uint32_t font, uint32_t ptr, uint32_t firstchar)
-    def cmd_setfont(self, *args):
+    # CMD_SETFONT(uint32_t font, uint32_t ptr, uint32_t firstchar)
+    def CMD_SETFONT(self, *args):
         self.cmd(0x36, 'III', args)
 
-    # cmd_setmatrix()
-    def cmd_setmatrix(self, *args):
+    # CMD_SETMATRIX()
+    def CMD_SETMATRIX(self, *args):
         self.cmd0(0x27)
 
-    # cmd_setrotate(uint32_t r)
-    def cmd_setrotate(self, *args):
+    # CMD_SETROTATE(uint32_t r)
+    def CMD_SETROTATE(self, *args):
         self.cmd(0x31, 'I', args)
 
-    # cmd_setscratch(uint32_t handle)
-    def cmd_setscratch(self, *args):
+    # CMD_SETSCRATCH(uint32_t handle)
+    def CMD_SETSCRATCH(self, *args):
         self.cmd(0x37, 'I', args)
 
-    # cmd_sketch(int16_t x, int16_t y, uint16_t w, uint16_t h, uint32_t ptr, uint16_t format)
-    def cmd_sketch(self, *args):
+    # CMD_SKETCH(int16_t x, int16_t y, uint16_t w, uint16_t h, uint32_t ptr, uint16_t format)
+    def CMD_SKETCH(self, *args):
         self.cmd(0x2c, 'hhHHIHH', args + (0,))
 
-    # cmd_skipcond(uint32_t a, uint32_t func, uint32_t ref, uint32_t mask, uint32_t num)
-    def cmd_skipcond(self, *args):
+    # CMD_SKIPCOND(uint32_t a, uint32_t func, uint32_t ref, uint32_t mask, uint32_t num)
+    def CMD_SKIPCOND(self, *args):
         self.cmd(0x8c, 'IIIII', args)
 
-    # cmd_slider(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t options, uint16_t val, uint16_t range)
-    def cmd_slider(self, *args):
+    # CMD_SLIDER(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t options, uint16_t val, uint16_t range)
+    def CMD_SLIDER(self, *args):
         self.cmd(0x0e, 'hhhhHHHH', args + (0,))
 
-    # cmd_snapshot(uint32_t ptr)
-    def cmd_snapshot(self, *args):
+    # CMD_SNAPSHOT(uint32_t ptr)
+    def CMD_SNAPSHOT(self, *args):
         self.cmd(0x1d, 'I', args)
 
-    # cmd_spinner(int16_t x, int16_t y, uint16_t style, uint16_t scale)
-    def cmd_spinner(self, *args):
+    # CMD_SPINNER(int16_t x, int16_t y, uint16_t style, uint16_t scale)
+    def CMD_SPINNER(self, *args):
         self.cmd(0x14, 'hhHH', args)
 
-    # cmd_stop()
-    def cmd_stop(self, *args):
+    # CMD_STOP()
+    def CMD_STOP(self, *args):
         self.cmd0(0x15)
 
-    # cmd_swap()
-    def cmd_swap(self, *args):
+    # CMD_SWAP()
+    def CMD_SWAP(self, *args):
         self.cmd0(0x01)
 
-    # cmd_sync()
-    def cmd_sync(self, *args):
+    # CMD_SYNC()
+    def CMD_SYNC(self, *args):
         self.cmd0(0x3c)
 
-    # cmd_testcard()
-    def cmd_testcard(self, *args):
+    # CMD_TESTCARD()
+    def CMD_TESTCARD(self, *args):
         self.cmd0(0x57)
 
-    # cmd_text(int16_t x, int16_t y, int16_t font, uint16_t options, const char* s)
-    def cmd_text(self, *args):
+    # CMD_TEXT(int16_t x, int16_t y, int16_t font, uint16_t options, const char* s)
+    def CMD_TEXT(self, *args):
         self.cmd(0x0a, 'hhhH', args[:4])
         self.fstring(args[4:])
 
-    # cmd_textdim(uint32_t dimensions, int16_t font, uint16_t options, const char* s)
-    def cmd_textdim(self, *args):
+    # CMD_TEXTDIM(uint32_t dimensions, int16_t font, uint16_t options, const char* s)
+    def CMD_TEXTDIM(self, *args):
         self.cmd(0x84, 'IhH', args[:3])
         self.fstring(args[3:])
 
-    # cmd_toggle(int16_t x, int16_t y, int16_t w, int16_t font, uint16_t options, uint16_t state, const char* s)
-    def cmd_toggle(self, *args):
+    # CMD_TOGGLE(int16_t x, int16_t y, int16_t w, int16_t font, uint16_t options, uint16_t state, const char* s)
+    def CMD_TOGGLE(self, *args):
         self.cmd(0x10, "hhhhHH", args[0:6])
         label = (args[6].encode() + b'\xff' + args[7].encode())
         self.fstring((label,) + args[8:])
 
-    # cmd_track(int16_t x, int16_t y, int16_t w, int16_t h, int16_t tag)
-    def cmd_track(self, *args):
+    # CMD_TRACK(int16_t x, int16_t y, int16_t w, int16_t h, int16_t tag)
+    def CMD_TRACK(self, *args):
         self.cmd(0x28, 'hhhhhH', args + (0,))
 
-    # cmd_translate(int32_t tx, int32_t ty)
-    def cmd_translate(self, tx, ty):
+    # CMD_TRANSLATE(int32_t tx, int32_t ty)
+    def CMD_TRANSLATE(self, tx, ty):
         self.cmd(0x24, 'ii', (f16(tx), f16(ty)))
 
-    # cmd_videoframe(uint32_t dst, uint32_t ptr)
-    def cmd_videoframe(self, *args):
+    # CMD_VIDEOFRAME(uint32_t dst, uint32_t ptr)
+    def CMD_VIDEOFRAME(self, *args):
         self.cmd(0x3b, 'II', args)
 
-    # cmd_videostart(uint32_t options)
-    def cmd_videostart(self, *args):
+    # CMD_VIDEOSTART(uint32_t options)
+    def CMD_VIDEOSTART(self, *args):
         self.cmd(0x3a, 'I', args)
 
-    # cmd_wait(uint32_t us)
-    def cmd_wait(self, *args):
+    # CMD_WAIT(uint32_t us)
+    def CMD_WAIT(self, *args):
         self.cmd(0x59, 'I', args)
 
-    # cmd_waitchange(uint32_t a)
-    def cmd_waitchange(self, *args):
+    # CMD_WAITCHANGE(uint32_t a)
+    def CMD_WAITCHANGE(self, *args):
         self.cmd(0x67, 'I', args)
 
-    # cmd_waitcond(uint32_t a, uint32_t func, uint32_t ref, uint32_t mask)
-    def cmd_waitcond(self, *args):
+    # CMD_WAITCOND(uint32_t a, uint32_t func, uint32_t ref, uint32_t mask)
+    def CMD_WAITCOND(self, *args):
         self.cmd(0x78, 'IIII', args)
 
-    # cmd_watchdog(uint32_t init_val)
-    def cmd_watchdog(self, *args):
+    # CMD_WATCHDOG(uint32_t init_val)
+    def CMD_WATCHDOG(self, *args):
         self.cmd(0x83, 'I', args)
 
-    # PATCH commands
+    # Extension commands
 
-    # cmd_loadpatch(uint32_t options)
-    def cmd_loadpatch(self, *args):
+    # CMD_LOADPATCH(uint32_t options)
+    def CMD_LOADPATCH(self, *args):
         self.cmd(0x82, 'I', args)
 
-    # cmd_region(void)
-    def cmd_region(self, *args):
+    # CMD_REGION(void)
+    def CMD_REGION(self, *args):
         self.cmd0(0x8f)
 
-    # cmd_endregion(int16_t x, int16_t y, int16_t w, int16_t h)
-    def cmd_endregion(self, *args):
+    # CMD_ENDREGION(int16_t x, int16_t y, int16_t w, int16_t h)
+    def CMD_ENDREGION(self, *args):
         self.cmd(0x90, 'hhhh', args)
 
-    # cmd_sdblockwrite(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
-    def cmd_sdblockwrite(self, *args):
+    # CMD_SDBLOCKWRITE(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
+    def CMD_SDBLOCKWRITE(self, *args):
         return self.cmdr(0x70, 'III', args)
 
-    # cmd_fswrite (uint32_t dst, const char* filename, uint32_t result)
-    def cmd_fswrite(self, dst, filename):
+    # CMD_FSWRITE (uint32_t dst, const char* filename, uint32_t result)
+    def CMD_FSWRITE(self, dst, filename):
         self.cmd(0x93, 'I', (dst,))
         self.cstring(filename)
         return self.result()
 
-    # cmd_fsfile (uint32_t size, const char* filename, uint32_t result)
-    def cmd_fsfile(self, size, filename):
+    # CMD_FSFILE (uint32_t size, const char* filename, uint32_t result)
+    def CMD_FSFILE(self, size, filename):
         self.cmd(0x94, 'I', (size,))
         self.cstring(filename)
         return self.result()
 
-    # cmd_fssnapshot (uint32_t temp, const char* filename, uint32_t result)
-    def cmd_fssnapshot(self, temp, filename):
+    # CMD_FSSNAPSHOT (uint32_t temp, const char* filename, uint32_t result)
+    def CMD_FSSNAPSHOT(self, temp, filename):
         self.cmd(0x95, 'I', (temp,))
         self.cstring(filename)
         return self.result()
 
-    # cmd_fscropshot (uint32_t temp, const char* filename, uint32_t result)
-    def cmd_fscropshot(self, temp, filename, x, y, w, h):
+    # CMD_FSCROPSHOT (uint32_t temp, const char* filename, uint32_t result)
+    def CMD_FSCROPSHOT(self, temp, filename, x, y, w, h):
         self.cmd(0x95, 'I', (temp,))
         self.cstring(filename)
         self.cc(struct.pack('hhHH', x, y, w, h))
         return self.result()
 
-    # cmd_textscale(int16_t x, int16_t y, int16_t font, uint16_t options, uint32_t scale, const char* s)
-    def cmd_textscale(self, *args):
+    # CMD_TEXTSCALE(int16_t x, int16_t y, int16_t font, uint16_t options, uint32_t scale, const char* s)
+    def CMD_TEXTSCALE(self, *args):
         self.cmd(0x95, 'hhhHI', args[:5])
         self.fstring(args[5:])
 
-    # cmd_textangle(int16_t x, int16_t y, int16_t font, uint16_t options, uint32_t angle, const char* s)
-    def cmd_textangle(self, *args):
+    # CMD_TEXTANGLE(int16_t x, int16_t y, int16_t font, uint16_t options, uint32_t angle, const char* s)
+    def CMD_TEXTANGLE(self, *args):
         self.cmd(0x96, 'hhhHI', args[:5])
         self.fstring(args[5:])
 
-    # cmd_textticker(int16_t x, int16_t y, uint16_t w, uint16_t h, int16_t font, uint16_t options, uint32_t pos, const char* s)
-    def cmd_textticker(self, *args):
+    # CMD_TEXTTICKER(int16_t x, int16_t y, uint16_t w, uint16_t h, int16_t font, uint16_t options, uint32_t pos, const char* s)
+    def CMD_TEXTTICKER(self, *args):
         self.cmd(0x97, 'hhHHhHi', args[:7])
         self.fstring(args[7:])
 
-    # cmd_textsize(int16_t font, uint16_t options, const char* s, uint16_t w, uint16_t h)
-    def cmd_textsize(self, *args):
+    # CMD_TEXTSIZE(int16_t font, uint16_t options, const char* s, uint16_t w, uint16_t h)
+    def CMD_TEXTSIZE(self, *args):
         self.cmd(0xaa, 'hH', args[:2])
         self.fstring(args[2:])
         return self.result()
 
-    # cmd_keyboard(int16_t x, int16_t y, uint16_t w, uint16_t h, int16_t font, uint16_t options, const char* s)
-    def cmd_keyboard(self, *args):
+    # CMD_KEYBOARD(int16_t x, int16_t y, uint16_t w, uint16_t h, int16_t font, uint16_t options, const char* s)
+    def CMD_KEYBOARD(self, *args):
         self.cmd(0x9b, 'hhHHhH', args[:6])
         self.fstring(args[6:])
 
-    # cmd_memoryinit(uint32_t address, uint32_t size)
-    def cmd_memoryinit(self,*args):
+    # CMD_MEMORYINIT(uint32_t address, uint32_t size)
+    def CMD_MEMORYINIT(self,*args):
         self.cmd(0x9c, "II", args)
 
-    # cmd_memorymalloc(uint32_t size, uint32_t address)
-    def cmd_memorymalloc(self, *args):
+    # CMD_MEMORYMALLOC(uint32_t size, uint32_t address)
+    def CMD_MEMORYMALLOC(self, *args):
         return self.cmdr(0x9d, "I", args)
 
-    # cmd_memoryfree(uint32_t address, uint32_t size)
-    def cmd_memoryfree(self, *args):
+    # CMD_MEMORYFREE(uint32_t address, uint32_t size)
+    def CMD_MEMORYFREE(self, *args):
         return self.cmdr(0x9e, "I", args)
 
-    # cmd_memorybitmap(uint16_t fmt, uint16_t w, uint16_t h, uint16_t resv, uint32_t address)
-    def cmd_memorybitmap(self, *args):
+    # CMD_MEMORYBITMAP(uint16_t fmt, uint16_t w, uint16_t h, uint16_t resv, uint32_t address)
+    def CMD_MEMORYBITMAP(self, *args):
         return self.cmdr(0xa9, "HhhH", args)
 
-    # cmd_plotdraw(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)
-    def cmd_plotdraw(self, *args):
+    # CMD_PLOTDRAW(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)
+    def CMD_PLOTDRAW(self, *args):
         self.cmd(0xab, "IHHhhII", args)
 
-    # cmd_plotstream(uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale")
-    def cmd_plotstream(self, *args):
+    # CMD_PLOTSTREAM(uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale")
+    def CMD_PLOTSTREAM(self, *args):
         self.cmd(0xac, "HHhhII", args)

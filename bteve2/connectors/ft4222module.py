@@ -16,7 +16,8 @@ class EVE2(eve.EVE2):
     multi_mode = False
 
     def __init__(self):
-
+        print("Initialise FT4222 interface")
+        
         # Configure the first interface (IF/1) of the FTDI device as a SPI master
         try:
             # open 'device' with default description 'FT4222 A'
@@ -32,7 +33,6 @@ class EVE2(eve.EVE2):
 
         # also use gpio
         self.devB.gpio_Init(gpio0 = Dir.OUTPUT)
-        self.boot()
 
     def setup_flash(self):
         pass
@@ -88,7 +88,6 @@ class EVE2(eve.EVE2):
             self.devA.spiMaster_EndTransaction()
             a += n
             r += response
-            print(".", end="")
         return r
 
     def wr(self, a, s, inc=True):
@@ -136,7 +135,7 @@ class EVE2(eve.EVE2):
             exchange(bytes([0xFF, 0xEB, 0x08, 0x00, 0x00]), True)
             # Set DDR, JT and AUD in Boot Control
             exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]), True)
-            # Clear BootCfgEn
+            # CLEAR BootCfgEn
             exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]), True)
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]), True)
@@ -153,14 +152,14 @@ class EVE2(eve.EVE2):
             fault = False
             if 1 in bb:
                 # Wait for the REG_ID register to be set to 0x7c to
-                while self.rd32(eve.REG_ID) != 0x7c:
+                while self.rd32(eve.REG.ID) != 0x7c:
                     pass
-                while not fault and self.rd32(eve.REG_BOOT_STATUS) != 0x522e2e2e:
+                while not fault and self.rd32(eve.REG.BOOT_STATUS) != 0x522e2e2e:
                     fault = 1e-9 * (time.monotonic_ns() - t0) > 0.1
                 if fault:
-                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.REG_BOOT_STATUS):08x}, retrying...]")
+                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.BOOT_STATUS):08x}, retrying...]")
                     continue
-                actual = self.rd32(eve.REG_FREQUENCY)
+                actual = self.rd32(eve.REG.FREQUENCY)
                 if actual != FREQUENCY:
                     print(f"[Requested {FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
                     continue

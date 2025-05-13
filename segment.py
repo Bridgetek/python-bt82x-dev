@@ -44,9 +44,9 @@ def segment(gd):
     #gd.calibrate()
 
     # Start drawing test screen.
-    gd.begin()
-    gd.ClearColorRGB(64,72,64)
-    gd.Clear(1,1,1)
+    gd.CMD_DLSTART()
+    gd.CLEAR_COLOR_RGB(64,72,64)
+    gd.CLEAR(1,1,1)
 
     redfg = (255, 0, 0)
     redbg = (32, 0, 0)
@@ -67,7 +67,8 @@ def segment(gd):
     sevensegment.cmd_sevenseg(gd, x + (gap * 6), y, size, int((number/10)%10), fg, bg)
     sevensegment.cmd_sevenseg(gd, x + (gap * 7), y, size, int((number/1)%10), fg, bg)
 
-    gd.Display()
-    gd.swap()
+    gd.DISPLAY()
+    gd.CMD_SWAP()
+    gd.LIB_AwaitCoProEmpty()
 
 apprunner.run(segment)

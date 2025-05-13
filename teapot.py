@@ -36,31 +36,31 @@ family = "BT82x"
 from assets import teapot_trackball
 
 def setup_scroll(gd):
-    gd.BitmapHandle(63)
-    #gd.cmd_loadimage(0xffffffff, 0)
-    gd.cmd_loadimage(80 << 20, 0)
+    gd.BITMAP_HANDLE(63)
+    #gd.CMD_LOADIMAGE(0xffffffff, 0)
+    gd.CMD_LOADIMAGE(80 << 20, 0)
     with open("assets/teapot_logo.png", "rb") as f:
         gd.load(f)
-    gd.BitmapSize(eve.NEAREST, eve.REPEAT, eve.BORDER, 0, 129)
-    gd.BitmapSizeH(0, 0)
+    gd.BITMAP_SIZE(eve.FILTER.NEAREST, eve.WRAP.REPEAT, eve.WRAP.BORDER, 0, 129)
+    gd.BITMAP_SIZE_H(0, 0)
 
 def draw_scroll(gd, frame):
-    gd.ClearColorRGB(0x1a, 0x1a, 0x1a)
-    gd.Clear(1,1,1)
+    gd.CLEAR_COLOR_RGB(0x1a, 0x1a, 0x1a)
+    gd.CLEAR(1,1,1)
 
-    gd.SaveContext()
-    gd.VertexFormat(0)
-    gd.BitmapHandle(63)
-    gd.Begin(eve.BITMAPS)
+    gd.SAVE_CONTEXT()
+    gd.VERTEX_FORMAT(0)
+    gd.BITMAP_HANDLE(63)
+    gd.BEGIN(eve.PRIMATIVE.BITMAPS)
 
-    gd.ColorRGB(0x80, 0x80, 0x80)
-    gd.BitmapTransformC(frame*256)
+    gd.COLOR_RGB(0x80, 0x80, 0x80)
+    gd.BITMAP_TRANSFORM_C(frame*256)
     for i in (0, 2, 4):
-        gd.Vertex2f(0, 40 + 200 * i)
-    gd.BitmapTransformC(-frame*256)
+        gd.VERTEX2F(0, 40 + 200 * i)
+    gd.BITMAP_TRANSFORM_C(-frame*256)
     for i in (1, 3, 5):
-        gd.Vertex2f(0, 40 + 200 * i)
-    gd.RestoreContext()
+        gd.VERTEX2F(0, 40 + 200 * i)
+    gd.RESTORE_CONTEXT()
 
 def teapot(gd):
 
@@ -86,25 +86,27 @@ def teapot(gd):
     (vertices, strips) = json.load(open("assets/teapot_geometry.json"))
     curquat = teapot_trackball.trackball(0, 0, 0, 0)
 
-    gd.begin()
-    gd.Clear()
+    gd.CMD_DLSTART()
+    gd.CLEAR()
     setup_scroll(gd)
-    gd.swap()
+    gd.CMD_SWAP()
+    gd.LIB_AwaitCoProEmpty()
 
     vertex_array    = 0x000000
     draw_list       = 0x4040000
 
-    gd.cmd_newlist(draw_list)
-    gd.ColorRGB(255, 255, 255)
-    gd.VertexTranslateX(gd.w // 2)
-    gd.VertexTranslateY(gd.h // 2)
-    gd.LineWidth(gd.w / 2000)
+    gd.CMD_NEWLIST(draw_list)
+    gd.COLOR_RGB(255, 255, 255)
+    gd.VERTEX_TRANSLATE_X(gd.w // 2)
+    gd.VERTEX_TRANSLATE_Y(gd.h // 2)
+    gd.LINE_WIDTH(gd.w / 2000)
     for s in strips:
-        gd.Begin(eve.LINE_STRIP)
+        gd.BEGIN(eve.PRIMATIVE.LINE_STRIP)
         for i in s:
-            gd.cmd_append(vertex_array + 4 * i, 4)
-    gd.cmd_endlist()
-    gd.swap()
+            gd.CMD_APPEND(vertex_array + 4 * i, 4)
+    gd.CMD_ENDLIST()
+    gd.CMD_SWAP()
+    gd.LIB_AwaitCoProEmpty()
 
     xyz = np.array(vertices)
 
@@ -127,18 +129,19 @@ def teapot(gd):
         for (vx, vy) in vtx:
             vxybuf += c4((0x1 << 30) | ((vx & 32767) << 15) | (vy & 32767) ) 
         # Write the VERTEX2F commands to RAMG
-        gd.cmd_memwrite(0, len(vxybuf))
+        gd.CMD_MEMWRITE(0, len(vxybuf))
         gd.ram_cmd(vxybuf)
-        gd.finish()
+        gd.LIB_AwaitCoProEmpty()
 
-        gd.begin()
-        gd.Clear()
+        gd.CMD_DLSTART()
+        gd.CLEAR()
         draw_scroll(gd, scroll_frame)
-        gd.VertexFormat(3)
-        gd.cmd_calllist(draw_list)
-        gd.swap() 
+        gd.VERTEX_FORMAT(3)
+        gd.CMD_CALLLIST(draw_list)
+        gd.CMD_SWAP()
+        gd.LIB_AwaitCoProEmpty() 
 
-        (ty, tx) = struct.unpack("hh", gd.rd(eve.REG_TOUCH_SCREEN_XY, 4))
+        (ty, tx) = struct.unpack("hh", gd.rd(eve.REG.TOUCH_SCREEN_XY, 4))
         touching = (tx != -32768)
         sx = (2 * tx - gd.w) / gd.w
         sy = (gd.h - 2 * ty) / gd.h
@@ -154,8 +157,8 @@ def teapot(gd):
         curquat = teapot_trackball.add_quats(curquat, spin)
         scroll_frame += 1
 
-        gd.cmd_graphicsfinish()
-        gd.finish()
+        gd.CMD_GRAPHICSFINISH()
+        gd.LIB_AwaitCoProEmpty()
 
     t1 = time.monotonic()
     took = t1 - t0

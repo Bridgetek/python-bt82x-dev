@@ -7,9 +7,6 @@ import bteve2 as eve
 
 FREQUENCY = 72_000_000      # system clock frequency, in Hz
 
-print("The D2XX connector is currently not supported.")
-sys.exit(-1)
-
 def check(f):
     if f != 0:
         names = [
@@ -39,6 +36,8 @@ def bseq(*a):
 
 class EVE2(eve.EVE2):
     def __init__(self):
+        print("Initialise FT232H interface")
+
         if sys.platform.startswith('linux'):
             self.d2xx = ctypes.cdll.LoadLibrary("/usr/local/lib/libftd2xx.so")
         elif sys.platform.startswith('darwin'):
@@ -46,14 +45,13 @@ class EVE2(eve.EVE2):
         else:
             self.d2xx = ctypes.windll.LoadLibrary("ftd2xx")
 
-        print('D2XX loaded:')
         library_version = ctypes.c_uint32()
         self.d2xx.FT_GetLibraryVersion(ctypes.byref(library_version))
-        print('     FT_GetLibraryVersion: %06x' % library_version.value)
+        if (library_version.value < 0x030214) or (library_version.value >= 0xff000000):
+            raise Exception("Sorry, FTDI D2XX driver too old")
 
         dwNumDevs = ctypes.c_uint32()
         self.d2xx.FT_CreateDeviceInfoList(ctypes.byref(dwNumDevs))
-        print('dwNumDevs', dwNumDevs.value)
 
         SerialNumber = ctypes.create_string_buffer(256)
         Description = ctypes.create_string_buffer(256)
@@ -73,7 +71,6 @@ class EVE2(eve.EVE2):
                                              SerialNumber,
                                              Description,
                                              ctypes.byref(ftHandle))
-            # print(i, dwFlags, dwType, dwID, dwLocId, repr(SerialNumber.value), Description.value)
             if Description.value == b"VA800A-SPI":
                 devices.append((SerialNumber.value, i))
             if Description.value == b"UMFTPD2A A":
@@ -85,6 +82,8 @@ class EVE2(eve.EVE2):
             for i,(s,d) in enumerate(devices):
                 ispicked = ["", "[SELECTED]"][i == select]
                 print("    ", i, s, ispicked)
+        else:
+            raise Exception("Sorry, no FTDI D2XX device for SPI master")
         (_, devnum) = devices[select]
 
         self.ftHandle = ctypes.c_void_p()
@@ -134,8 +133,6 @@ class EVE2(eve.EVE2):
 
         self.assert_reset(1)
 
-        self.boot()
-
     def npending(self):
         dwNumBytesToRead = ctypes.c_uint()
         check(self.d2xx.FT_GetQueueStatus(self.ftHandle, ctypes.byref(dwNumBytesToRead)))
@@ -150,7 +147,6 @@ class EVE2(eve.EVE2):
         if s:
             dwNumBytesSent = ctypes.c_uint()
             check(self.d2xx.FT_Write(self.ftHandle, s, len(s), ctypes.byref(dwNumBytesSent)))
-            # print('raw_write:', dwNumBytesSent, "\n" + hexdump(s))
     def silent(self, s): # send a silent command - one that expects no response
         self.raw_write(s)
         if self.npending() != 0:
@@ -181,6 +177,12 @@ class EVE2(eve.EVE2):
         self.raw_write(self.csel() + msg + self.cunsel()) # SCU wake
         time.sleep(.001)
 
+    def setup_flash(self):
+        pass
+
+    def sleepclocks(self, n):
+        time.sleep(n / 72e6)
+
     def addr(self, a):
         return struct.pack(">I", a)
 
@@ -196,7 +198,6 @@ class EVE2(eve.EVE2):
         r = b''
         while a != a1:
             n = min(a1 - a, 32)
-            # print("reading %x %d" %(a, n))
             msg = (struct.pack("<BH", 0x11, 3) + self.addr(a))
             self.raw_write(self.csel() + msg)
             def recv(n):
@@ -204,7 +205,6 @@ class EVE2(eve.EVE2):
                while self.npending() < n:
                    pass
                r = b''.join(self.raw_read(n))
-               # print('recv (%d)\n%s' % (n, hexdump(r)))
                return r
             bb = recv(32 + n)
             if 1 in bb:             # Got READY byte in response
@@ -223,7 +223,7 @@ class EVE2(eve.EVE2):
             r += response
         return r
 
-    def wr(self, a, s):
+    def wr(self, a, s, inc=True):
         assert (a & 3) == 0
         assert (len(s) & 3) == 0
 
@@ -233,10 +233,18 @@ class EVE2(eve.EVE2):
             n = min(64000, t)
             msg = struct.pack("<BH", 0x11, 4 + n - 1) + self.addr((2**31) | a) + s[:n]
             ww.append(self.csel() + msg + self.cunsel())
-            a += n
+            if inc: 
+                a += n
             t -= n
             s = s[n:]
         self.raw_write(b''.join(ww))
+
+    def cs(self, v):
+        if v:
+            self.cunsel()
+        else:
+            self.csel()
+
     def reset(self):
         while True:
             self.assert_reset(1)
@@ -257,26 +265,36 @@ class EVE2(eve.EVE2):
             exchange(bytes([0xFF, 0xEB, 0x08, 0x00, 0x00]))
             # Set DDR, JT and AUD in Boot Control
             exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]))
-            # Clear BootCfgEn
+            # CLEAR BootCfgEn
             exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]))
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
-            time.sleep(.1)
+            # Set ACTIVE
+            exchange(bytes([0x00, 0x00, 0x00, 0x00, 0x00]))
+            time.sleep(.2)
 
             msg = (struct.pack("<BH", 0x11, 3) + self.addr(0))
             self.raw_write(self.csel() + msg)
             n = 128
-            #self.raw_write(struct.pack("<BH", 0x20, n - 1))
+            self.raw_write(struct.pack("<BH", 0x20, n - 1))
             while self.npending() < n:
                 pass
             r = b''.join(self.raw_read(n))
-            print(r)
             self.raw_write(self.cunsel())
+            t0 = time.monotonic_ns()
+            fault = False
             if 1 in r:
-                while self.rd32(eve.REG_ID) != 0x7c:
+                while self.rd32(eve.REG.ID) != 0x7c:
                     pass
-                print(f"Boot status: 0x{self.rd32(eve.REG_BOOT_STATUS):x}")
-                if self.rd32(eve.REG_BOOT_STATUS) == 0x522e2e2e:
-                    break
+                while not fault and self.rd32(eve.REG.BOOT_STATUS) != 0x522e2e2e:
+                    fault = 1e-9 * (time.monotonic_ns() - t0) > 0.1
+                if fault:
+                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.REG.BOOT_STATUS):08x}, retrying...]")
+                    continue
+                actual = self.rd32(eve.REG.FREQUENCY)
+                if actual != FREQUENCY:
+                    print(f"[Requested {FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
+                    continue
+                return
             print("[Boot fail after reset, retrying...]")
 

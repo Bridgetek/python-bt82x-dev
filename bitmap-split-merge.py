@@ -30,7 +30,7 @@ def pad4(s):
     return s
 
 def iload(self, a, plain):
-    self.cmd_inflate(a, 0)
+    self.CMD_INFLATE(a, 0)
     self.cc(pad4(zlib.compress(plain)))
 
 def dith(w, h):
@@ -90,57 +90,57 @@ def convert(im, fmt, dither = False):
     return bb
 
 def oe_split(gd, dst0, dst1, src):
-    gd.cmd_rendertarget(*dst0)
-    gd.cmd_setbitmap(*src)
-    gd.BlendFunc(eve.SRC_ALPHA, eve.ZERO)
-    gd.Begin(eve.BITMAPS)
+    gd.CMD_RENDERTARGET(*dst0)
+    gd.CMD_SETBITMAP(*src)
+    gd.BLEND_FUNC(eve.SRC_ALPHA, eve.ZERO)
+    gd.BEGIN(eve.BITMAPS)
     gd.BitmapTransformA(0, 0x200)       # Shrink 2x
-    gd.Vertex2f(0, 0)
-    gd.Display()
-    gd.cmd_swap()
+    gd.VERTEX2F(0, 0)
+    gd.DISPLAY()
+    gd.CMD_SWAP()
 
-    gd.cmd_dlstart()
-    gd.cmd_rendertarget(*dst1)
-    gd.BlendFunc(eve.SRC_ALPHA, eve.ZERO)
-    gd.Begin(eve.BITMAPS)
+    gd.CMD_DLSTART()
+    gd.CMD_RENDERTARGET(*dst1)
+    gd.BLEND_FUNC(eve.SRC_ALPHA, eve.ZERO)
+    gd.BEGIN(eve.BITMAPS)
     gd.BitmapTransformA(0, 0x200)       # Shrink 2x
     gd.BitmapTransformC(0x100)          # Offset 1 pixel
-    gd.Vertex2f(0, 0)
-    gd.Display()
-    gd.cmd_swap()
+    gd.VERTEX2F(0, 0)
+    gd.DISPLAY()
+    gd.CMD_SWAP()
 
 def oe_merge(gd, dst, src0, src1):
-    gd.cmd_rendertarget(*dst)
+    gd.CMD_RENDERTARGET(*dst)
 
     scratch = 0x07d8_0000
     mask = eve.Surface(scratch, eve.L8, 2, 1)
-    gd.cmd_regwrite(scratch, 0xff00)
+    gd.CMD_REGWRITE(scratch, 0xff00)
 
-    gd.cmd_setbitmap(*mask)
-    gd.BitmapSize(eve.NEAREST, eve.REPEAT, eve.REPEAT, 0, 0)
-    gd.BitmapSizeH(0, 0)
+    gd.CMD_SETBITMAP(*mask)
+    gd.BITMAP_SIZE(eve.NEAREST, eve.REPEAT, eve.REPEAT, 0, 0)
+    gd.BITMAP_SIZE_H(0, 0)
 
-    gd.Clear(1, 1, 1)
-    gd.Begin(eve.BITMAPS)
+    gd.CLEAR(1, 1, 1)
+    gd.BEGIN(eve.BITMAPS)
 
-    gd.StencilFunc(eve.ALWAYS, 0xff, 0xff)
-    gd.StencilOp(eve.REPLACE, eve.REPLACE)
-    gd.AlphaFunc(eve.NOTEQUAL, 0)
-    gd.Vertex2f(0, 0)
+    gd.STENCIL_FUNC(eve.ALWAYS, 0xff, 0xff)
+    gd.STENCIL_OP(eve.REPLACE, eve.REPLACE)
+    gd.ALPHA_FUNC(eve.NOTEQUAL, 0)
+    gd.VERTEX2F(0, 0)
 
-    gd.StencilMask(0)
-    gd.BlendFunc(eve.SRC_ALPHA, eve.ZERO)
+    gd.STENCIL_MASK(0)
+    gd.BLEND_FUNC(eve.SRC_ALPHA, eve.ZERO)
     gd.BitmapTransformA(0, 0x080)       # zoom 2x
 
     for (i, src) in enumerate((src0, src1)):
-        gd.cmd_setbitmap(*src)
-        gd.BitmapSize(eve.NEAREST, eve.BORDER, eve.BORDER, 0, 0)
-        gd.BitmapSizeH(0, 0)
-        gd.StencilFunc(eve.EQUAL, i, 1)
-        gd.Vertex2f(0, 0)
+        gd.CMD_SETBITMAP(*src)
+        gd.BITMAP_SIZE(eve.NEAREST, eve.BORDER, eve.BORDER, 0, 0)
+        gd.BITMAP_SIZE_H(0, 0)
+        gd.STENCIL_FUNC(eve.EQUAL, i, 1)
+        gd.VERTEX2F(0, 0)
 
-    gd.Display()
-    gd.cmd_swap()
+    gd.DISPLAY()
+    gd.CMD_SWAP()
 
 def bitmap_split(gd):
     (w, h) = (1024, 800)
@@ -155,22 +155,22 @@ def bitmap_split(gd):
     iload(gd, src.addr, convert(im0, src.fmt))
 
     oe_split(gd, dst0, dst1, src)
-    gd.cmd_graphicsfinish()
-    gd.finish()
+    gd.CMD_GRAPHICSFINISH()
+    gd.LIB_AwaitCoProEmpty()
 
-    gd.cmd_dlstart()
-    gd.Clear(1, 1, 1)
+    gd.CMD_DLSTART()
+    gd.CLEAR(1, 1, 1)
     framebuffer = eve.Surface(eve.SWAPCHAIN_0, eve.RGB6, 1920, 1200)
-    gd.cmd_rendertarget(*framebuffer)
-    gd.VertexFormat(0) # integer coordinates
-    gd.Begin(eve.BITMAPS)
-    gd.cmd_setbitmap(*dst0)
-    gd.Vertex2f(0, 0)
+    gd.CMD_RENDERTARGET(*framebuffer)
+    gd.VERTEX_FORMAT(0) # integer coordinates
+    gd.BEGIN(eve.BITMAPS)
+    gd.CMD_SETBITMAP(*dst0)
+    gd.VERTEX2F(0, 0)
 
-    gd.cmd_setbitmap(*dst1)
-    gd.Vertex2f(1024, 0)
-    gd.swap()
-    gd.finish()
+    gd.CMD_SETBITMAP(*dst1)
+    gd.VERTEX2F(1024, 0)
+    gd.CMD_SWAP()
+    gd.LIB_AwaitCoProEmpty()
 
 def bitmap_merge(gd):
     (w, h) = (1024, 800)
@@ -187,19 +187,19 @@ def bitmap_merge(gd):
     iload(gd, src1.addr, convert(im1, fmt))
 
     oe_merge(gd, dst, src0, src1)
-    gd.cmd_graphicsfinish()
-    gd.finish()
+    gd.CMD_GRAPHICSFINISH()
+    gd.LIB_AwaitCoProEmpty()
 
-    gd.cmd_dlstart()
-    gd.Clear(1, 1, 1)
+    gd.CMD_DLSTART()
+    gd.CLEAR(1, 1, 1)
     framebuffer = eve.Surface(eve.SWAPCHAIN_0, eve.RGB6, 1920, 1200)
-    gd.cmd_rendertarget(*framebuffer)
-    gd.VertexFormat(0) # integer coordinates
-    gd.Begin(eve.BITMAPS)
-    gd.cmd_setbitmap(*dst)
-    gd.Vertex2f(0, 0)
-    gd.swap()
-    gd.finish()
+    gd.CMD_RENDERTARGET(*framebuffer)
+    gd.VERTEX_FORMAT(0) # integer coordinates
+    gd.BEGIN(eve.BITMAPS)
+    gd.CMD_SETBITMAP(*dst)
+    gd.VERTEX2F(0, 0)
+    gd.CMD_SWAP()
+    gd.LIB_AwaitCoProEmpty()
 
 def bitmap_main(gd):
     parser = argparse.ArgumentParser(description="EVE bitmap split/merge demo")
