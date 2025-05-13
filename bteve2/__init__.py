@@ -5,7 +5,6 @@ from collections import namedtuple
 
 __version__ = '0.3.0'
 
-from .registers import REG, KEYS, OPT, BITMAP_FORMAT, PRIMATIVE, TEST, FILTER, WRAP, BLEND, STENCIL, TOUCHMODE, TOUCH, DLSWAP, INT, SAMPLES, CHANNEL, ADC, ANIM, CGRADIENT_SHAPE, CTOUCH_MODE, FLASH_STATUS
 from sys import implementation
 if implementation.name == "circuitpython":
     #from _eve import _EVE
@@ -41,10 +40,7 @@ It uses the raw read/write methods to access co-processor registers.
 
 Surface = namedtuple('Surface', ['addr', 'fmt', 'w', 'h'])
 
-class EVE2(e_EVE2, REG, KEYS, OPT, BITMAP_FORMAT, PRIMATIVE, TEST, 
-           FILTER, WRAP, BLEND, STENCIL, TOUCHMODE, TOUCH, 
-           DLSWAP, INT, SAMPLES, CHANNEL, ADC, ANIM, 
-           CGRADIENT_SHAPE, CTOUCH_MODE, FLASH_STATUS):
+class EVE2(e_EVE2):
 
     def __init__(self, connector):
         connector_dir = os.path.join(os.path.dirname(__file__), "connectors")
@@ -56,29 +52,6 @@ class EVE2(e_EVE2, REG, KEYS, OPT, BITMAP_FORMAT, PRIMATIVE, TEST,
         except ModuleNotFoundError:
             print(f"Connector '{connector}' not found in '{connector_dir}'")
             sys.exit(1)
-
-        # Initialise all the classes containing constants
-        self.REG = REG
-        self.OPT = OPT
-        self.KEYS = KEYS
-        self.BITMAP_FORMAT = BITMAP_FORMAT
-        self.PRIMATIVE = PRIMATIVE
-        self.TEST = TEST
-        self.FILTER = FILTER
-        self.WRAP = WRAP
-        self.BLEND = BLEND
-        self.STENCIL = STENCIL
-        self.TOUCHMODE = TOUCHMODE
-        self.TOUCH = TOUCH
-        self.DLSWAP = DLSWAP
-        self.INT = INT
-        self.SAMPLES = SAMPLES
-        self.CHANNEL = CHANNEL
-        self.ADC = ADC
-        self.ANIM = ANIM
-        self.CGRADIENT_SHAPE = CGRADIENT_SHAPE
-        self.CTOUCH_MODE = CTOUCH_MODE
-        self.FLASH_STATUS = FLASH_STATUS
 
         # Initialise connector interface
         connection = self.connector.EVE2()

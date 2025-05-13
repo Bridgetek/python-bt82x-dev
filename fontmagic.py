@@ -185,7 +185,7 @@ def cmd_textrotate(gd, x, y, fontcache, text):
     gd.VERTEX_FORMAT(2)
     gd.CELL(0)
     # Select the handle for the font.
-    gd.BEGIN(eve.PRIMATIVE.BITMAPS)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
     # Manipulate the font display.
     gd.CMD_LOADIDENTITY()
     # Rotate around point width/2, height/2,
@@ -234,10 +234,10 @@ def cmd_textzoom(gd, x, y, fontcache, zoom, text):
     gd.VERTEX_FORMAT(2)
     gd.CELL(0)
     # Select the handle for the font.
-    gd.BEGIN(eve.PRIMATIVE.BITMAPS)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
     # Manipulate the font display.
     gd.CMD_LOADIDENTITY()
-    gd.BITMAP_SIZE(eve.FILTER.NEAREST, eve.WRAP.BORDER, eve.WRAP.BORDER, int(width * zoom), int(height * zoom))
+    gd.BITMAP_SIZE(gd.FILTER_NEAREST, gd.WRAP_BORDER, gd.WRAP_BORDER, int(width * zoom), int(height * zoom))
     # Apply scale to text.
     gd.CMD_SCALE(zoom, zoom)
     gd.CMD_SETMATRIX()
@@ -409,7 +409,7 @@ def fontmagic(gd):
         # with the parameter "-l 0" as well.
         y = 100
         # Draw test text of all ASCII characters.
-        gd.BEGIN(eve.PRIMATIVE.BITMAPS)
+        gd.BEGIN(gd.BEGIN_BITMAPS)
         # Miss out \x0a since that is a carriage return to CMD_TEXT.
         gd.CMD_TEXT(100, y, customfont, eve.OPT_FILL, "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0d\x0e\x0f" \
                     "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f")

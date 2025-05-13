@@ -1,10 +1,7 @@
 import struct
 import array
-import sys
-import importlib
+import os
 from collections import namedtuple
-
-from .registers import * 
 
 class CoprocessorException(Exception):
     pass
@@ -67,7 +64,14 @@ _Inputs = namedtuple(
 
 class EVE2:
 
-    FIFO_MAX = (REG.CMDBUF_SIZE - 4) # Maximum reported free space in the EVE command FIFO
+    regfile = os.path.join(os.path.dirname(__file__), "registers.py")
+    with open(regfile) as f:
+        code = compile(f.read(), regfile, 'exec')
+        exec(code)
+    optfile = os.path.join(os.path.dirname(__file__), "options.py")
+    with open(optfile) as f:
+        code = compile(f.read(), optfile, 'exec')
+        exec(code)
 
     """
     Co-processor commands are defined in this file and begin with "cmd_".
@@ -128,9 +132,9 @@ class EVE2:
     # When the co-processor is idle this will be FIFO_MAX.
     # Note: when bit 0 is set then the co-processor has encountered an error.
     def getspace(self):
-        self.space = self.rd32(REG.CMDB_SPACE)
+        self.space = self.rd32(self.REG_CMDB_SPACE)
         if self.space & 1:
-            message = self.rd(REG.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
+            message = self.rd(self.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
             raise CoprocessorException(message)
 
     # Return True if the co-processor RAM_CMD space is empty (FIFO_MAX 
@@ -147,7 +151,7 @@ class EVE2:
         while i < len(ss):
             send = ss[i:i + self.space]
             i += self.space
-            self.wr(self.REG.CMDB_WRITE, send, inc=False)
+            self.wr(self.REG_CMDB_WRITE, send, inc=False)
             self.space -= len(send)
             if i < len(ss):
                 self.sleepclocks(10000)
@@ -167,7 +171,7 @@ class EVE2:
         return self.previous(1)
     
     def LIB_GetCoProException(self):
-        return self.rd(REG.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
+        return self.rd(REG_RAM_REPORT, 256).strip(b'\x00').decode('ascii')
 
     #def LIB_WriteDataToRAMG(self, )
 
@@ -196,20 +200,20 @@ class EVE2:
         #self.flush()
         #self.cs(False)
         self.cs(True)
-        self.wr32(self.REG.CMD_READ, 0)
+        self.wr32(self.REG_CMD_READ, 0)
         self.cs(False)
         # Instructions are write REG_CMD_READ as zero then
         # wait for REG_CMD_WRITE to become zero.
         while True:
-            writeptr = self.rd32(self.REG.CMD_WRITE)
+            writeptr = self.rd32(self.REG_CMD_WRITE)
             if (writeptr == 0): break;
 
     # Return the result field of the preceding command
     def previous(self, fmt = "I"):
         self.finish()
         size = struct.calcsize(fmt)
-        offset = (self.rd32(self.REG.CMD_READ) - size) & self.FIFO_MAX
-        r = struct.unpack(fmt, self.rd(REG.RAM_CMD + offset, size))
+        offset = (self.rd32(self.REG_CMD_READ) - size) & self.FIFO_MAX
+        r = struct.unpack(fmt, self.rd(REG_RAM_CMD + offset, size))
         if len(r) == 1:
             return r[0]
         else:
@@ -235,9 +239,9 @@ class EVE2:
     # Read the touch inputs.
     def get_inputs(self):
         self.finish()
-        t = _Touch(*struct.unpack("hhHHhhhhhhhhI", self.rd(self.REG.TOUCH_RAW_XY, 28)))
+        t = _Touch(*struct.unpack("hhHHhhhhhhhhI", self.rd(self.REG_TOUCH_RAW_XY, 28)))
 
-        r = _Tracker(*struct.unpack("HH", self.rd(self.REG.TRACKER, 4)))
+        r = _Tracker(*struct.unpack("HH", self.rd(self.REG_TRACKER, 4)))
 
         if not hasattr(self, "prev_touching"):
             self.prev_touching = False
@@ -256,7 +260,7 @@ class EVE2:
 
         try:
             with open(fn, "rb") as f:
-                self.wr(self.REG.TOUCH_TRANSFORM_A, f.read())
+                self.wr(self.REG_TOUCH_TRANSFORM_A, f.read())
         except FileNotFoundError:
             self.CMD_DLSTART()
             self.CLEAR()
@@ -265,7 +269,7 @@ class EVE2:
             self.LIB_AwaitCoProEmpty()
             self.CMD_DLSTART()
             with open(fn, "wb") as f:
-                f.write(self.rd(self.REG.TOUCH_TRANSFORM_A, 24))
+                f.write(self.rd(self.REG_TOUCH_TRANSFORM_A, 24))
 
     # Load from a file-like into the command buffer.
     def load(self, f):
@@ -296,37 +300,35 @@ class EVE2:
 
         horcy = self.w + 180
         vercy = self.h + 45 # 1210-1280
-        self.CMD_REGWRITE(self.REG.GPIO, 0x80)
-        self.CMD_REGWRITE(self.REG.DISP, 1)
+        self.CMD_REGWRITE(self.REG_GPIO, 0x80)
+        self.CMD_REGWRITE(self.REG_DISP, 1)
 
-        self.CMD_REGWRITE(self.REG.HCYCLE, horcy)
-        self.CMD_REGWRITE(self.REG.HSIZE, self.w)
-        self.CMD_REGWRITE(self.REG.HOFFSET, 50)
-        self.CMD_REGWRITE(self.REG.HSYNC0, 0)
-        self.CMD_REGWRITE(self.REG.HSYNC1, 30)
+        self.CMD_REGWRITE(self.REG_HCYCLE, horcy)
+        self.CMD_REGWRITE(self.REG_HSIZE, self.w)
+        self.CMD_REGWRITE(self.REG_HOFFSET, 50)
+        self.CMD_REGWRITE(self.REG_HSYNC0, 0)
+        self.CMD_REGWRITE(self.REG_HSYNC1, 30)
 
-        self.CMD_REGWRITE(self.REG.VCYCLE, vercy)
-        self.CMD_REGWRITE(self.REG.VSIZE, self.h)
-        self.CMD_REGWRITE(self.REG.VOFFSET, 10)
-        self.CMD_REGWRITE(self.REG.VSYNC0, 0)
-        self.CMD_REGWRITE(self.REG.VSYNC1, 3)
+        self.CMD_REGWRITE(self.REG_VCYCLE, vercy)
+        self.CMD_REGWRITE(self.REG_VSIZE, self.h)
+        self.CMD_REGWRITE(self.REG_VOFFSET, 10)
+        self.CMD_REGWRITE(self.REG_VSYNC0, 0)
+        self.CMD_REGWRITE(self.REG_VSYNC1, 3)
 
-        self.CMD_REGWRITE(self.REG.PCLK_POL, 0)
+        self.CMD_REGWRITE(self.REG_PCLK_POL, 0)
 
         # 0: 1 pixel single // 1: 2 pixel single // 2: 2 pixel dual // 3: 4 pixel dual
         extsyncmode = 3
         TXPLLDiv = 0x03
-        self.CMD_APBWRITE(self.REG.LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
-        self.CMD_APBWRITE(self.REG.LVDSTX_EN, 7) # Enable PLL
+        self.CMD_APBWRITE(self.REG_LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
+        self.CMD_APBWRITE(self.REG_LVDSTX_EN, 7) # Enable PLL
 
-        self.CMD_REGWRITE(self.REG.SO_MODE, extsyncmode)
-        self.CMD_REGWRITE(self.REG.SO_SOURCE, surface.addr)
-        self.CMD_REGWRITE(self.REG.SO_FORMAT, surface.fmt)
-        self.CMD_REGWRITE(self.REG.SO_EN, 1)
+        self.CMD_REGWRITE(self.REG_SO_MODE, extsyncmode)
+        self.CMD_REGWRITE(self.REG_SO_SOURCE, surface.addr)
+        self.CMD_REGWRITE(self.REG_SO_FORMAT, surface.fmt)
+        self.CMD_REGWRITE(self.REG_SO_EN, 1)
 
         self.LIB_AwaitCoProEmpty()
-
-    # FIFO_MAX = (_REG.CMDBUF_SIZE - 4) # Maximum reported free space in the EVE command FIFO
 
     # Add commands to the co-processor buffer.
     # It is only sent when flush is called or the buffer exceeds

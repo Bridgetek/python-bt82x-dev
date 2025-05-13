@@ -27,7 +27,7 @@ import sevensegment
 
 def ledbox(gd, x, y, count, segsize):
     gd.VERTEX_FORMAT(2)
-    gd.BEGIN(eve.PRIMATIVE.RECTS)
+    gd.BEGIN(gd.BEGIN_RECTS)
     gd.VERTEX_TRANSLATE_X((x - (segsize//3)))
     gd.VERTEX_TRANSLATE_Y((y - (segsize//3)))
     gd.VERTEX2F(0, 0)
@@ -42,7 +42,7 @@ def lednumber(gd, x, y, count, segsize, value, fg, bg):
         value = value // 10
 
 def tapebox(gd, x, y, w, h):
-    gd.BEGIN(eve.PRIMATIVE.RECTS)
+    gd.BEGIN(gd.BEGIN_RECTS)
     gd.VERTEX_TRANSLATE_X(x)
     gd.VERTEX_TRANSLATE_Y(y)
     gd.VERTEX2F(0, 0)
@@ -103,11 +103,11 @@ def b2tf(gd):
 
         dy = y
         gd.COLOR_RGB(255, 255, 255)
-        gd.CMD_TEXT(gd.w//2, dy + 5 * segsize // 2 + 30, 31, eve.OPT.CENTER, "DESTINATION TIME")
+        gd.CMD_TEXT(gd.w//2, dy + 5 * segsize // 2 + 30, 31, gd.OPT_CENTER, "DESTINATION TIME")
         dy = dy + segsize * 4
-        gd.CMD_TEXT(gd.w//2, dy + 5 * segsize // 2 + 30, 31, eve.OPT.CENTER, "PRESENT TIME")
+        gd.CMD_TEXT(gd.w//2, dy + 5 * segsize // 2 + 30, 31, gd.OPT_CENTER, "PRESENT TIME")
         dy = dy + segsize * 4
-        gd.CMD_TEXT(gd.w//2, dy + 5 * segsize // 2 + 30, 31, eve.OPT.CENTER, "LAST TIME DEPARTED")
+        gd.CMD_TEXT(gd.w//2, dy + 5 * segsize // 2 + 30, 31, gd.OPT_CENTER, "LAST TIME DEPARTED")
         dy = dy + segsize * 4
 
         gd.CMD_BGCOLOR(0x100000)

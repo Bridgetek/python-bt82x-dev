@@ -184,3 +184,7 @@ python simple.py --connector ft4222module "simple program to write to the screen
 ```
 
 The string in quotes is used in a CMD_TEXT call with the font number set in the `--font` parameter. Make sure that the font number is a valid ROM FONT.
+
+# CircuitPython Development
+
+At the moment CircuitPython is not supported.

@@ -41,7 +41,7 @@ def setup_scroll(gd):
     gd.CMD_LOADIMAGE(80 << 20, 0)
     with open("assets/teapot_logo.png", "rb") as f:
         gd.load(f)
-    gd.BITMAP_SIZE(eve.FILTER.NEAREST, eve.WRAP.REPEAT, eve.WRAP.BORDER, 0, 129)
+    gd.BITMAP_SIZE(gd.FILTER_NEAREST, gd.WRAP_REPEAT, gd.WRAP_BORDER, 0, 129)
     gd.BITMAP_SIZE_H(0, 0)
 
 def draw_scroll(gd, frame):
@@ -51,7 +51,7 @@ def draw_scroll(gd, frame):
     gd.SAVE_CONTEXT()
     gd.VERTEX_FORMAT(0)
     gd.BITMAP_HANDLE(63)
-    gd.BEGIN(eve.PRIMATIVE.BITMAPS)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
 
     gd.COLOR_RGB(0x80, 0x80, 0x80)
     gd.BITMAP_TRANSFORM_C(frame*256)
@@ -101,7 +101,7 @@ def teapot(gd):
     gd.VERTEX_TRANSLATE_Y(gd.h // 2)
     gd.LINE_WIDTH(gd.w / 2000)
     for s in strips:
-        gd.BEGIN(eve.PRIMATIVE.LINE_STRIP)
+        gd.BEGIN(gd.BEGIN_LINE_STRIP)
         for i in s:
             gd.CMD_APPEND(vertex_array + 4 * i, 4)
     gd.CMD_ENDLIST()
@@ -141,7 +141,7 @@ def teapot(gd):
         gd.CMD_SWAP()
         gd.LIB_AwaitCoProEmpty() 
 
-        (ty, tx) = struct.unpack("hh", gd.rd(eve.REG.TOUCH_SCREEN_XY, 4))
+        (ty, tx) = struct.unpack("hh", gd.rd(gd.REG_TOUCH_SCREEN_XY, 4))
         touching = (tx != -32768)
         sx = (2 * tx - gd.w) / gd.w
         sy = (gd.h - 2 * ty) / gd.h

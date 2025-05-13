@@ -35,7 +35,7 @@ def simple(eve):
     eve.CLEAR_COLOR_RGB(64,72,64)
     eve.CLEAR(1,1,1)
 
-    eve.CMD_TEXT(100, 100, font, eve.OPT.CENTER, args.text)
+    eve.CMD_TEXT(100, 100, font, eve.OPT_CENTER, args.text)
 
     eve.DISPLAY()
     eve.CMD_SWAP()

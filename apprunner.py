@@ -30,11 +30,11 @@ def run(app, minimal = False, connector=None):
     eve.register(eve)
 
     if not minimal:
-        eve.CMD_REGWRITE(eve.REG.SC0_SIZE, 2)
-        eve.CMD_REGWRITE(eve.REG.SC0_PTR0, 10 << 20)
-        eve.CMD_REGWRITE(eve.REG.SC0_PTR1, 18 << 20)
-        eve.panel(bteve2.Surface(eve.REG.SWAPCHAIN_0, eve.BITMAP_FORMAT.RGB6, width, height))
-        eve.CMD_REGWRITE(eve.REG.RE_DITHER, 1)
+        eve.CMD_REGWRITE(eve.REG_SC0_SIZE, 2)
+        eve.CMD_REGWRITE(eve.REG_SC0_PTR0, 10 << 20)
+        eve.CMD_REGWRITE(eve.REG_SC0_PTR1, 18 << 20)
+        eve.panel(bteve2.Surface(eve.SWAPCHAIN_0, eve.FORMAT_RGB6, width, height))
+        eve.CMD_REGWRITE(eve.REG_RE_DITHER, 1)
         app(eve)
         eve.LIB_AwaitCoProEmpty()
     else:
