@@ -125,6 +125,7 @@ This code may also be used with [circuitpython](https://circuitpython.org/), how
 | bitmap-crop.py | Simple bitmap crop demo code |
 | plottest.py | Simple plot graph demo code |
 | plottest2.py | Plot live graphs demo code |
+| tsd.py | Time-series data live display, using HISTOGRAM |
 
 ### apprunner
 
