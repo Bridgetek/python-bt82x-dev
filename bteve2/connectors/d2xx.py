@@ -198,8 +198,7 @@ class EVE2(eve.EVE2):
         r = b''
         while a != a1:
             # Timout for a read is 7uS for BT82x.
-            # On D2XX the MPSSE protocol used will recieve data on a packet
-            # full condition or a latency timer event. A minimum of 125uS.
+            # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
             # Read a a maximum of 32 bytes before the "0x01" that signifies data ready.
             n = min(a1 - a, 32)
             msg = (struct.pack("<BH", 0x11, 3) + self.addr(a))
@@ -302,3 +301,5 @@ class EVE2(eve.EVE2):
                 return
             print("[Boot fail after reset, retrying...]")
 
+        # Disable QSPI burst mode
+        #self.wr32(self.REG_SYS_CFG, 1 << 10)

@@ -55,9 +55,9 @@ class EVE2(eve.EVE2):
         r = b''
         while a != a1:
             # Timeout for a read is 7uS for BT82x.
+            # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
             # On FT4222H the spiMaster_EndTransaction will take 11uS.
             # This is T0 (12.5nS for 80MHz clock) * 880 clocks from Datasheet.
-            # Timout for a read is 7uS for BT82x.
             # Read a maximum of 32 bytes before the "0x01" that signifies data ready.
             n = min(a1 - a, 32)
             if self.multi_mode:
@@ -170,6 +170,9 @@ class EVE2(eve.EVE2):
                 break
 
             print(f"[Boot fail after reset, retrying...]")
+
+        # Disable QSPI burst mode
+        #self.wr32(self.REG_SYS_CFG, 1 << 10)
 
         parser = argparse.ArgumentParser(description="ft4222 module")
         parser.add_argument("--mode", help="spi mode", default="0")     # 0: single, 1: dual, 2: quad

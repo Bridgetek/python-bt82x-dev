@@ -205,10 +205,10 @@ SAMPLES_ADPCM                  = 2
 SAMPLES_S16                    = 3
 SAMPLES_S16S                   = 4
 
-CHANNEL_RED                            = 2
-CHANNEL_GREEN                          = 3
-CHANNEL_BLUE                           = 4
-CHANNEL_ALPHA                          = 5
+RED                            = 2
+GREEN                          = 3
+BLUE                           = 4
+ALPHA                          = 5
 
 ADC_SINGLE_ENDED           = 0
 ADC_DIFFERENTIAL           = 1

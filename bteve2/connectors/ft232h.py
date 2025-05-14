@@ -56,9 +56,7 @@ class EVE2(eve.EVE2):
         r = b''
         while a != a1:
             # Timout for a read is 7uS for BT82x.
-            # On FT232H the MPSSE protocol used will recieve data on a packet
-            # full condition or a latency timer event. A minimum of 125uS.
-            # The timeout is covered within the libMPSSE protocol.
+            # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
             # Read a maximum of 32 bytes before the "0x01" that signifies data ready.
             n = min(a1 - a, 32)
             self.slave.write(self.addr(a), start = True, stop = False)
@@ -149,3 +147,6 @@ class EVE2(eve.EVE2):
                 return
 
             print(f"[Boot fail after reset, retrying...]")
+
+        # Disable QSPI burst mode
+        #self.wr32(self.REG_SYS_CFG, 1 << 10)
