@@ -14,8 +14,6 @@ import array
 
 import numpy as np
 
-# This is the EVE library.
-import bteve2 as eve
 # This module provides the connector (gd) to the EVE hardware.
 import apprunner
 
