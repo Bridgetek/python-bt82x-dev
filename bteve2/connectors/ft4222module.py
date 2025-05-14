@@ -27,7 +27,7 @@ class EVE2(eve.EVE2):
         except: 
             raise Exception("Sorry, no FTDI FT4222H device for SPI master")
 
-        # init spi master
+        # init spi master at a 20MHz SPI clock (80MHz / 4)
         self.devA.spiMaster_Init(Mode.SINGLE, Clock.DIV_4, Cpol.IDLE_LOW, Cpha.CLK_LEADING, SlaveSelect.SS0)
         self.devA.setClock(SysClock.CLK_80)   # system clock = 80Mhz
 
@@ -54,7 +54,11 @@ class EVE2(eve.EVE2):
         a1 = a + nn
         r = b''
         while a != a1:
-
+            # Timeout for a read is 7uS for BT82x.
+            # On FT4222H the spiMaster_EndTransaction will take 11uS.
+            # This is T0 (12.5nS for 80MHz clock) * 880 clocks from Datasheet.
+            # Timout for a read is 7uS for BT82x.
+            # Read a maximum of 32 bytes before the "0x01" that signifies data ready.
             n = min(a1 - a, 32)
             if self.multi_mode:
                 bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 32 + n)

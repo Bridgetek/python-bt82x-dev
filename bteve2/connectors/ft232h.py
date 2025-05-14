@@ -55,6 +55,11 @@ class EVE2(eve.EVE2):
         a1 = a + nn
         r = b''
         while a != a1:
+            # Timout for a read is 7uS for BT82x.
+            # On FT232H the MPSSE protocol used will recieve data on a packet
+            # full condition or a latency timer event. A minimum of 125uS.
+            # The timeout is covered within the libMPSSE protocol.
+            # Read a maximum of 32 bytes before the "0x01" that signifies data ready.
             n = min(a1 - a, 32)
             self.slave.write(self.addr(a), start = True, stop = False)
             def recv(n):

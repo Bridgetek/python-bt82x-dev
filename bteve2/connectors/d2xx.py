@@ -197,6 +197,10 @@ class EVE2(eve.EVE2):
         a1 = a + nn
         r = b''
         while a != a1:
+            # Timout for a read is 7uS for BT82x.
+            # On D2XX the MPSSE protocol used will recieve data on a packet
+            # full condition or a latency timer event. A minimum of 125uS.
+            # Read a a maximum of 32 bytes before the "0x01" that signifies data ready.
             n = min(a1 - a, 32)
             msg = (struct.pack("<BH", 0x11, 3) + self.addr(a))
             self.raw_write(self.csel() + msg)
