@@ -154,7 +154,7 @@ class EVE2:
             self.wr(self.REG_CMDB_WRITE, send, inc=False)
             self.space -= len(send)
             if i < len(ss):
-                self.sleepclocks(10000)
+                #self.sleepclocks(10000)
                 self.getspace()
 
     # Start a display list in the co-processor.
@@ -381,12 +381,14 @@ class EVE2:
     # This can cope with data sizes larger than the buffer.
     def ram_cmd(self, s):
         # CLEAR currently stored buffer.
-        self.flush()
+        n = len(self.buf)
+        if n >= self.FIFO_MAX:        
+            self.flush()
         assert((len(s) & 3) == 0, "Data must be a multiple of 4 bytes")
         n = len(s)
         while n > 0:
             chunk = min((1024 * 15), n)
-            self.buf = s[:chunk]
+            self.buf += s[:chunk]
             self.flush()
             s = s[chunk:]
             n -= chunk
