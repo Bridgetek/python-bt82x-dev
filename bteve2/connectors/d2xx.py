@@ -96,12 +96,12 @@ class EVE2(eve.EVE2):
         check(self.d2xx.FT_SetUSBParameters(self.ftHandle, 16384, 16384))       # 2
         check(self.d2xx.FT_SetChars(self.ftHandle, False, 0, False, 0))         # 3
         check(self.d2xx.FT_SetTimeouts(self.ftHandle, 0, 5000))                 # 4
-        # check(self.d2xx.FT_SetLatencyTimer(self.ftHandle, 1))                   # 5
+        check(self.d2xx.FT_SetLatencyTimer(self.ftHandle, 1))                   # 5
         # check(self.d2xx.FT_SetFlowControl(self.ftHandle, 0, 0, 0))              # 6
         check(self.d2xx.FT_SetBitMode(self.ftHandle, 0, 0))                     # 7
         check(self.d2xx.FT_SetBitMode(self.ftHandle, 0, 2))                     # 8
 
-        time.sleep(0.050)   # wait for USB stuff ?!?
+        time.sleep(0.050)   # wait for device
 
         self.s = ctypes.create_string_buffer(65536)
 
@@ -200,7 +200,7 @@ class EVE2(eve.EVE2):
             # Timout for a read is 7uS for BT82x.
             # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
             # Read a a maximum of 32 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 32)
+            n = min(a1 - a, 32 + nn)
             msg = (struct.pack("<BH", 0x11, 3) + self.addr(a))
             self.raw_write(self.csel() + msg)
             def recv(n):

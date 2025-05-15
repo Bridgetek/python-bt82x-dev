@@ -58,7 +58,7 @@ class EVE2(eve.EVE2):
             # Timout for a read is 7uS for BT82x.
             # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
             # Read a maximum of 32 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 32)
+            n = min(a1 - a, 32 + nn)
             self.slave.write(self.addr(a), start = True, stop = False)
             def recv(n):
                 return self.slave.read(n, start = False, stop = False)

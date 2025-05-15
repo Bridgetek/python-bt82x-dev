@@ -59,7 +59,7 @@ class EVE2(eve.EVE2):
             # On FT4222H the spiMaster_EndTransaction will take 11uS.
             # This is T0 (12.5nS for 80MHz clock) * 880 clocks from Datasheet.
             # Read a maximum of 32 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 32)
+            n = min(a1 - a, 32 + nn)
             if self.multi_mode:
                 bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 32 + n)
                 if 1 in bb:
