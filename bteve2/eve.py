@@ -73,6 +73,39 @@ class EVE2:
         code = compile(f.read(), optfile, 'exec')
         exec(code)
 
+    # Definitions used for target display resolution selection
+    WQVGA   = 480     # e.g. VM800B with 5" or 4.3" display
+    WVGA    = 800     # e.g. ME813A-WH50C or VM816
+    WSVGA   = 1024    # e.g. ME817EV with 7" display
+    WXGA    = 1280    # e.g. ME817EV with 10.1" display
+    HD      = 1920    # e.g. 10" high definition display
+
+    # Select the resolution
+    DISPLAY_RES = HD
+
+    # Explicitly disable QuadSPI
+    QUADSPI_ENABLE = 0
+
+    # Setup default parameters for various displays.
+    # These must be overridden for different display modules.
+    SET_PCLK_FREQ       = 0
+    EVE_DISP_WIDTH      = 0 #   Active width of LCD display
+    EVE_DISP_HEIGHT     = 0 #  Active height of LCD display
+    EVE_DISP_HCYCLE     = 0 #  Total number of clocks per line
+    EVE_DISP_HOFFSET    = 0 #  Start of active line
+    EVE_DISP_HSYNC0     = 0 #  Start of horizontal sync pulse
+    EVE_DISP_HSYNC1     = 0 # End of horizontal sync pulse
+    EVE_DISP_VCYCLE     = 0 #  Total number of lines per screen
+    EVE_DISP_VOFFSET    = 0 #  Start of active screen
+    EVE_DISP_VSYNC0     = 0 #  Start of vertical sync pulse
+    EVE_DISP_VSYNC1     = 0 #  End of vertical sync pulse
+    EVE_DISP_PCLK       = 0 #  Pixel Clock
+    EVE_DISP_SWIZZLE    = 0 #  Define RGB output pins
+    EVE_DISP_PCLKPOL    = 0 #  Define active edge of PCLK
+    EVE_DISP_CSPREAD    = 0
+    EVE_DISP_DITHER     = 0
+    EVE_TOUCH_CONFIG    = 0 # Touch panel settings
+
     """
     Co-processor commands are defined in this file and begin with "cmd_".
 
@@ -270,7 +303,7 @@ class EVE2:
         except FileNotFoundError:
             self.CMD_DLSTART()
             self.CLEAR()
-            self.CMD_TEXT(self.w // 2, self.h // 2, 34, OPT_CENTER, "Tap the dot")
+            self.CMD_TEXT(self.w // 2, self.h // 2, 34, self.OPT_CENTER, "Tap the dot")
             self.CMD_CALIBRATE(0)
             self.LIB_AwaitCoProEmpty()
             self.CMD_DLSTART()
@@ -295,7 +328,7 @@ class EVE2:
         self.cmd(0x63, 'II', args)
 
     # Setup the EVE registers to match the surface created.
-    def panel(self, surface):
+    def panel(self, surface, panelset=None, touch=None):
         self.CMD_RENDERTARGET(*surface)
         self.CLEAR()
         self.CMD_SWAP()
@@ -303,25 +336,65 @@ class EVE2:
         self.LIB_AwaitCoProEmpty()
 
         (self.w, self.h) = (surface.w, surface.h)
-
-        horcy = self.w + 180
-        vercy = self.h + 45 # 1210-1280
         self.CMD_REGWRITE(self.REG_GPIO, 0x80)
         self.CMD_REGWRITE(self.REG_DISP, 1)
 
-        self.CMD_REGWRITE(self.REG_HCYCLE, horcy)
-        self.CMD_REGWRITE(self.REG_HSIZE, self.w)
-        self.CMD_REGWRITE(self.REG_HOFFSET, 50)
-        self.CMD_REGWRITE(self.REG_HSYNC0, 0)
-        self.CMD_REGWRITE(self.REG_HSYNC1, 30)
+        self.EVE_DISP_WIDTH = self.w
+        self.EVE_DISP_HEIGHT = self.h
 
-        self.CMD_REGWRITE(self.REG_VCYCLE, vercy)
-        self.CMD_REGWRITE(self.REG_VSIZE, self.h)
-        self.CMD_REGWRITE(self.REG_VOFFSET, 10)
-        self.CMD_REGWRITE(self.REG_VSYNC0, 0)
-        self.CMD_REGWRITE(self.REG_VSYNC1, 3)
+        if panelset == None:
+            horcy = self.w + 180
+            vercy = self.h + 45 # 1210-1280
 
-        self.CMD_REGWRITE(self.REG_PCLK_POL, 0)
+            self.EVE_DISP_HCYCLE = horcy
+            self.EVE_DISP_HOFFSET = 50
+            self.EVE_DISP_HSYNC0 = 0
+            self.EVE_DISP_HSYNC1 = 30
+            self.EVE_DISP_VCYCLE = vercy
+            self.EVE_DISP_VOFFSET = 10
+            self.EVE_DISP_VSYNC0 = 0
+            self.EVE_DISP_VSYNC1 = 3
+            self.EVE_DISP_PCLKPOL = 0
+
+            self.EVE_DISP_PCLK = 2 # Pixel Clock
+            self.EVE_DISP_SWIZZLE = 0 # Define RGB output pins
+            self.EVE_DISP_CSPREAD = 0
+            self.EVE_DISP_DITHER = 1
+        
+        else:
+        
+            self.EVE_DISP_HCYCLE = panelset.hcycle
+            self.EVE_DISP_HOFFSET = panelset.hoffset
+            self.EVE_DISP_HSYNC0 = panelset.hsync0
+            self.EVE_DISP_HSYNC1 = panelset.hsync1
+            self.EVE_DISP_VCYCLE = panelset.vcycle
+            self.EVE_DISP_VOFFSET = panelset.voffset
+            self.EVE_DISP_VSYNC0 = panelset.vsync0
+            self.EVE_DISP_VSYNC1 = panelset.vsync1
+            self.EVE_DISP_PCLKPOL = panelset.pclk_pol
+
+            self.EVE_DISP_PCLK = panelset.pclk_freq
+            self.EVE_DISP_SWIZZLE = panelset.swizzle
+            self.EVE_DISP_CSPREAD = panelset.cspread
+            self.EVE_DISP_DITHER = panelset.dither
+
+        if touch == None:
+            self.EVE_TOUCH_CONFIG = ((0x5d << 4) | (2) | (1 << 11)) # Goodix GT911
+        else:
+            self.EVE_TOUCH_CONFIG = ((touch.address << 4) | (touch.type) | (1 << 11)) 
+
+        self.CMD_REGWRITE(self.REG_HSIZE, self.EVE_DISP_WIDTH)
+        self.CMD_REGWRITE(self.REG_VSIZE, self.EVE_DISP_HEIGHT)
+        self.CMD_REGWRITE(self.REG_HCYCLE, self.EVE_DISP_HCYCLE)
+        self.CMD_REGWRITE(self.REG_HOFFSET, self.EVE_DISP_HOFFSET)
+        self.CMD_REGWRITE(self.REG_HSYNC0, self.EVE_DISP_HSYNC0)
+        self.CMD_REGWRITE(self.REG_HSYNC1, self.EVE_DISP_HSYNC1)
+        self.CMD_REGWRITE(self.REG_VCYCLE, self.EVE_DISP_VCYCLE)
+        self.CMD_REGWRITE(self.REG_VOFFSET, self.EVE_DISP_VOFFSET)
+        self.CMD_REGWRITE(self.REG_VSYNC0, self.EVE_DISP_VSYNC0)
+        self.CMD_REGWRITE(self.REG_VSYNC1, self.EVE_DISP_VSYNC1)
+        self.CMD_REGWRITE(self.REG_PCLK_POL, self.EVE_DISP_PCLKPOL)
+        self.CMD_REGWRITE(self.REG_RE_DITHER, self.EVE_DISP_DITHER)
 
         # 0: 1 pixel single // 1: 2 pixel single // 2: 2 pixel dual // 3: 4 pixel dual
         extsyncmode = 3

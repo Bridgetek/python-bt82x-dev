@@ -38,7 +38,12 @@ It uses the raw read/write methods to access co-processor registers.
 
 """
 
+# Set the size and the display format of the display
 Surface = namedtuple('Surface', ['addr', 'fmt', 'w', 'h'])
+# Optional panel settings for the display (if not set then use best guess)
+Panel = namedtuple('Panel', ['display_res','hcycle','hoffset','hsync0','hsync1','vcycle','voffset','vsync0','vsync1','swizzle','pclk_pol','cspread','dither','pclk_freq'])
+# Optional touch screen settings
+Touch = namedtuple('Touch', ['description','address','type'])
 
 class EVE2(e_EVE2):
 
