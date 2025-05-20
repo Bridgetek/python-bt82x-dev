@@ -331,7 +331,7 @@ def fontmagic(gd):
         # Load normal assets in place directly.
         gd.CMD_INFLATE(address, 0)
         gd.ram_cmd(pad4(zlib.compress(dd)))
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
     """print(f"0x{address:x}: 0x{gd.rd32(address):08x} 0x{gd.rd32(address+4):08x} 0x{gd.rd32(address+8):08x} 0x{gd.rd32(address+12):08x}")"""
 
     # Update the font table with the custom font.
@@ -339,7 +339,7 @@ def fontmagic(gd):
     gd.CMD_DLSTART()
     gd.CMD_SETFONT(customfont, address, first_character)
     gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
 
     """print(f"0x{address:x}: ")
     for i in range(0, 256, 4):
@@ -431,6 +431,6 @@ def fontmagic(gd):
 
     gd.DISPLAY()
     gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
     
 apprunner.run(fontmagic)

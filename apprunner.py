@@ -64,6 +64,6 @@ def run(app, minimal = False, connector=None):
         eve.CMD_REGWRITE(eve.REG_SC0_PTR1, 18 << 20)
         eve.panel(surface, panel, touch)
         app(eve)
-        eve.LIB_AwaitCoProEmpty()
+        eve.LIB_AWAITCOPROEMPTY()
     else:
         app(eve)

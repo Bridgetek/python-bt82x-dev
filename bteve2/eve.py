@@ -116,7 +116,7 @@ class EVE2:
         gd.CMD_TEXT(10, 10, 25, 0, "Hello, World!")
         # Send CMD_SWAP then wait for the co-processor to finish.
         gd.CMD_SWAP()
-        gd.LIB_AwaitCoProEmpty() 
+        gd.LIB_AWAITCOPROEMPTY() 
 
     However, if required the display list can be ended with finish
         gd.CMD_DLSTART()
@@ -126,7 +126,7 @@ class EVE2:
         # Send CMD_SWAP to the display list.
         gd.CMD_SWAP()
         # Wait for the co-processor to finish.
-        gd.LIB_AwaitCoProEmpty()
+        gd.LIB_AWAITCOPROEMPTY()
     
     More advanced usage can have multiple display lists sent to the 
     co-processor.
@@ -138,7 +138,7 @@ class EVE2:
         # Send CMD_SWAP to the display list.
         gd.CMD_SWAP()
         # Start the co-processor, but do not wait to finish.
-        gd.LIB_AwaitCoProEmpty()
+        gd.LIB_AWAITCOPROEMPTY()
         # Perform some processing for a long time in parallel to the
         # co-processor working.
         long_time_routine()
@@ -191,26 +191,26 @@ class EVE2:
                 self.getspace()
 
     # Start a display list in the co-processor.
-    def LIB_BeginCoProList(self):
+    def LIB_BEGINCOPROLIST(self):
         self.finish(True)
         pass
 
-    def LIB_EndCoProList(self):
+    def LIB_ENDCOPROLIST(self):
         pass
 
-    def LIB_AwaitCoProEmpty(self):
+    def LIB_AWAITCOPROEMPTY(self):
         self.finish(True)
 
-    def LIB_GetResult(self, offset=1):
+    def LIB_GETRESULT(self, offset=1):
         return self.previous()
     
-    def LIB_GetCoProException(self):
+    def LIB_GETCOPROEXCEPTION(self):
         return self.rd(self.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
 
-    def LIB_WriteDataToRAMG(self, s):
+    def LIB_WRITEDATATORAMG(self, s):
         self.ram_cmd(s)
 
-    def LIB_WriteDataToCMD(self, s):
+    def LIB_WRITEDATATOCMD(self, s):
         self.flush()
         self.write(s)
 
@@ -294,7 +294,7 @@ class EVE2:
         return self.inputs
 
     # Calibrate the touch screen.
-    def calibrate(self):
+    def LIB_CALIBRATE(self):
         fn = "calibrate.bin"
 
         try:
@@ -305,7 +305,7 @@ class EVE2:
             self.CLEAR()
             self.CMD_TEXT(self.w // 2, self.h // 2, 34, self.OPT_CENTER, "Tap the dot")
             self.CMD_CALIBRATE(0)
-            self.LIB_AwaitCoProEmpty()
+            self.LIB_AWAITCOPROEMPTY()
             self.CMD_DLSTART()
             with open(fn, "wb") as f:
                 f.write(self.rd(self.REG_TOUCH_TRANSFORM_A, 24))
@@ -316,6 +316,8 @@ class EVE2:
             s = f.read(512)
             if not s:
                 return
+            while len(s) % 4:
+                s += b'\x00'
             self.ram_cmd(s)
 
     # Command that returns a value as a result from the CMDB.
@@ -333,7 +335,7 @@ class EVE2:
         self.CLEAR()
         self.CMD_SWAP()
         self.CMD_GRAPHICSFINISH()
-        self.LIB_AwaitCoProEmpty()
+        self.LIB_AWAITCOPROEMPTY()
 
         (self.w, self.h) = (surface.w, surface.h)
         self.CMD_REGWRITE(self.REG_GPIO, 0x80)
@@ -407,7 +409,7 @@ class EVE2:
         self.CMD_REGWRITE(self.REG_SO_FORMAT, surface.fmt)
         self.CMD_REGWRITE(self.REG_SO_EN, 1)
 
-        self.LIB_AwaitCoProEmpty()
+        self.LIB_AWAITCOPROEMPTY()
 
     # Add commands to the co-processor buffer.
     # It is only sent when flush is called or the buffer exceeds
@@ -610,7 +612,7 @@ class EVE2:
 
     # CMD_ARC(int16_t x, int16_t y, uint16_t r0, uint16_t r1, uint16_t a0, uint16_t a1)
     def CMD_ARC(self, x, y, r0, r1, a0, a1):
-        self.cmd(0x87, 'hhHHHH', (x, y, r0, r1, furmans(a0), furmans(a1)))
+        self.cmd(0x87, 'hhHHHH', (x, y, r0, r1, a0, a1))
 
     # CMD_BGCOLOR(uint32_t c)
     def CMD_BGCOLOR(self, *args):
@@ -629,7 +631,7 @@ class EVE2:
     def CMD_CALIBRATE(self, *args):
         self.cmd(0x13, 'I', args)
 
-    def LIB_Calibrate(self, size):
+    def LIB_CALIBRATE(self, size):
         self.CMD_CALIBRATE(0)
         return self.previous()
 
@@ -667,7 +669,7 @@ class EVE2:
 
     # CMD_DIAL(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t val)
     def CMD_DIAL(self, x, y, r, options, val):
-        self.cmd(0x29, "hhhHI", (x, y, r, options, furmans(val)))
+        self.cmd(0x29, "hhhHI", (x, y, r, options, val))
 
     # CMD_DLSTART()
     def CMD_DLSTART(self, *args):
@@ -709,7 +711,7 @@ class EVE2:
     def CMD_FLASHFAST(self, *args):
         self.cmd(0x44, "I", args)
 
-    def LIB_FlashFast(self):
+    def LIB_FLASHFAST(self):
         self.CMD_FLASHFAST(0)
         return self.previous()
 
@@ -746,12 +748,12 @@ class EVE2:
         self.cmd(0x3f, 'II', args)
 
     # CMD_FSDIR(uint32_t dst, uint32_t num, const char* path, uint32_t result)
-    def CMD_FSDIR(self, dst, num, path, result):
-        self.cmd(0x8e, 'II', (dst, num))
-        self.cstring(path)
-        self.c4(result)
+    def CMD_FSDIR(self, *args):
+        self.cmd(0x8e, 'II', args[:2])
+        self.cstring(args[2])
+        self.c4(args[3])
 
-    def LIB_FSDir(self, dst, num, path):
+    def LIB_FSDIR(self, dst, num, path):
         self.CMD_FSDIR(dst, num, path, 0)
         return self.previous()
 
@@ -760,32 +762,32 @@ class EVE2:
         self.cmd(0x6d, 'I', args)
 
     # CMD_FSREAD(uint32_t dst, const char* filename, uint32_t result)
-    def CMD_FSREAD(self, dst, filename, result):
-        self.cmd(0x71, 'I', (dst,))
-        self.cstring(filename)
-        self.c4(result)
+    def CMD_FSREAD(self, *args):
+        self.cmd(0x71, 'I', args[0])
+        self.cstring(args[1])
+        self.c4(args[2])
 
-    def LIB_FSRead(self, dst, filename):
+    def LIB_FSREAD(self, dst, filename):
         self.CMD_FSREAD(dst, filename, 0)
         return self.previous()
 
     # CMD_FSSIZE(const char* filename, uint32_t size)
-    def CMD_FSSIZE(self, filename, size):
+    def CMD_FSSIZE(self, *args):
         self.cmd0(0x80)
-        self.cstring(filename)
-        self.c4(size)
+        self.cstring(args[0])
+        self.c4(args[1])
 
-    def LIB_FSSize(self, filename):
+    def LIB_FSSIZE(self, filename):
         self.CMD_FSSIZE(filename, 0)
         return self.previous()
 
     # CMD_FSSOURCE(const char* filename, uint32_t result)
-    def CMD_FSSOURCE(self, filename, result):
+    def CMD_FSSOURCE(self, *args):
         self.cmd0(0x7f)
-        self.cstring(filename)
-        self.c4(result)
+        self.cstring(args[0])
+        self.c4(args[1])
 
-    def LIB_FSSource(self, filename):
+    def LIB_FSSOURCE(self, filename):
         self.CMD_FSSOURCE(filename, 0)
         return self.previous()
 
@@ -795,22 +797,34 @@ class EVE2:
 
     # CMD_GETIMAGE(uint32_t source, uint32_t fmt, uint32_t w, uint32_t h, uint32_t palette)
     def CMD_GETIMAGE(self, *args):
-        self.cmd(0x58, 'IIIII', (0,0,0,0,0))
+        self.cmd(0x58, 'IIIII', args)
+
+    def LIB_GETIMAGE(self):
+        self.CMD_GETIMAGE(0,0,0,0,0)
         return self.previous("IIiiI")
 
     # CMD_GETMATRIX(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f)
-    def CMD_GETMATRIX(self):
-        self.cmd(0x2f, 'iiiiii', (0,0,0,0,0,0))
+    def CMD_GETMATRIX(self, *args):
+        self.cmd(0x2f, 'iiiiii', args)
+
+    def LIB_GETMATRIX(self):
+        self.CMD_GETMATRIX(0,0,0,0,0,0)
         return tuple([x/0x10000 for x in self.previous("6i")])
 
     # CMD_GETPROPS(uint32_t ptr, uint32_t w, uint32_t h)
     def CMD_GETPROPS(self):
         self.cmd(0x22, 'III', (0,0,0))
+
+    def LIB_GETPROPS(self):
+        self.CMD_GETPROPS(0,0,0)
         return self.previous("Iii")
 
     # CMD_GETPTR(uint32_t result)
-    def CMD_GETPTR(self):
-        self.cmd(0x20, 'I', (0,))
+    def CMD_GETPTR(self, *args):
+        self.cmd(0x20, 'I', args)
+
+    def LIB_GETPTR(self):
+        self.CMD_GETPTR(0)
         return self.previous()
 
     # CMD_GLOW(int16_t x, int16_t y, int16_t w, int16_t h)
@@ -882,7 +896,7 @@ class EVE2:
     def CMD_MEMCRC(self, *args):
         self.cmd(0x16, 'III', args)
 
-    def LIB_MemCrc(self, ptr, num):
+    def LIB_MEMCRC(self, ptr, num):
         self.CMD_MEMCRC(ptr, num, 0)
         return self.previous()
 
@@ -926,7 +940,7 @@ class EVE2:
     def CMD_REGREAD(self, *args):
         self.cmd(0x17, 'II', args)
 
-    def LIB_RegRead(self, ptr):
+    def LIB_REGREAD(self, ptr):
         self.CMD_REGREAD(ptr, 0)
         return self.previous()
 
@@ -959,8 +973,8 @@ class EVE2:
         self.cmd(0x39, 'II', args)
 
     # CMD_ROTATE(int32_t a)
-    def CMD_ROTATE(self, a):
-        self.cmd(0x26, 'i', (furmans(a),))
+    def CMD_ROTATE(self, *args):
+        self.cmd(0x26, 'i', args)
 
     # CMD_ROTATEAROUND(int32_t x, int32_t y, int32_t a, int32_t s)
     def CMD_ROTATEAROUND(self, *args):
@@ -990,16 +1004,16 @@ class EVE2:
     def CMD_SDATTACH(self, *args):
         self.cmd(0x6e, 'II', args)
 
-    def LIB_SDAttach(self, options):
-        self.CMD_REGREAD(options, 0)
+    def LIB_SDATTACH(self, options):
+        self.CMD_SDATTACH(options, 0)
         return self.previous()
 
     # CMD_SDBLOCKREAD(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
     def CMD_SDBLOCKREAD(self, *args):
         self.cmd(0x6f, 'IIII', args)
 
-    def LIB_SDBlockRead(self, dst, src, count):
-        self.CMD_REGREAD(dst, src, count, 0)
+    def LIB_SDBLOCKREAD(self, dst, src, count):
+        self.CMD_SDBLOCKREAD(dst, src, count, 0)
         return self.previous()
 
     # CMD_SETBASE(uint32_t b)
@@ -1128,48 +1142,48 @@ class EVE2:
     def CMD_SDBLOCKWRITE(self, *args):
         self.cmd(0x70, 'IIII', args)
 
-    def LIB_SDBlockWrite(self, dst, src, count):
+    def LIB_SDBLOCKWRITE(self, dst, src, count):
         self.CMD_SDBLOCKWRITE(dst, src, count, 0)
         return self.previous()
 
     # CMD_FSWRITE (uint32_t dst, const char* filename, uint32_t result)
-    def CMD_FSWRITE(self, dst, filename):
-        self.cmd(0x93, 'I', (dst,))
-        self.cstring(filename)
-        self.c4(result)
+    def CMD_FSWRITE(self, *args):
+        self.cmd(0x93, 'I', args[0])
+        self.cstring(args[1])
+        self.c4(args[2])
 
-    def LIB_FSWrite(self, dst, filename):
+    def LIB_FSWRITE(self, dst, filename):
         self.CMD_FSWRITE(dst, filename, 0)
         return self.previous()
 
     # CMD_FSFILE (uint32_t size, const char* filename, uint32_t result)
-    def CMD_FSFILE(self, size, filename, result):
-        self.cmd(0x94, 'I', (size,))
-        self.cstring(filename)
-        self.c4(result)
+    def CMD_FSFILE(self, *args):
+        self.cmd(0x94, 'I', args[0])
+        self.cstring(args[1])
+        self.c4(args[2])
 
-    def LIB_FSFile(self, size, filename):
+    def LIB_FSFILE(self, size, filename):
         self.CMD_FSFILE(size, filename, 0)
         return self.previous()
         
     # CMD_FSSNAPSHOT (uint32_t temp, const char* filename, uint32_t result)
-    def CMD_FSSNAPSHOT(self, temp, filename, result):
-        self.cmd(0x95, 'I', (temp,))
-        self.cstring(filename)
-        self.c4(result)
+    def CMD_FSSNAPSHOT(self, *args):
+        self.cmd(0x95, 'I', args[0])
+        self.cstring(args[1])
+        self.c4(args[2])
 
-    def LIB_FSSnapshot(self, temp, filename):
+    def LIB_FSSNAPSHOT(self, temp, filename):
         self.CMD_FSSNAPSHOT(temp, filename, 0)
         return self.previous()
 
     # CMD_FSCROPSHOT (uint32_t temp, const char* filename, int16_t x, int16_t y, uint16_t w, uint16_t h)
-    def CMD_FSCROPSHOT(self, temp, filename, x, y, w, h, result):
-        self.cmd(0x95, 'I', (temp,))
-        self.cstring(filename)
-        self.cc(struct.pack('hhHH', x, y, w, h))
-        self.c4(result)
+    def CMD_FSCROPSHOT(self, *args):
+        self.cmd(0x95, 'I', args[0])
+        self.cstring(args[1])
+        self.cc(struct.pack('hhHH', args[2:6]))
+        self.c4(args[6])
 
-    def LIB_FSSnapshot(self, temp, filename, x, y, w, h):
+    def LIB_FSSNAPSHOT(self, temp, filename, x, y, w, h):
         self.CMD_FSSNAPSHOT(temp, filename, x, y, w, h, 0)
         return self.previous()
 
@@ -1189,13 +1203,13 @@ class EVE2:
         self.fstring(args[7:])
 
     # CMD_TEXTSIZE(int16_t font, uint16_t options, const char* s, uint16_t w, uint16_t h)
-    def CMD_TEXTSIZE(self, font, opt, s, result):
-        self.cmd(0xaa, 'hH', (font, opt))
-        self.fstring(s)
-        self.c4(result)
+    def CMD_TEXTSIZE(self, *args):
+        self.cmd(0xaa, 'hH', args[:2])
+        self.fstring(args[2])
+        self.c4(args[3])
 
-    def LIB_TextSize(self, font, options, s):
-        self.CMD_TEXTSIZE(font. options, s, 0, 0)
+    def LIB_TEXTSIZE(self, font, options, s):
+        self.CMD_TEXTSIZE(font, options, s, 0)
         wh = self.previous()
         return (wh & 0xffff, (wh >> 16) & 0xffff)
 
@@ -1212,7 +1226,7 @@ class EVE2:
     def CMD_MEMORYMALLOC(self, *args):
         self.cmd(0x9d, "II", args)
 
-    def LIB_MemoryMalloc(self, size):
+    def LIB_MEMORYMALLOC(self, size):
         self.CMD_MEMORYMALLOC(size, 0);
         return self.previous()
 
@@ -1220,7 +1234,7 @@ class EVE2:
     def CMD_MEMORYFREE(self, *args):
         self.cmd(0x9e, "II", args)
 
-    def LIB_MemoryFree(self, address):
+    def LIB_MEMORYFREE(self, address):
         self.CMD_MEMORYFREE(address, 0);
         return self.previous()
 
@@ -1228,7 +1242,7 @@ class EVE2:
     def CMD_MEMORYBITMAP(self, *args):
         self.cmd(0xa9, "HHHHI", args)
 
-    def LIB_MemoryBitmap(self, fmt, w, h):
+    def LIB_MEMORYBITMAP(self, fmt, w, h):
         self.CMD_MEMORYBITMAP(fmt, w, h, 0, 0);
         return self.previous()
     

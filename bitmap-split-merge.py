@@ -156,7 +156,7 @@ def bitmap_split(gd):
 
     oe_split(gd, dst0, dst1, src)
     gd.CMD_GRAPHICSFINISH()
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
 
     gd.CMD_DLSTART()
     gd.CLEAR(1, 1, 1)
@@ -170,7 +170,7 @@ def bitmap_split(gd):
     gd.CMD_SETBITMAP(*dst1)
     gd.VERTEX2F(1024, 0)
     gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
 
 def bitmap_merge(gd):
     (w, h) = (1024, 800)
@@ -188,7 +188,7 @@ def bitmap_merge(gd):
 
     oe_merge(gd, dst, src0, src1)
     gd.CMD_GRAPHICSFINISH()
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
 
     gd.CMD_DLSTART()
     gd.CLEAR(1, 1, 1)
@@ -199,7 +199,7 @@ def bitmap_merge(gd):
     gd.CMD_SETBITMAP(*dst)
     gd.VERTEX2F(0, 0)
     gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
 
 def bitmap_main(gd):
     parser = argparse.ArgumentParser(description="EVE bitmap split/merge demo")

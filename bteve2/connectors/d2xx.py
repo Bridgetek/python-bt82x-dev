@@ -199,8 +199,8 @@ class EVE2(eve.EVE2):
         while a != a1:
             # Timout for a read is 7uS for BT82x.
             # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
-            # Read a a maximum of 32 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 32 + nn)
+            # Read a a maximum of 4 bytes before the "0x01" that signifies data ready.
+            n = min(a1 - a, 4 + nn)
             msg = (struct.pack("<BH", 0x11, 3) + self.addr(a))
             self.raw_write(self.csel() + msg)
             def recv(n):
@@ -209,7 +209,7 @@ class EVE2(eve.EVE2):
                    pass
                r = b''.join(self.raw_read(n))
                return r
-            bb = recv(32 + n)
+            bb = recv(4 + n)
             if 1 in bb:             # Got READY byte in response
                 i = bb.index(1)
                 response = bb[i + 1:i + 1 + n]

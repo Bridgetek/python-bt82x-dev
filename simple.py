@@ -39,6 +39,6 @@ def simple(eve):
 
     eve.DISPLAY()
     eve.CMD_SWAP()
-    eve.LIB_AwaitCoProEmpty()
+    eve.LIB_AWAITCOPROEMPTY()
     
 app.run(simple, connector="ft4222module")

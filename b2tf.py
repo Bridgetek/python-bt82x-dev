@@ -208,7 +208,7 @@ def b2tf(gd):
 
         gd.DISPLAY()
         gd.CMD_SWAP()
-        gd.LIB_AwaitCoProEmpty()
+        gd.LIB_AWAITCOPROEMPTY()
 
         present = present - datetime.timedelta(hours=1)
         lasttime = datetime.datetime.now()

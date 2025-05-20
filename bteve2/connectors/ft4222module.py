@@ -58,14 +58,14 @@ class EVE2(eve.EVE2):
             # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
             # On FT4222H the spiMaster_EndTransaction will take 11uS.
             # This is T0 (12.5nS for 80MHz clock) * 880 clocks from Datasheet.
-            # Read a maximum of 32 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 32 + nn)
+            # Read a maximum of 4 bytes before the "0x01" that signifies data ready.
+            n = min(a1 - a, 4 + nn)
             if self.multi_mode:
-                bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 32 + n)
+                bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 4 + n)
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
-                    if i >= 32: print(f"Oh dear {i}")
+                    if i >= 4: print(f"Oh dear {i}")
                     response = bb[i + 1:i + 1 + n]
                 else:
                     # There is no recovery here.

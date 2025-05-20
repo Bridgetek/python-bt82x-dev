@@ -90,7 +90,7 @@ def teapot(gd):
     gd.CLEAR()
     setup_scroll(gd)
     gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
 
     vertex_array    = 0x000000
     draw_list       = 0x4040000
@@ -106,7 +106,7 @@ def teapot(gd):
             gd.CMD_APPEND(vertex_array + 4 * i, 4)
     gd.CMD_ENDLIST()
     gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
 
     xyz = np.array(vertices)
 
@@ -131,7 +131,7 @@ def teapot(gd):
         # Write the VERTEX2F commands to RAMG
         gd.CMD_MEMWRITE(0, len(vxybuf))
         gd.ram_cmd(vxybuf)
-        gd.LIB_AwaitCoProEmpty()
+        gd.LIB_AWAITCOPROEMPTY()
 
         gd.CMD_DLSTART()
         gd.CLEAR()
@@ -139,7 +139,7 @@ def teapot(gd):
         gd.VERTEX_FORMAT(3)
         gd.CMD_CALLLIST(draw_list)
         gd.CMD_SWAP()
-        gd.LIB_AwaitCoProEmpty() 
+        gd.LIB_AWAITCOPROEMPTY() 
 
         (ty, tx) = struct.unpack("hh", gd.rd(gd.REG_TOUCH_SCREEN_XY, 4))
         touching = (tx != -32768)
@@ -158,7 +158,7 @@ def teapot(gd):
         scroll_frame += 1
 
         gd.CMD_GRAPHICSFINISH()
-        gd.LIB_AwaitCoProEmpty()
+        gd.LIB_AWAITCOPROEMPTY()
 
     t1 = time.monotonic()
     took = t1 - t0

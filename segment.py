@@ -69,6 +69,6 @@ def segment(gd):
 
     gd.DISPLAY()
     gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+    gd.LIB_AWAITCOPROEMPTY()
 
 apprunner.run(segment)
