@@ -13,13 +13,6 @@ family = "BT82x"
 device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
 assert(family in device_families)
 
-if family == "BT82x":
-    # This loads BT82x family definitions only.
-    import bteve2 as eve
-else:
-    # This loads FT80x, FT81x, BT81x family definitions.
-    import bteve as eve
-
 # Load the sevensegment source code from the "common" directory.
 sys.path.append('common')
 import sevensegment
@@ -41,7 +34,7 @@ def segment(gd):
         
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #gd.calibrate()
+    #gd.LIB_CALIBRATE()
 
     # Start drawing test screen.
     gd.CMD_DLSTART()

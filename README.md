@@ -203,4 +203,38 @@ At the moment CircuitPython is not supported.
 The API for using the python interface is simple. All keywords, commands, options, and registers are in capital letters.
 * Display List commands have no decoration.
 * Coprocessor commands are in prefixed with "CMD_".
-* 
+* Library functions that automate a coprocessor command are prefixed with "LIB_".
+* Registers are prefixed with "REG_".
+* Special memory addresses are prefixed with "RAM_".
+* Options are prefixed with "OPT_".
+* Other constants are prefixed with the function they are related to.
+
+## Display List Commands
+
+These are as described in Chapter 4 of the "BT82X Series Programming Guide". The function for display list commands will add that command to the display list. 
+
+Non-reserved bitfields in the commands are passed as parameters in the call to the function. The parameters are used to set the bits in the 32-bit display list command without modification.
+
+All parameters must be an "int" type.
+
+## Coprocessor Commands
+
+These are as described in Chapter 5 of the "BT82X Series Programming Guide". The function for coprocessor commands will add that command to the display list, they will not retrieve any result fields from the coprocessor FIFO.
+
+All results fields for commands will need to be passed as a parameter, even though the result will overwrite this value in the coprocessor FIFO.
+
+## Library Functions
+
+These are provided to generate a coprocessor command and return a result from commands which update the coprocessor FIFO with a result value. 
+
+The reason that the coprocessor commands and the library functions both exist is so that the user has the option of ignoring the result of a coprocessor command without reading the result. This can result in a significant performance improvement.
+
+It is also possible to use coprocessor commands such as CMD_RESULT to copy result values to memory to be checked after a block of coprocessor activity.
+
+## Registers
+
+These are as described in Chapter 3 of the "BT82X Series Programming Guide".
+
+## Options and Constants
+
+Options for display list and coprocessor commands are described in the Chapter 4 and 5 of the "BT82X Series Programming Guide". The naming of the options and constants is made to clarify the function(s) that they are associated with.  e.g. "BEGIN_LINE_STRIP" for use with the display list BEGIN command.

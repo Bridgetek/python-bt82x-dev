@@ -8,7 +8,7 @@ import zlib
 
 
 # This module provides the connector (gd) to the EVE hardware.
-import apprunner
+import apprunner as apprunner
 
 # Target EVE device.
 family = "BT82x"

@@ -20,9 +20,8 @@ from pyftdi.ftdi import Ftdi
 
 import bteve2 as eve
 
-FREQUENCY = 72_000_000      # system clock frequency, in Hz
-
-class EVE2(eve.EVE2):
+class connector():
+    FREQUENCY = 72_000_000      # system clock frequency, in Hz
 
     def __init__(self):
         print("Initialise FT4232H interface")
@@ -58,6 +57,9 @@ class EVE2(eve.EVE2):
     def addr(self, a):
         return struct.pack(">I", a)
 
+    def rd32(self, a):
+        return struct.unpack("I", self.rd(a, 4))[0]
+        
     def rd(self, a, nn):
         assert (a & 3) == 0
         assert (nn & 3) == 0
@@ -144,20 +146,20 @@ class EVE2(eve.EVE2):
             fault = False
             if 1 in bb:
                 # Wait for the REG_ID register to be set to 0x7c to
-                while self.rd32(self.REG_ID) != 0x7c:
+                while self.rd32(eve.EVE2.REG_ID) != 0x7c:
                     pass
-                while not fault and self.rd32(self.REG_BOOT_STATUS) != 0x522e2e2e:
+                while not fault and self.rd32(eve.EVE2.REG_BOOT_STATUS) != 0x522e2e2e:
                     fault = 1e-9 * (time.monotonic_ns() - t0) > 0.1
                 if fault:
-                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(self.REG_BOOT_STATUS):08x}, retrying...]")
+                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.EVE2.REG_BOOT_STATUS):08x}, retrying...]")
                     continue
-                actual = self.rd32(self.REG_FREQUENCY)
-                if actual != FREQUENCY:
-                    print(f"[Requested {FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
+                actual = self.rd32(eve.EVE2.REG_FREQUENCY)
+                if actual != self.FREQUENCY:
+                    print(f"[Requested {self.FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
                     continue
                 return
 
             print(f"[Boot fail after reset, retrying...]")
 
         # Disable QSPI burst mode
-        #self.wr32(self.REG_SYS_CFG, 1 << 10)
+        #self.wr32(eve.EVE2.REG_SYS_CFG, 1 << 10)

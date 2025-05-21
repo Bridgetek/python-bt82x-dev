@@ -28,7 +28,7 @@ def simple(eve):
         
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #eve.calibrate()
+    #eve.LIB_CALIBRATE()
 
     # Start drawing test screen.
     eve.CMD_DLSTART()

@@ -13,25 +13,8 @@ import ctypes
 
 import numpy as np
 
-# This module provides the connector (gd) to the EVE hardware.
 import apprunner
-
-# Target EVE device.
-family = "BT82x"
-
-# EVE family support check.
-device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
-assert(family in device_families)
-
-if family == "BT82x":
-    # This loads BT82x family definitions only.
-    import bteve2 as eve
-else:
-    # This loads FT80x, FT81x, BT81x family definitions.
-    import bteve as eve
-
-# Target EVE device.
-family = "BT82x"
+import bteve2
 
 from assets import teapot_trackball
 

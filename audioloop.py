@@ -1,8 +1,6 @@
 # Typical command line:
 # python audioloop.py --connector ft4222module
 import sys
-
-import sys
 import time
 
 # This module provides the connector (eve) to the EVE hardware.
@@ -23,7 +21,7 @@ def audioloop(eve):
 
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #eve.calibrate()
+    #eve.LIB_CALIBRATE()
     
     TRACE_COUNT = 4
     TRACE_POINTS = 512

@@ -1,19 +1,15 @@
-import os
-import sys
-import importlib
 from collections import namedtuple
 
 __version__ = '0.3.0'
 
 from sys import implementation
 if implementation.name == "circuitpython":
-    #from _eve import _EVE
-    pass
+    from .circuitpython import connector as connectorcp
 else:
     #from ._eve import _EVE
     pass
     
-from .eve import align4, CoprocessorException, EVE2 as e_EVE2
+from .eve import CoprocessorException, EVE2 as e_EVE2
 
 """
 This module is designed to be used as a subclass of a superclass that 
@@ -48,25 +44,32 @@ Touch = namedtuple('Touch', ['description','address','type'])
 class EVE2(e_EVE2):
 
     def __init__(self, connector):
-        connector_dir = os.path.join(os.path.dirname(__file__), "connectors")
 
-        sys.path.append(connector_dir)
-        try:
-            self.connector = importlib.import_module(connector)
-            print(f"Connector '{connector}' loaded")
-        except ModuleNotFoundError:
-            print(f"Connector '{connector}' not found in '{connector_dir}'")
-            sys.exit(1)
+        print(f"Connector is {connector}")
+        if implementation.name != "circuitpython":
+            if (connector == "ft4222module"):
+                from .ft4222module import connector as connector4222
+                self.connector = connector4222()
+            if (connector == "ft232h"):
+                from .ft232h import connector as connector232
+                self.connector = connector232()
+            if (connector == "ft4232h"):
+                from .ft4232h import connector as connector4232
+                self.connector = connector4232()
+            if (connector == "d2xx"):
+                from .d2xx import connector as connectord2xx
+                self.connector = connectord2xx()
+        else:
+            self.connector = connectorcp()
 
         # Initialise connector interface
-        connection = self.connector.EVE2()
-        self.setup_flash = connection.setup_flash
-        self.sleepclocks = connection.sleepclocks
-        self.addr = connection.addr
-        self.rd = connection.rd
-        self.wr = connection.wr
-        self.cs = connection.cs
-        self.reset = connection.reset
+        self.setup_flash = self.connector.setup_flash
+        self.sleepclocks = self.connector.sleepclocks
+        self.addr = self.connector.addr
+        self.rd = self.connector.rd
+        self.wr = self.connector.wr
+        self.cs = self.connector.cs
+        self.reset = self.connector.reset
 
         # Start connection to the BT82x
         self.boot()

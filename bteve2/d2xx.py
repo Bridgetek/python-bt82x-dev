@@ -5,36 +5,9 @@ import time
 
 import bteve2 as eve
 
-FREQUENCY = 72_000_000      # system clock frequency, in Hz
+class connector():
+    FREQUENCY = 72_000_000      # system clock frequency, in Hz
 
-def check(f):
-    if f != 0:
-        names = [
-            "FT_OK",
-            "FT_INVALID_HANDLE",
-            "FT_DEVICE_NOT_FOUND",
-            "FT_DEVICE_NOT_OPENED",
-            "FT_IO_ERROR",
-            "FT_INSUFFICIENT_RESOURCES",
-            "FT_INVALID_PARAMETER",
-            "FT_INVALID_BAUD_RATE",
-            "FT_DEVICE_NOT_OPENED_FOR_ERASE",
-            "FT_DEVICE_NOT_OPENED_FOR_WRITE",
-            "FT_FAILED_TO_WRITE_DEVICE",
-            "FT_EEPROM_READ_FAILED",
-            "FT_EEPROM_WRITE_FAILED",
-            "FT_EEPROM_ERASE_FAILED",
-            "FT_EEPROM_NOT_PRESENT",
-            "FT_EEPROM_NOT_PROGRAMMED",
-            "FT_INVALID_ARGS",
-            "FT_NOT_SUPPORTED",
-            "FT_OTHER_ERROR"]
-        raise IOError("Error in MPSSE function (status %d: %s)" % (f, names[f]))
-
-def bseq(*a):
-    return bytes(a)
-
-class EVE2(eve.EVE2):
     def __init__(self):
         print("Initialise FT232H interface")
 
@@ -87,19 +60,19 @@ class EVE2(eve.EVE2):
         (_, devnum) = devices[select]
 
         self.ftHandle = ctypes.c_void_p()
-        check(self.d2xx.FT_Open(devnum, ctypes.byref(self.ftHandle)))
+        self.check(self.d2xx.FT_Open(devnum, ctypes.byref(self.ftHandle)))
 
         # Procedure from p.12 of
         #   http://www.ftdichip.com/Support/Documents/AppNotes/AN_135_MPSSE_Basics.pdf
 
-        check(self.d2xx.FT_ResetDevice(self.ftHandle))                          # 1
-        check(self.d2xx.FT_SetUSBParameters(self.ftHandle, 16384, 16384))       # 2
-        check(self.d2xx.FT_SetChars(self.ftHandle, False, 0, False, 0))         # 3
-        check(self.d2xx.FT_SetTimeouts(self.ftHandle, 0, 5000))                 # 4
-        check(self.d2xx.FT_SetLatencyTimer(self.ftHandle, 1))                   # 5
-        # check(self.d2xx.FT_SetFlowControl(self.ftHandle, 0, 0, 0))              # 6
-        check(self.d2xx.FT_SetBitMode(self.ftHandle, 0, 0))                     # 7
-        check(self.d2xx.FT_SetBitMode(self.ftHandle, 0, 2))                     # 8
+        self.check(self.d2xx.FT_ResetDevice(self.ftHandle))                          # 1
+        self.check(self.d2xx.FT_SetUSBParameters(self.ftHandle, 16384, 16384))       # 2
+        self.check(self.d2xx.FT_SetChars(self.ftHandle, False, 0, False, 0))         # 3
+        self.check(self.d2xx.FT_SetTimeouts(self.ftHandle, 0, 5000))                 # 4
+        self.check(self.d2xx.FT_SetLatencyTimer(self.ftHandle, 1))                   # 5
+        # self.check(self.d2xx.FT_SetFlowControl(self.ftHandle, 0, 0, 0))              # 6
+        self.check(self.d2xx.FT_SetBitMode(self.ftHandle, 0, 0))                     # 7
+        self.check(self.d2xx.FT_SetBitMode(self.ftHandle, 0, 2))                     # 8
 
         time.sleep(0.050)   # wait for device
 
@@ -108,8 +81,8 @@ class EVE2(eve.EVE2):
         # OK, now device is in MPSSE mode, so can 
         # use AN_108 system
 
-        self.silent(bseq(0x84))                      # Loopback enable
-        self.raw_write(bseq(0xab))                       # Send bogus command 0xab
+        self.silent(self.bseq(0x84))                      # Loopback enable
+        self.raw_write(self.bseq(0xab))                       # Send bogus command 0xab
 
         while self.npending() < 2:
             pass
@@ -119,34 +92,59 @@ class EVE2(eve.EVE2):
             print(rd)
             assert 0
 
-        self.silent(bseq(0x85))                     # Disable internal loop-back
-        self.silent(bseq(0x8a))                     # Disable divide by 5
-        self.silent(bseq(0x97))                     # Turn off adaptive clocking
-        self.silent(bseq(0x8d))                     # Turn off three-phase clocking
+        self.silent(self.bseq(0x85))                     # Disable internal loop-back
+        self.silent(self.bseq(0x8a))                     # Disable divide by 5
+        self.silent(self.bseq(0x97))                     # Turn off adaptive clocking
+        self.silent(self.bseq(0x8d))                     # Turn off three-phase clocking
 
         if 0:
             # 6 MHz
-            self.silent(bseq(0x86, 0x04, 0x00))
+            self.silent(self.bseq(0x86, 0x04, 0x00))
         else:
             # 15 MHz
-            self.silent(bseq(0x86, 0x01, 0x00))
+            self.silent(self.bseq(0x86, 0x01, 0x00))
 
         self.assert_reset(1)
 
+    def check(self, f):
+        if f != 0:
+            names = [
+                "FT_OK",
+                "FT_INVALID_HANDLE",
+                "FT_DEVICE_NOT_FOUND",
+                "FT_DEVICE_NOT_OPENED",
+                "FT_IO_ERROR",
+                "FT_INSUFFICIENT_RESOURCES",
+                "FT_INVALID_PARAMETER",
+                "FT_INVALID_BAUD_RATE",
+                "FT_DEVICE_NOT_OPENED_FOR_ERASE",
+                "FT_DEVICE_NOT_OPENED_FOR_WRITE",
+                "FT_FAILED_TO_WRITE_DEVICE",
+                "FT_EEPROM_READ_FAILED",
+                "FT_EEPROM_WRITE_FAILED",
+                "FT_EEPROM_ERASE_FAILED",
+                "FT_EEPROM_NOT_PRESENT",
+                "FT_EEPROM_NOT_PROGRAMMED",
+                "FT_INVALID_ARGS",
+                "FT_NOT_SUPPORTED",
+                "FT_OTHER_ERROR"]
+            raise IOError("Error in MPSSE function (status %d: %s)" % (f, names[f]))
+    def bseq(self, *a):
+        return bytes(a)
     def npending(self):
         dwNumBytesToRead = ctypes.c_uint()
-        check(self.d2xx.FT_GetQueueStatus(self.ftHandle, ctypes.byref(dwNumBytesToRead)))
+        self.check(self.d2xx.FT_GetQueueStatus(self.ftHandle, ctypes.byref(dwNumBytesToRead)))
         return dwNumBytesToRead.value
     def raw_read(self, n):
         dwNumBytesRead = ctypes.c_uint()
-        check(self.d2xx.FT_Read(self.ftHandle, self.s, n, ctypes.byref(dwNumBytesRead)))
+        self.check(self.d2xx.FT_Read(self.ftHandle, self.s, n, ctypes.byref(dwNumBytesRead)))
         assert n == dwNumBytesRead.value
         return list(self.s)[:n]
     def raw_write(self, s):
         assert type(s) == bytes
         if s:
             dwNumBytesSent = ctypes.c_uint()
-            check(self.d2xx.FT_Write(self.ftHandle, s, len(s), ctypes.byref(dwNumBytesSent)))
+            self.check(self.d2xx.FT_Write(self.ftHandle, s, len(s), ctypes.byref(dwNumBytesSent)))
     def silent(self, s): # send a silent command - one that expects no response
         self.raw_write(s)
         if self.npending() != 0:
@@ -155,10 +153,10 @@ class EVE2(eve.EVE2):
             print("Error after %s - MPSSE receive buffer should be empty, but contains %s" % (hd(s), hd(self.raw_read(self.npending()))))
 
     def csel(self):
-        return (bseq(0x80, 0x80, 0x9b))
+        return (self.bseq(0x80, 0x80, 0x9b))
 
     def cunsel(self):
-        return (bseq(0x80, 0x88, 0x9b))
+        return (self.bseq(0x80, 0x88, 0x9b))
 
     # From MPSSE SPI module:
     #   http://www.ftdichip.com/Support/Documents/DataSheets/Modules/DS_VA800A-SPI_MPSSE_Module.pdf
@@ -168,9 +166,9 @@ class EVE2(eve.EVE2):
 
     def assert_reset(self, sense):
         if sense:
-            self.silent(bseq(0x80, 0x08, 0x9b))
+            self.silent(self.bseq(0x80, 0x08, 0x9b))
         else:
-            self.silent(bseq(0x80, 0x88, 0x9b))
+            self.silent(self.bseq(0x80, 0x88, 0x9b))
 
     def scu(self, b0, b1 = 0, b2 = 0):
         msg = struct.pack("<BH", 0x11, 2) + bytes([b0, b1, b2])
@@ -186,6 +184,9 @@ class EVE2(eve.EVE2):
     def addr(self, a):
         return struct.pack(">I", a)
 
+    def rd32(self, a):
+        return struct.unpack("I", self.rd(a, 4))[0]
+        
     def rd(self, a, nn):
         if nn == 0:
             return b""
@@ -287,19 +288,19 @@ class EVE2(eve.EVE2):
             t0 = time.monotonic_ns()
             fault = False
             if 1 in r:
-                while self.rd32(self.REG_ID) != 0x7c:
+                while self.rd32(eve.EVE2.REG_ID) != 0x7c:
                     pass
-                while not fault and self.rd32(self.REG_BOOT_STATUS) != 0x522e2e2e:
+                while not fault and self.rd32(eve.EVE2.REG_BOOT_STATUS) != 0x522e2e2e:
                     fault = 1e-9 * (time.monotonic_ns() - t0) > 0.1
                 if fault:
-                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(self.REG_BOOT_STATUS):08x}, retrying...]")
+                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.EVE2.REG_BOOT_STATUS):08x}, retrying...]")
                     continue
-                actual = self.rd32(self.REG_FREQUENCY)
-                if actual != FREQUENCY:
-                    print(f"[Requested {FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
+                actual = self.rd32(eve.EVE2.REG_FREQUENCY)
+                if actual != self.FREQUENCY:
+                    print(f"[Requested {self.FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
                     continue
                 return
             print("[Boot fail after reset, retrying...]")
 
         # Disable QSPI burst mode
-        #self.wr32(self.REG_SYS_CFG, 1 << 10)
+        #self.wr32(eve.EVE2.REG_SYS_CFG, 1 << 10)

@@ -15,13 +15,6 @@ family = "BT82x"
 device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
 assert(family in device_families)
 
-if family == "BT82x":
-    # This loads BT82x family definitions only.
-    import bteve2 as eve
-else:
-    # This loads FT80x, FT81x, BT81x family definitions.
-    import bteve as eve
-
 # Valid program actions.
 actions = ["standard", "ascii", "symbol"]
 
@@ -306,7 +299,7 @@ def fontmagic(gd):
 
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #gd.calibrate()
+    #gd.LIB_CALIBRATE()
 
     # Install a custom font. 
     # This must be installed in RAM_G memory before the details of the font
