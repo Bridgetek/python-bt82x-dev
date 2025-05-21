@@ -8,7 +8,7 @@ import zlib
 
 
 # This module provides the connector (gd) to the EVE hardware.
-import apprunner as apprunner
+import apprunner as app
 
 # Target EVE device.
 family = "BT82x"
@@ -33,18 +33,18 @@ def iload(self, a, plain):
     self.CMD_INFLATE(a, 0)
     self.cc(pad4(zlib.compress(plain)))
 
-def dith(w, h):
+def dith(gd, w, h):
     return np.tile(np.concatenate((
         np.tile(np.array([0, 2]), (w+1) // 2)[:w],
         np.tile(np.array([3, 1]), (w+1) // 2)[:w]
     )), (h+1) // 2)[:w*h]
 
-colorfmts = {
-    eve.RGB565 :   (0, 5, 6, 5)
+def convert(gd, im, fmt, dither = False):
+    colorfmts = {
+        gd.FORMAT_RGB565 :   (0, 5, 6, 5)
     }
 
-def convert(im, fmt, dither = False):
-    dd = dith(*im.size)
+    dd = dith(gd, *im.size)
     sizes = colorfmts[fmt][::-1]
     bpp = sum(sizes)
     cs = [np.frombuffer(c.tobytes(), np.uint8).astype(np.uint32) for c in im.split()]
@@ -92,19 +92,19 @@ def convert(im, fmt, dither = False):
 def oe_split(gd, dst0, dst1, src):
     gd.CMD_RENDERTARGET(*dst0)
     gd.CMD_SETBITMAP(*src)
-    gd.BLEND_FUNC(eve.SRC_ALPHA, eve.ZERO)
-    gd.BEGIN(eve.BITMAPS)
-    gd.BitmapTransformA(0, 0x200)       # Shrink 2x
+    gd.BLEND_FUNC(gd.BLEND_SRC_ALPHA, gd.BLEND_ZERO)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
+    gd.BITMAP_TRANSFORM_A(0, 0x200)       # Shrink 2x
     gd.VERTEX2F(0, 0)
     gd.DISPLAY()
     gd.CMD_SWAP()
 
     gd.CMD_DLSTART()
     gd.CMD_RENDERTARGET(*dst1)
-    gd.BLEND_FUNC(eve.SRC_ALPHA, eve.ZERO)
-    gd.BEGIN(eve.BITMAPS)
-    gd.BitmapTransformA(0, 0x200)       # Shrink 2x
-    gd.BitmapTransformC(0x100)          # Offset 1 pixel
+    gd.BLEND_FUNC(gd.BLEND_SRC_ALPHA, gd.BLEND_ZERO)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
+    gd.BITMAP_TRANSFORM_A(0, 0x200)       # Shrink 2x
+    gd.BITMAP_TRANSFORM_C(0x100)          # Offset 1 pixel
     gd.VERTEX2F(0, 0)
     gd.DISPLAY()
     gd.CMD_SWAP()
@@ -113,30 +113,30 @@ def oe_merge(gd, dst, src0, src1):
     gd.CMD_RENDERTARGET(*dst)
 
     scratch = 0x07d8_0000
-    mask = eve.Surface(scratch, eve.L8, 2, 1)
+    mask = eve.Surface(scratch, gd.FORMAT_L8, 2, 1)
     gd.CMD_REGWRITE(scratch, 0xff00)
 
     gd.CMD_SETBITMAP(*mask)
-    gd.BITMAP_SIZE(eve.NEAREST, eve.REPEAT, eve.REPEAT, 0, 0)
+    gd.BITMAP_SIZE(gd.FILTER_NEAREST, gd.WRAP_REPEAT, gd.WRAP_REPEAT, 0, 0)
     gd.BITMAP_SIZE_H(0, 0)
 
     gd.CLEAR(1, 1, 1)
-    gd.BEGIN(eve.BITMAPS)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
 
-    gd.STENCIL_FUNC(eve.ALWAYS, 0xff, 0xff)
-    gd.STENCIL_OP(eve.REPLACE, eve.REPLACE)
-    gd.ALPHA_FUNC(eve.NOTEQUAL, 0)
+    gd.STENCIL_FUNC(gd.TEST_ALWAYS, 0xff, 0xff)
+    gd.STENCIL_OP(gd.STENCIL_REPLACE, gd.STENCIL_REPLACE)
+    gd.ALPHA_FUNC(gd.TEST_NOTEQUAL, 0)
     gd.VERTEX2F(0, 0)
 
     gd.STENCIL_MASK(0)
-    gd.BLEND_FUNC(eve.SRC_ALPHA, eve.ZERO)
-    gd.BitmapTransformA(0, 0x080)       # zoom 2x
+    gd.BLEND_FUNC(gd.BLEND_SRC_ALPHA, gd.BLEND_ZERO)
+    gd.BITMAP_TRANSFORM_A(0, 0x080)       # zoom 2x
 
     for (i, src) in enumerate((src0, src1)):
         gd.CMD_SETBITMAP(*src)
-        gd.BITMAP_SIZE(eve.NEAREST, eve.BORDER, eve.BORDER, 0, 0)
+        gd.BITMAP_SIZE(gd.FILTER_NEAREST, gd.WRAP_BORDER, gd.WRAP_BORDER, 0, 0)
         gd.BITMAP_SIZE_H(0, 0)
-        gd.STENCIL_FUNC(eve.EQUAL, i, 1)
+        gd.STENCIL_FUNC(gd.TEST_EQUAL, i, 1)
         gd.VERTEX2F(0, 0)
 
     gd.DISPLAY()
@@ -146,13 +146,13 @@ def bitmap_split(gd):
     (w, h) = (1024, 800)
     im0 = Image.open("assets/oe_AB.png").resize((2 * w, h))
 
-    fmt = eve.RGB565
+    fmt = gd.FORMAT_RGB565
     block_addr = 0x400000       # allocate 4MB per block
     src = eve.Surface(block_addr * 5, fmt, 2 * w, h)
     dst0 = eve.Surface(block_addr * 6, src.fmt, w, h)
     dst1 = eve.Surface(block_addr * 7, src.fmt, w, h)
 
-    iload(gd, src.addr, convert(im0, src.fmt))
+    iload(gd, src.addr, convert(gd, im0, src.fmt))
 
     oe_split(gd, dst0, dst1, src)
     gd.CMD_GRAPHICSFINISH()
@@ -160,10 +160,10 @@ def bitmap_split(gd):
 
     gd.CMD_DLSTART()
     gd.CLEAR(1, 1, 1)
-    framebuffer = eve.Surface(eve.SWAPCHAIN_0, eve.RGB6, 1920, 1200)
+    framebuffer = eve.Surface(gd.SWAPCHAIN_0, gd.FORMAT_RGB6, 1920, 1200)
     gd.CMD_RENDERTARGET(*framebuffer)
     gd.VERTEX_FORMAT(0) # integer coordinates
-    gd.BEGIN(eve.BITMAPS)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
     gd.CMD_SETBITMAP(*dst0)
     gd.VERTEX2F(0, 0)
 
@@ -177,14 +177,14 @@ def bitmap_merge(gd):
     im0 = Image.open("assets/oe_A.png").resize((w, h))
     im1 = Image.open("assets/oe_B.png").resize((w, h))
 
-    fmt = eve.RGB565
+    fmt = gd.FORMAT_RGB565
     block_addr = 0x400000       # allocate 4MB per block
     src0 = eve.Surface(block_addr * 5, fmt, w, h)
     src1 = eve.Surface(block_addr * 6, fmt, w, h)
     dst = eve.Surface(block_addr * 7, fmt, 2 * w, h)
 
-    iload(gd, src0.addr, convert(im0, fmt))
-    iload(gd, src1.addr, convert(im1, fmt))
+    iload(gd, src0.addr, convert(gd, im0, fmt))
+    iload(gd, src1.addr, convert(gd, im1, fmt))
 
     oe_merge(gd, dst, src0, src1)
     gd.CMD_GRAPHICSFINISH()
@@ -192,10 +192,10 @@ def bitmap_merge(gd):
 
     gd.CMD_DLSTART()
     gd.CLEAR(1, 1, 1)
-    framebuffer = eve.Surface(eve.SWAPCHAIN_0, eve.RGB6, 1920, 1200)
+    framebuffer = eve.Surface(gd.SWAPCHAIN_0, gd.FORMAT_RGB6, 1920, 1200)
     gd.CMD_RENDERTARGET(*framebuffer)
     gd.VERTEX_FORMAT(0) # integer coordinates
-    gd.BEGIN(eve.BITMAPS)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
     gd.CMD_SETBITMAP(*dst)
     gd.VERTEX2F(0, 0)
     gd.CMD_SWAP()
@@ -218,4 +218,4 @@ def bitmap_main(gd):
     else:
         print("Invalid option. Use 'split' or 'merge'.")
 
-apprunner.run(bitmap_main)
+app.run(bitmap_main)
