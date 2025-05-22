@@ -1644,11 +1644,11 @@ class EVE2:
     
     # CMD_PLOTDRAW(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)
     def CMD_PLOTDRAW(self, *args):
-        self.cmd(0xab, "IHHhhII", args)
+        self.cmd(0xab, "IHHhhIII", args)
 
     # CMD_PLOTSTREAM(uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale")
     def CMD_PLOTSTREAM(self, *args):
-        self.cmd(0xac, "HHhhII", args)
+        self.cmd(0xac, "HHhhIII", args)
 
    #  EVE_CMD_PLOTBITMAP(uint32_t addr, uint16_t len, uint16_t opt, uint32_t handle)
     def CMD_PLOTBITMAP(self, *args):
