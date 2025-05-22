@@ -1583,6 +1583,20 @@ class EVE2:
         self.CMD_FSSNAPSHOT(temp, filename, x, y, w, h, 0)
         return self.previous()
 
+    # CMD_SEVENSEG(int16_t x, int16_t y, uint16_t s, uint16_t n)
+    def CMD_SEVENSEG(self, *args):
+        self.cmd(0x98, 'hhHH', args)
+
+    # CMD_MESSAGEBOX(int16_t font, uint16_t options, const char* s)
+    def CMD_MESSAGEBOX(self, *args):
+        self.cmd(0x99, 'hH', args[:2])
+        self.fstring(args[2:])
+
+    # CMD_TOOLTIP(int16_t x, int16_t y, int16_t font, uint16_t options, const char* s)
+    def CMD_TOOLTIP(self, *args):
+        self.cmd(0x9a, 'hhhH', args[:4])
+        self.fstring(args[4:])
+
     # CMD_TEXTSCALE(int16_t x, int16_t y, int16_t font, uint16_t options, uint32_t scale, const char* s)
     def CMD_TEXTSCALE(self, *args):
         self.cmd(0x95, 'hhhHI', args[:5])
