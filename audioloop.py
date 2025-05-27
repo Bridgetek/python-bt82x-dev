@@ -11,6 +11,7 @@ import apprunner
 # Load the extension code from the "common" directory.
 sys.path.append('common')
 import extplotmemsevenseg
+import vumeter
 
 def pad4(s):
     while len(s) % 4:
@@ -134,6 +135,9 @@ def audioloop(eve):
     # VU level gauge
     # VU display value (averaged and peaked)
     vu_level = 0
+    vu_prev = 0
+    vu_prev1 = None
+    vu_prev2 = None
     # VU meter location
     vux1 = border * 10
     vuy = border * 10
@@ -183,54 +187,12 @@ def audioloop(eve):
         # Pixel resolution
         eve.VERTEX_FORMAT(0)
         
-        # Cut-outs for VU meters
         eve.BEGIN(eve.BEGIN_RECTS)
-        # Border for trace graphs
-        eve.COLOR_RGB(125, 125, 125)
-        eve.VERTEX2F(vux1 - border, vuy - border)
-        eve.VERTEX2F(vux1 + 2 * vuw + 2 * border, vuy + vuh + border)
-        # Inside for trace graphs
-        eve.COLOR_RGB(255, 255, 255)
-        eve.VERTEX2F(vux1, vuy)
-        eve.VERTEX2F(vux1 + vuw, vuy + vuh)
-        eve.VERTEX2F(vux2, vuy)
-        eve.VERTEX2F(vux2 + vuw, vuy + vuh)
-        # Border for trace graphs
+        # Border for EQ
         eve.COLOR_RGB(0, 0, 0)
         eve.VERTEX2F(geqx - border, geqy - border)
         eve.VERTEX2F(geqx + (geqw * ((geqseg * 2) - 1) / (geqseg * 2)) + border, geqy + geqh + border)
         eve.END()
-
-        for vux in [vux1, vux2]:
-            eve.BEGIN(eve.BEGIN_LINES)
-            eve.COLOR_RGB(0, 0, 0)
-            eve.LINE_WIDTH(2)
-            eve.VERTEX2F(vux + ((vuw * 1) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + vuw - ((vuw * 4) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 2) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 2) // 12), vuy + ((vuh * 3) // 12))
-            eve.VERTEX2F(vux + ((vuw * 5) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 5) // 12), vuy + ((vuh * 3) // 12))
-            eve.VERTEX2F(vux + ((vuw * 6) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 6) // 12), vuy + ((vuh * 3) // 12))
-            eve.VERTEX2F(vux + ((vuw * 7) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 7) // 12), vuy + ((vuh * 3) // 12))
-            eve.VERTEX2F(vux + ((vuw * 8) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 8) // 12), vuy + ((vuh * 3) // 12))
-            eve.COLOR_RGB(255, 0, 0)
-            eve.LINE_WIDTH(8)
-            eve.VERTEX2F(vux + ((vuw * 8) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 11) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 10) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 10) // 12), vuy + ((vuh * 3) // 12))
-            eve.VERTEX2F(vux + ((vuw * 11) // 12), vuy + ((vuh * 4) // 12))
-            eve.VERTEX2F(vux + ((vuw * 11) // 12), vuy + ((vuh * 3) // 12))
-            eve.END()
-            eve.COLOR_RGB(0, 0, 0)
-            eve.BEGIN(eve.BEGIN_BITMAPS)
-            eve.VERTEX2II(vux + (vuw // 2) - 22, vuy + (vuh // 2), 24, 86)
-            eve.VERTEX2II(vux + (vuw // 2), vuy + (vuh // 2), 24, 85)
-            eve.END()
 
         eve.SAVE_CONTEXT()
         for i in range(geqseg):
@@ -397,27 +359,24 @@ def audioloop(eve):
             geqtreb = (geqtreb * 75) / 100
 
         if vu_active:
-            vu_sample = vu_sample * 2 // vu_active
-            if (vu_sample > 255): 
-                vu_sample = 255
+            # Average channels for level
+            vu_level = vu_sample * 2 // vu_active
+            if (vu_level > 255): 
+                vu_level = 255
+        else:
+            # No channels active
+            vu_level = 0
 
-        if vu_sample > vu_level: 
-            vu_level = ((vu_sample + vu_level) * 99) // 200
+        # Peak level - make EQ pulse
+        if vu_level > vu_prev: 
             geqbass = 255
             geqmid = 255
             geqtreb = 255
-        else : 
-            vu_level = (vu_level * 98) // 100
+        vu_prev = vu_level
 
         # Draw VU meter pointer
-        eve.BEGIN(eve.BEGIN_LINES)
-        eve.COLOR_RGB(0, 0, 0)
-        eve.LINE_WIDTH(2)
-        for vux in [vux1, vux2]:
-            eve.VERTEX2F(vux + (vuw // 2), vuy + vuh - border)
-            eve.VERTEX2F(vux + (vuw // 2) + ((math.sin(((vu_level - 128) / 512) * math.pi)) * (vuh * 3 // 4)), 
-                     vuy + vuh - border - ((math.cos(((vu_level - 128) / 512) * math.pi)) * (vuh * 3 // 4)))
-        eve.END()
+        vu_prev1 = vumeter.cmd_vumeter(eve, vux1, vuy, vuw, vuh, vu_level, vu_prev1, 5)
+        vu_prev2 = vumeter.cmd_vumeter(eve, vux2, vuy, vuw, vuh, vu_level, vu_prev2, 5)
 
         if (perf_fps):
             eve.COLOR_RGB(255, 255, 255)
