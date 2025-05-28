@@ -1,28 +1,17 @@
 # Typical command line:
 # python b2tf.py --connector ft4222module
 import sys
-import time
 import datetime
 
-# This module provides the connector (gd) to the EVE hardware.
+# Add the library directories to the module search path.
+sys.path.append('../..')
+sys.path.append('../../bteve2')
+
+# This module provides the connector to the EVE hardware.
 import apprunner
 
-# Target EVE device.
-family = "BT82x"
-
-# EVE family support check.
-device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
-assert(family in device_families)
-
-if family == "BT82x":
-    # This loads BT82x family definitions only.
-    import bteve2 as eve
-else:
-    # This loads FT80x, FT81x, BT81x family definitions.
-    import bteve as eve
-
 # Load the sevensegment source code from the "common" directory.
-sys.path.append('common')
+sys.path.append('../../common')
 import sevensegment 
 
 def ledbox(gd, x, y, count, segsize):

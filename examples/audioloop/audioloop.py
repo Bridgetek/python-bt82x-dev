@@ -5,11 +5,15 @@ import time
 import math 
 import random
 
-# This module provides the connector (eve) to the EVE hardware.
+# Add the library directories to the module search path.
+sys.path.append('../..')
+sys.path.append('../../bteve2')
+
+# This module provides the connector to the EVE hardware.
 import apprunner
 
 # Load the extension code from the "common" directory.
-sys.path.append('common')
+sys.path.append('../../common')
 import extplotmemsevenseg
 import vumeter
 
@@ -54,9 +58,6 @@ def audioloop(eve):
             trace_data.append(file.read())
         with open("assets/sample_2.pcm", mode='rb') as file:
             trace_data.append(file.read())
-        # Load background image to array
-        with open("assets/picwaves.jpg", mode="rb") as file:
-            picbg = pad4(file.read())
     except:
         raise(f"Error: asset not found.")
 
