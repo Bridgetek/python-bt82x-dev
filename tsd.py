@@ -1,7 +1,6 @@
 # Typical command line:
 # python tsd.py --connector ft4222module
 import math
-import bteve2 as eve
 
 # This module provides the connector (gd) to the EVE hardware.
 import apprunner
