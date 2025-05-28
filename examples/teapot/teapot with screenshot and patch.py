@@ -13,8 +13,12 @@ import ctypes
 
 import numpy as np
 
+# Add the library directories to the module search path.
+sys.path.append('../..')
+sys.path.append('../../bteve2')
+
+# This module provides the connector to the EVE hardware.
 import apprunner
-import bteve2
 
 from assets import teapot_trackball
 
@@ -23,7 +27,7 @@ def setup_scroll(gd):
     #gd.CMD_LOADIMAGE(0xffffffff, 0)
     gd.CMD_LOADIMAGE(80 << 20, 0)
     with open("assets/teapot_logo.png", "rb") as f:
-        gd.load(f)
+         gd.load(f)
     gd.BITMAP_SIZE(gd.FILTER_NEAREST, gd.WRAP_REPEAT, gd.WRAP_BORDER, 0, 129)
     gd.BITMAP_SIZE_H(0, 0)
 
@@ -66,6 +70,16 @@ def teapot(gd):
             np.array(y * q, dtype = np.int32)
         )
 
+    gd.CMD_LOADPATCH(0)
+    with open("../../assets/patch-sdcard.patch", "rb") as f:
+        gd.load(f)
+    gd.LIB_AWAITCOPROEMPTY()
+
+    options = gd.OPT_IS_SD
+    gd.CMD_SDATTACH(options, 7)
+    sz = gd.previous(1)
+    print("File status = 0x%x"%(sz))
+    
     (vertices, strips) = json.load(open("assets/teapot_geometry.json"))
     curquat = teapot_trackball.trackball(0, 0, 0, 0)
 
@@ -129,6 +143,7 @@ def teapot(gd):
         sx = (2 * tx - gd.w) / gd.w
         sy = (gd.h - 2 * ty) / gd.h
         if touching:
+            frame = 100000;
             if prev_touch is not None:
                 spin = teapot_trackball.trackball(prev_touch[0], prev_touch[1], sx, sy)
                 spin *= 8
@@ -143,8 +158,20 @@ def teapot(gd):
         gd.CMD_GRAPHICSFINISH()
         gd.LIB_AWAITCOPROEMPTY()
 
+        t2 = time.monotonic()
+        #gd.CMD_FSSNAPSHOT(0x10000, f"i{frame}.bmp", 7)
+        #gd.LIB_AWAITCOPROEMPTY()
+        t3 = time.monotonic()
+        #sz = gd.previous(1)
+        #print("File status = 0x%x"%(sz))
+        #print(f"File \"i{frame}.bmp\" in {t3 - t2:.3f}s")
+
     t1 = time.monotonic()
     took = t1 - t0
     print(f"{N} frames took {took:.3f} s. {N / took:.2f} fps")
+
+    gd.CMD_FSSNAPSHOT(0x10000, f"i{frame}.bmp", 7)
+    sz = gd.previous(1)
+    print("File status = 0x%x"%(sz))
 
 apprunner.run(teapot)

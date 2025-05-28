@@ -721,6 +721,18 @@ class EVE2:
         self.cmd(code, fmt, args)
         return self.result()
 
+    def LIB_SDCARD_ERROR(self, r):
+        message = {
+                0: "No error.",
+                0xd000: "SD card is not detected.",
+                0xd001: "No response from card.",
+                0xd002: "Card timeout during initialization.",
+                0xd003: "Sector 0 (MBR) not found on card.",
+                0xd004: "FAT filesystem not found.",
+                0xd005: "Card failed to enter high-speed mode",
+        }.get(r, "Unknown code")
+        return message
+
     # Command used to setup LVDSTX registers.
     def CMD_APBWRITE(self, *args):
         self.cmd(0x63, 'II', args)
@@ -1159,7 +1171,7 @@ class EVE2:
 
     # CMD_FSREAD(uint32_t dst, const char* filename, uint32_t result)
     def CMD_FSREAD(self, *args):
-        self.cmd(0x71, 'I', int(args[0]))
+        self.cmd(0x71, 'I', [int(args[0])])
         self.cstring(args[1])
         self.c4(args[2])
 
@@ -1544,7 +1556,7 @@ class EVE2:
 
     # CMD_FSWRITE (uint32_t dst, const char* filename, uint32_t result)
     def CMD_FSWRITE(self, *args):
-        self.cmd(0x93, 'I', int(args[0]))
+        self.cmd(0x91, 'I', [int(args[0])])
         self.cstring(args[1])
         self.c4(int(args[2]))
 
@@ -1554,7 +1566,7 @@ class EVE2:
 
     # CMD_FSFILE (uint32_t size, const char* filename, uint32_t result)
     def CMD_FSFILE(self, *args):
-        self.cmd(0x94, 'I', int(args[0]))
+        self.cmd(0x92, 'I', [int(args[0])])
         self.cstring(args[1])
         self.c4(int(args[2]))
 
@@ -1564,7 +1576,7 @@ class EVE2:
         
     # CMD_FSSNAPSHOT (uint32_t temp, const char* filename, uint32_t result)
     def CMD_FSSNAPSHOT(self, *args):
-        self.cmd(0x95, 'I', int(args[0]))
+        self.cmd(0x93, 'I', [int(args[0])])
         self.cstring(args[1])
         self.c4(int(args[2]))
 
@@ -1574,12 +1586,12 @@ class EVE2:
 
     # CMD_FSCROPSHOT (uint32_t temp, const char* filename, int16_t x, int16_t y, uint16_t w, uint16_t h)
     def CMD_FSCROPSHOT(self, *args):
-        self.cmd(0x95, 'I', int(args[0]))
+        self.cmd(0x94, 'I', [int(args[0])])
         self.cstring(args[1])
         self.cc(struct.pack('hhHH', [ int(arg) for arg in args[2:6] ] ))
         self.c4(int(args[6]))
 
-    def LIB_FSSNAPSHOT(self, temp, filename, x, y, w, h):
+    def LIB_FSCROPSHOT(self, temp, filename, x, y, w, h):
         self.CMD_FSSNAPSHOT(temp, filename, x, y, w, h, 0)
         return self.previous()
 

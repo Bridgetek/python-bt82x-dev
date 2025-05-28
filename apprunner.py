@@ -4,13 +4,14 @@ from sys import implementation
 # This loads BT82x family definitions only.
 import bteve2
 
-print(implementation.name)
 if implementation.name != "circuitpython":
     import argparse
 
 class run:
     def __init__(self, app, minimal = False, connector=None, panel="HD"):
         if implementation.name != "circuitpython":
+            if connector == None: 
+                connector = "ft4222module"
             progname = sys.argv[0]
             
             # Parse arguments

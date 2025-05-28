@@ -3,16 +3,12 @@
 import sys
 import argparse
 
-# This module provides the connector (eve) to the EVE hardware.
-import bteve2 as eve
-import apprunner as app
+# Add the library directories to the module search path.
+sys.path.append('../..')
+sys.path.append('../../bteve2')
 
-# Target EVE device.
-family = "BT82x"
-
-# EVE family support check.
-device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
-assert(family in device_families)
+# This module provides the connector to the EVE hardware.
+import apprunner
 
 def simple(eve):
     # Handle for fonts to use in the test.
@@ -41,4 +37,4 @@ def simple(eve):
     eve.CMD_SWAP()
     eve.LIB_AWAITCOPROEMPTY()
     
-app.run(simple, connector="ft4222module")
+apprunner.run(simple)

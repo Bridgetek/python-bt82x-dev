@@ -5,15 +5,19 @@ import struct
 import zlib
 import argparse
 
-# This module provides the connector (gd) to the EVE hardware.
+# Add the library directories to the module search path.
+sys.path.append('../..')
+sys.path.append('../../bteve2')
+
+# Load the extension code from the "common" directory.
+sys.path.append('../../common')
+import screenshot
+
+# This module provides the connector to the EVE hardware.
 import apprunner
 
 # Target EVE device.
 family = "BT82x"
-
-# EVE family support check.
-device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
-assert(family in device_families)
 
 # Valid program actions.
 actions = ["standard", "ascii", "symbol"]
@@ -222,7 +226,6 @@ def cmd_textzoom(gd, x, y, fontcache, zoom, text):
         gd.CMD_REGION() # BT82x
     else:
         gd.SAVE_CONTEXT() # BT82x, BT81x, FT81x, FT80x
-
     # Setup the font.
     gd.VERTEX_FORMAT(2)
     gd.CELL(0)
@@ -232,7 +235,7 @@ def cmd_textzoom(gd, x, y, fontcache, zoom, text):
     gd.CMD_LOADIDENTITY()
     gd.BITMAP_SIZE(gd.FILTER_NEAREST, gd.WRAP_BORDER, gd.WRAP_BORDER, int(width * zoom), int(height * zoom))
     # Apply scale to text.
-    gd.CMD_SCALE(zoom, zoom)
+    gd.CMD_SCALE(zoom * 65536, zoom * 65536)
     gd.CMD_SETMATRIX()
 
     x1,y1 = x,y
@@ -313,8 +316,11 @@ def fontmagic(gd):
         parser.print_usage()
         sys.exit(1)
 
+    screenshot.setup(gd)
+
     print("Upload font file...")
     # Check for a relocatable font file. 
+    gd.CMD_DLSTART()
     format = int.from_bytes(dd[0:4], byteorder='little')
     if format == 0x0100aa44:
         # Use loadasset for relocatable assets.
@@ -333,11 +339,6 @@ def fontmagic(gd):
     gd.CMD_SETFONT(customfont, address, first_character)
     gd.CMD_SWAP()
     gd.LIB_AWAITCOPROEMPTY()
-
-    """print(f"0x{address:x}: ")
-    for i in range(0, 256, 4):
-        print(f"{int.from_bytes(gd.rd(address + i, 4), byteorder='little', signed=False):08x} ", end="")
-    print()"""
 
     # Obtain details on custom installed fonts from RAM_G.
     print("Get custom font info...")
@@ -425,5 +426,6 @@ def fontmagic(gd):
     gd.DISPLAY()
     gd.CMD_SWAP()
     gd.LIB_AWAITCOPROEMPTY()
+
     
 apprunner.run(fontmagic)
