@@ -8,7 +8,7 @@ sys.path.append('../..')
 sys.path.append('../../bteve2')
 
 # Load the extension code from the "common" directory.
-sys.path.append('../../common')
+sys.path.append('../common')
 import sevensegment
 
 # This module provides the connector to the EVE hardware.
@@ -35,10 +35,11 @@ def segment(gd):
     # Calibrate screen if necessary. 
     # Don't do this for now.
     #gd.LIB_CALIBRATE()
+    screenshot.setup(gd)
 
     # Start drawing test screen.
     gd.CMD_DLSTART()
-    gd.CLEAR_COLOR_RGB(64,72,64)
+    gd.CLEAR_COLOR_RGB(0,0,0)
     gd.CLEAR(1,1,1)
 
     redfg = (255, 0, 0)
@@ -59,7 +60,6 @@ def segment(gd):
     sevensegment.cmd_sevenseg(gd, x + (gap * 5), y, size, int((number/100)%10), fg, bg)
     sevensegment.cmd_sevenseg(gd, x + (gap * 6), y, size, int((number/10)%10), fg, bg)
     sevensegment.cmd_sevenseg(gd, x + (gap * 7), y, size, int((number/1)%10), fg, bg)
-
     gd.DISPLAY()
     gd.CMD_SWAP()
     gd.LIB_AWAITCOPROEMPTY()

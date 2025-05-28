@@ -13,7 +13,7 @@ sys.path.append('../../bteve2')
 import apprunner
 
 # Load the extension code from the "common" directory.
-sys.path.append('../../common')
+sys.path.append('../common')
 import extplotmemsevenseg
 import vumeter
 

@@ -8,7 +8,7 @@ sys.path.append('../..')
 sys.path.append('../../bteve2')
 
 # Load the extension code from the "common" directory.
-sys.path.append('../../common')
+sys.path.append('../common')
 import extplotmem
 
 # This module provides the connector to the EVE hardware.
@@ -119,7 +119,6 @@ def plottest(eve):
         eve.wr32(i * 4, a)
 
     eve.CMD_DLSTART()
-    eve.CLEAR()
     eve.CLEAR_COLOR_RGB(30, 30, 90)
     eve.CLEAR(1,1,1)
 

@@ -117,26 +117,17 @@ The cable or board connections are identical to the (#MPSSE Cables) section.
 
 ## Files and Folder Structure
 
+The source code in this repository is structured as follows:
+
 | File/Folder | Description |
 | --- | --- |
 | bteve2 | Module and library code for BT82x |
 | docs | Documentation and images for documentation |
 | common | Common files shared between demos |
+| examples | Example code which use this module |
 | apprunner.py | Wrapper code to setup library, connector and application |
-| simple.py | Simple example code |
-| fontmagic.py | Simple example code demonstrating scaling and rotating fonts |
-| segment.py | Simple seven segment demo code |
-| b2tf.py | Advanced seven segment demo code |
-| teapot.py | 3D teapot rotation demo code |
-| bitmap-split-merge.py | Simple bitmap split/merge demo code |
-| bitmap-crop.py | Simple bitmap crop demo code |
-| plottest.py | Simple plot graph demo code |
-| plottest2.py | Plot live graphs demo code |
-| tsd.py | Time-series data live display, using HISTOGRAM |
 
-### apprunner
-
-This is a wrapper program that selects the command line parameters, sets up the required display "panel" and chooses a connector. It establishes a module for the BT82x API library and then calls the example program with the EVE handle (`eve`).
+The following sections explain the files in the top directory of this repository.
 
 ### bteve2
 
@@ -146,25 +137,29 @@ This is a python module for the BT82x interface allowing calls from python to be
 
 To run the python code and connect to a BT82x a connector is required. The connector is selected in the parameters to the example programs. It opens a port to the device that makes the SPI signals and sets-up the target device. API interfaces for `reset`, `wr`, `rd`, `cs` functions are required. 
 
-There are supported connectors for [FT4232H (`ft4232h.py`)](bteve2/connectors/ft4232h.py), [FT232H (`ft232h.py`)](bteve2/connectors/ft232h.py), [FT4222H (`ft4222module.py`)](bteve2/connectors/ft4222module.py), [D2XX (`d2xx.py`)](bteve2/connectors/d2xx.py). 
+There are supported connectors for [FT4232H (`ft4232h.py`)](bteve2/ft4232h.py), [FT232H (`ft232h.py`)](bteve2/ft232h.py), [FT4222H (`ft4222module.py`)](bteve2/ft4222module.py), [D2XX (`d2xx.py`)](bteve2/d2xx.py). 
 
 The FT4232H connector uses the first MPSSE interface, if it fails to open that then the second MPSSE interface (USB Interface 1) is used. The the CN2 connector on the UMFTPD2A board is connected to the second MPSSE interface.
 
 Connectors to other transports are simple to make. The `reset` function must be able to setup the BT82x in line with the provided code in supported connectors. The use of Chip Select in the `cs` function is required rather than automatic action of chip select on some devices.
 
-## Running Examples
+### apprunner
 
-The apprunner wrapper looks for the `--connector` parameter and attempts to find a connector python file in the connectors directory with a matching name. All other parameters are passed to the example code.
+This is a wrapper program that selects the command line parameters, sets up the required display "panel" and chooses a connector. It establishes a module for the BT82x API library and then calls the example program with the EVE handle (`eve`).
+
+The apprunner wrapper looks for the `--connector` parameter and attempts to find a connector python file in the connectors directory with a matching name. The next parameter it looks for is `--panel` which it will attempt to match with a panel type name in the program that will be used to setup the display panel. All other parameters are passed unchanged to the called code.
+
+## Examples
 
 In the example code the `apprunner` and `bteve2` libraries are imported. A function is made which takes a parameter called `eve` which is used to access the BT82x. At the top level of python script a call is made to `apprunner` with the name of the function. This sets up the environment for drawing on the BT82x.
 
-The simplest example code will therefore be:
+The simplest example code (in the top level directory of the repo) will therefore be:
 
 ```
 import apprunner
 import bteve2 as eve
 
-def simple(eve):
+def simplest(eve):
     # Start drawing test screen.
     eve.CMD_DLSTART()
     eve.CLEAR_COLOR_RGB(64,72,64)
@@ -174,31 +169,27 @@ def simple(eve):
     eve.CMD_SWAP()
     eve.LIB_AWAITCOPROEMPTY()
     
-apprunner.run(simple)
+apprunner.run(simplest)
 ```
 
-### simple.py
+The following example code is available:
 
-This simple program demonstrates writing text on the screen, it parses arguments and uses them to determine the display list for the BT82x.
+| Folder | Description |
+| --- | --- |
+| [examples/simple](examples/simple) | Simple example code |
+| [examples/fontmagic](examples/fontmagic)fontmagic.py | Simple example code demonstrating scaling and rotating fonts |
+| [examples/segment](examples/segment)segment.py | Simple seven segment demo code |
+| [examples/b2tf](examples/b2tf)b2tf.py | Advanced seven segment demo code |
+| [examples/teapot](examples/teapot).py | 3D teapot rotation demo code |
+| [examples/plottest](examples/plottest) | Simple plot graph demo code |
+| [examples/audioloop](examples/audioloop) | Advanced plot graph widget demo |
+| TODO: bitmap-split-merge.py | Simple bitmap split/merge demo code |
+| TODO: bitmap-crop.py | Simple bitmap crop demo code |
+| TODO: tsd.py | Time-series data live display, using HISTOGRAM |
 
-The format of the command is as follows:
+### Examples Common Code
 
-MPSSE example
-```
-python simple.py --connector ft232h "simple program to write to the screen" --font 25
-```
-FT4222 example in single mode (--mode 0)
-```
-python simple.py --connector ft4222module "simple program to write to the screen" --font 25
-
-```
-FT4222 example in dual mode (--mode 1) or quad mode (--mode 2)
-```
-python simple.py --connector ft4222module "simple program to write to the screen" --font 25 --mode 2
-
-```
-
-The string in quotes is used in a CMD_TEXT call with the font number set in the `--font` parameter. Make sure that the font number is a valid ROM FONT.
+The [examples/common](examples/common) directory contains common files and widgets for the examples. Many of the examples load code or modules from this directory. Documentation of the code is provided in the [README.md](examples/common/README.md) in the directory.
 
 # CircuitPython Development
 

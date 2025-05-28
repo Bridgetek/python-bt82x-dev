@@ -83,8 +83,12 @@ def cmd_vumeter(eve, x, y, w, h, vu_level, vu_prev = None, border=5):
     eve.END()
     eve.COLOR_RGB(0, 0, 0)
     eve.BEGIN(eve.BEGIN_BITMAPS)
-    eve.VERTEX2II(x + (w // 2) - 22, y + (h // 2), 24, 86)
-    eve.VERTEX2II(x + (w // 2), y + (h // 2), 24, 85)
+    eve.VERTEX_TRANSLATE_X(x + (w // 2) - 22)
+    eve.VERTEX_TRANSLATE_Y(y + (h // 2))
+    eve.VERTEX2II(0, 0, 24, 86)
+    eve.VERTEX2II(22, 0, 24, 85)
+    eve.VERTEX_TRANSLATE_X(0)
+    eve.VERTEX_TRANSLATE_Y(0)
     eve.END()
 
     # Draw VU meter pointer

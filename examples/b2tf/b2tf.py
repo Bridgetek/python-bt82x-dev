@@ -11,7 +11,7 @@ sys.path.append('../../bteve2')
 import apprunner
 
 # Load the sevensegment source code from the "common" directory.
-sys.path.append('../../common')
+sys.path.append('../common')
 import sevensegment 
 
 def ledbox(gd, x, y, count, segsize):
