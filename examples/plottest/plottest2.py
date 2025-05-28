@@ -1,59 +1,36 @@
 # Typical command line:
 # python plottest2.py --connector ft4222module
 import sys
-import argparse
-
-import math
-import sys
-import time
-import struct
-import gc
-import json
-import ctypes
 import array
 
-import numpy as np
+# Add the library directories to the module search path.
+sys.path.append('../..')
+sys.path.append('../../bteve2')
 
-# This module provides the connector (gd) to the EVE hardware.
+# Load the extension code from the "common" directory.
+sys.path.append('../../common')
+import extplotmem
+
+# This module provides the connector to the EVE hardware.
 import apprunner
 
 # Target EVE device.
 family = "BT82x"
 
-# EVE family support check.
-device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
-assert(family in device_families)
-
-if family == "BT82x":
-    # This loads BT82x family definitions only.
-    import bteve2 as eve
-else:
-    # This loads FT80x, FT81x, BT81x family definitions.
-    import bteve as eve
-
-def write_memory_block(gd, base_addr, arrint, indices):
+def write_memory_block(eve, base_addr, arrint, indices):
     """
     Helper function to write a block of memory.
-    :param gd: Graphics device object
+    :param eve: Graphics device object
     :param base_addr: Base address for memory operations
     :param arrint: Array of 32-bit integers
     :param indices: List of indices to write
     """
     for offset, index in enumerate(indices):
-        gd.wr32((base_addr + (offset * 4)), arrint[index])
+        eve.wr32((base_addr + (offset * 4)), arrint[index])
 
-def plottest2(gd):
+def plottest2(eve):
 
-    print("Loading patch")
-    gd.cmd_loadpatch(0)
-    with open("assets/patch-0.1.patch", "rb") as f:
-        gd.load(f)
-    gd.finish()
-    print("Getting patch version")
-    message = gd.rd(eve.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
-    if len(message) == 0:
-        raise (f"Failed to get text patch version {t:ver}")
-    print(message)
+    extplotmem.loadpatch(eve)
 
     arr = bytes([
             # Offset 0x00000000 to 0x00000400
@@ -148,66 +125,52 @@ def plottest2(gd):
     # Turn byte array into uint32s
     arrint = array.array('I', arr)
 
-    # clear memory blocks
-    gd.cmd_memzero(0, 1024 * 3)
-    i, x, y = 0, 0, 0
+    # Program graph data into RAM_G
+    for i,a in enumerate(arrint):
+        eve.wr32(i * 4, a)
 
+    # demonstrate rendering to a BITMAP in a buffer
     render_addr = 0x8000
-    render_format = eve.RGB8
+    render_format = eve.FORMAT_RGB8
     render_w = 1360
     render_h = 920
 
-    while True:
-        # Set render target to offscreen buffer
-        gd.cmd_rendertarget(render_addr, render_format, render_w, render_h)
-        gd.begin()
-        gd.Clear()
-        gd.ColorRGB(255, 255, 255)
-        gd.ClearColorRGB(30, 30, 90)
-        gd.Clear(1,1,1)
+    # Set render target to offscreen buffer
+    eve.CMD_RENDERTARGET(render_addr, render_format, render_w, render_h)
 
-        gd.VertexFormat(0)
-        gd.ColorRGB(0, 255, 0)
-        gd.LineWidth(2)
-        gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTHORIZONTAL, 0, 0, 0x15000, 0x10000, 0x10000)
-        gd.ColorRGB(255, 0, 0)
-        gd.cmd_plotdraw(1024, len(arr), eve.OPT_PLOTHORIZONTAL, 0, 300, 0x15000, 0x10000, 0x10000)
-        gd.ColorRGB(0, 255, 255)
-        gd.cmd_plotdraw(2048, len(arr), eve.OPT_PLOTHORIZONTAL, 0, 600, 0x15000, 0x10000, 0x10000)
+    eve.CMD_DLSTART()
+    eve.CLEAR_COLOR_RGB(30, 30, 90)
+    eve.CLEAR(1,1,1)
 
-        gd.Display()
-        gd.swap()
-        gd.cmd_graphicsfinish()
-        gd.finish()
+    eve.COLOR_RGB(255, 255, 255)
+    eve.VERTEX_FORMAT(0)
+    eve.COLOR_RGB(0, 255,0)
+    eve.LINE_WIDTH(2)
+    eve.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTHORIZONTAL, 14, 10, 0x14000, 0x18000, 1)
+    eve.COLOR_RGB(255,0,0)
+    eve.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTHORIZONTAL | eve.OPT_PLOTFILTER, 0, 0, 0x14000, 0x18000, 2)
+    eve.COLOR_RGB(0, 255,0)
+    eve.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTVERTICAL | eve.OPT_PLOTINVERT | eve.OPT_PLOTFILTER, 100, 2, 0x28000, 0xe000, 3)
 
-        # Set render target to display
-        gd.cmd_rendertarget(eve.SWAPCHAIN_0, eve.RGB6, 1920, 1200)
+    eve.DISPLAY()
+    eve.CMD_SWAP()
+    eve.LIB_AWAITCOPROEMPTY()
 
-        gd.cmd_dlstart()
-        gd.Clear(1, 1, 1)
-        gd.cmd_text(350, 0, 34, 0, "Eve plot Graphs demo")
-        gd.VertexFormat(0) # integer coordinates
-        gd.Begin(eve.BITMAPS)
-        gd.cmd_setbitmap(render_addr, render_format, render_w, render_h)
-        gd.Vertex2f(100, 100)
-        gd.Display()
-        gd.swap()
-        gd.cmd_graphicsfinish()
-        gd.finish()
+    # Set render target back to the to display (SWAPCHAIN0)
+    eve.CMD_RENDERTARGET(eve.SWAPCHAIN_0, eve.FORMAT_RGB6, 1920, 1200)
 
-        # move data in memory blocks
-        gd.cmd_memcpy(0, 4, 1020)
-        gd.cmd_memcpy(1024, 1024+8, 1024-8)
-        gd.cmd_memcpy(2048, 2048+16, 1024-16)
-        gd.finish()
+    eve.CMD_DLSTART()
+    eve.CLEAR_COLOR_RGB(30, 30, 90)
+    eve.CLEAR(1,1,1)
 
-        # Write new data to the top of the memory blocks
-        write_memory_block(gd, 255 * 4, arrint, [i])
-        write_memory_block(gd, 1024 + (254 * 4), arrint, [x, x + 1])
-        write_memory_block(gd, 2048 + (252 * 4), arrint, [y, y + 1, y + 2, y + 3])
+    eve.CMD_TEXT(350, 0, 34, 0, "Eve plot Graphs demo")
+    eve.VERTEX_FORMAT(0) # integer coordinates
+    eve.BEGIN(eve.BEGIN_BITMAPS)
+    eve.CMD_SETBITMAP(render_addr, render_format, render_w, render_h)
+    eve.VERTEX2F(100, 100)
 
-        i = (i + 1) % 256
-        x = (x + 2) % 256
-        y = (y + 4) % 256
+    eve.DISPLAY()
+    eve.CMD_SWAP()
+    eve.LIB_AWAITCOPROEMPTY()
 
 apprunner.run(plottest2)

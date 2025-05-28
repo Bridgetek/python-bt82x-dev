@@ -3,19 +3,19 @@
 import sys
 import argparse
 
-# This module provides the connector (gd) to the EVE hardware.
+# Add the library directories to the module search path.
+sys.path.append('../..')
+sys.path.append('../../bteve2')
+
+# Load the extension code from the "common" directory.
+sys.path.append('../../common')
+import sevensegment
+
+# This module provides the connector to the EVE hardware.
 import apprunner
 
 # Target EVE device.
 family = "BT82x"
-
-# EVE family support check.
-device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
-assert(family in device_families)
-
-# Load the sevensegment source code from the "common" directory.
-sys.path.append('common')
-import sevensegment
 
 def segment(gd):
     # Handle for fonts to use in the test.

@@ -11,7 +11,6 @@ sys.path.append('../../bteve2')
 
 # Load the extension code from the "common" directory.
 sys.path.append('../../common')
-import screenshot
 
 # This module provides the connector to the EVE hardware.
 import apprunner
@@ -315,8 +314,6 @@ def fontmagic(gd):
         print(f"Error: {args.font} not found.")
         parser.print_usage()
         sys.exit(1)
-
-    screenshot.setup(gd)
 
     print("Upload font file...")
     # Check for a relocatable font file. 

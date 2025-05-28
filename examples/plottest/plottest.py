@@ -1,48 +1,25 @@
 # Typical command line:
 # python plottest.py --connector ft4222module
 import sys
-import argparse
-
-import math
-import sys
-import time
-import struct
-import gc
-import json
-import ctypes
 import array
 
-import numpy as np
+# Add the library directories to the module search path.
+sys.path.append('../..')
+sys.path.append('../../bteve2')
 
-# This module provides the connector (gd) to the EVE hardware.
+# Load the extension code from the "common" directory.
+sys.path.append('../../common')
+import extplotmem
+
+# This module provides the connector to the EVE hardware.
 import apprunner
 
 # Target EVE device.
 family = "BT82x"
 
-# EVE family support check.
-device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
-assert(family in device_families)
+def plottest(eve):
 
-if family == "BT82x":
-    # This loads BT82x family definitions only.
-    import bteve2 as eve
-else:
-    # This loads FT80x, FT81x, BT81x family definitions.
-    import bteve as eve
-
-def plottest(gd):
-
-    print("Loading patch")
-    gd.cmd_loadpatch(0)
-    with open("assets/patch-0.1.patch", "rb") as f:
-        gd.load(f)
-    gd.finish()
-    print("Getting patch version")
-    message = gd.rd(eve.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
-    if len(message) == 0:
-        raise (f"Failed to get text patch version {t:ver}")
-    print(message)
+    extplotmem.loadpatch(eve)
 
     arr = bytes([
             # Offset 0x00000000 to 0x00000400
@@ -139,25 +116,24 @@ def plottest(gd):
 
     # Program graph data into RAM_G
     for i,a in enumerate(arrint):
-        gd.wr32(i * 4, a)
+        eve.wr32(i * 4, a)
 
-    gd.begin()
-    gd.Clear()
-    gd.ColorRGB(255, 255, 255)
-    gd.ClearColorRGB(30, 30, 90)
-    gd.Clear(1,1,1)
+    eve.CMD_DLSTART()
+    eve.CLEAR()
+    eve.CLEAR_COLOR_RGB(30, 30, 90)
+    eve.CLEAR(1,1,1)
 
-    gd.VertexFormat(0)
-    gd.ColorRGB(0, 255,0)
-    gd.LineWidth(2)
-    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTHORIZONTAL, 14, 10, 0x14000, 0x18000, 0x18000)
-    gd.ColorRGB(255,0,0)
-    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTHORIZONTAL | eve.OPT_PLOTFILTER, 0, 0, 0x14000, 0x18000, 0x18000)
-    gd.ColorRGB(0, 255,0)
-    gd.cmd_plotdraw(0, len(arr), eve.OPT_PLOTVERTICAL | eve.OPT_PLOTINVERT | eve.OPT_PLOTFILTER, 100, 2, 0x28000, 0xe000, 0x18000)
+    eve.VERTEX_FORMAT(0)
+    eve.COLOR_RGB(0, 255,0)
+    eve.LINE_WIDTH(2)
+    eve.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTHORIZONTAL, 14, 10, 0x14000, 0x18000, 1)
+    eve.COLOR_RGB(255,0,0)
+    eve.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTHORIZONTAL | eve.OPT_PLOTFILTER, 0, 0, 0x14000, 0x18000, 2)
+    eve.COLOR_RGB(0, 255,0)
+    eve.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTVERTICAL | eve.OPT_PLOTINVERT | eve.OPT_PLOTFILTER, 100, 2, 0x28000, 0xe000, 3)
 
-    gd.Display()
-    gd.swap()
-    gd.finish()
+    eve.DISPLAY()
+    eve.CMD_SWAP()
+    eve.LIB_AWAITCOPROEMPTY()
 
 apprunner.run(plottest)
