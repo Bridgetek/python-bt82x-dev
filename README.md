@@ -1,14 +1,16 @@
 # Python BT82x Development
 
-This python module and interface connectors allow python to be used to communicate with a BT82x device using FT4232H, FT232H or FT4222H devices. 
+This python module and interface connectors allow python to be used to communicate with a BT82x device using D2XX, FT4232H, FT232H or FT4222H devices. 
 
-The FT4232H and FT232H methods use the **[MPSSE Interface](#mpsse-interface)** of the devices to communicate over SPI to the BT82x. The **[FT4222H Interface](#ft4222h-interface)** has built-in SPI hardware and controller.  
+## Setup
 
-The BT82X based module [VM820C](https://brtchip.com/product/vm820c/) is the targeted hardware of this repo. 
+The FT4232H and FT232H methods use the **[MPSSE Interface](#mpsse-interface)** of the devices to communicate over SPI to the BT82x. The **[FT4222H Interface](#ft4222h-interface)** has built-in SPI hardware and controller. The D2XX method sends commands to an FT232H, FT4232H or FT232R device directly to drive the SPI interface.
+
+The BT82X based module [VM820C](https://brtchip.com/product/vm820c/) is the main targeted hardware of this repo. 
 It is equipped with [FT4222H Interface](#ft4222h-interface) on board for SPI connection with PC through USB.  
 To work with MPSSE interface,  please refer to the [VM820C datasheet](https://brtchip.com/wp-content/uploads/2025/01/DS_VM820C-1.pdf)
 
-## MPSSE Interface
+### MPSSE Interface
 
 For MPSSE devices the [pyftdi](https://github.com/eblot/pyftdi) module for python and the [libMPSSE-SPI](https://ftdichip.com/software-examples/mpsse-projects/libmpsse-spi-examples/) library are required. 
 
@@ -18,7 +20,7 @@ The connector `ft4232h` supports the quad-channel FT4232H devices and the connec
 
 _Note 1_: _A pin header and jumper cables are required to interface the CN2 connector to the BT82x development board._
 
-### Software Setup
+#### Software Setup
 
 All platforms will require a working up-to-date installation of __python 3.13.x__ or later. These instructions assume the use of __pip__ to install required pyftdi package.
 
@@ -44,7 +46,7 @@ It may be neccessary to reboot the PC or remove and replug the MPSSE device. Onc
 
 *These instructions are incomplete!* The built-in Linux drivers for FTDI devices need to be disabled for the libusb driver to be invoked.
 
-### Hardware Setup
+#### Hardware Setup
 
 _MPSSE Bus numbers refer to the MPSSE interface signals._
 
@@ -91,13 +93,13 @@ On UMFTPD2A the CN2 connector is a 12-pin 2.54 mm pitch through hole connector. 
 | MPSSE7 | CN2-10 | PD# - Powerdown signal |
 | N/A    | CN2-7  | Signal GND for SPI |
 
-## FT4222H Interface
+### FT4222H Interface
 
 The FT4222 device is supported using the [python-ft4222](https://msrelectronics.gitlab.io/python-ft4222/index.html) module for python and the [libFT4222](https://ftdichip.com/software-examples/ft4222h-software-examples/) library from FTDI.
 
 The connector `ft4222module` supports for FT4222H devices from FTDI.
 
-### Software Setup
+#### Software Setup
 
 All platforms will require a working up-to-date installation of __python 3.13.x__ or later. These instructions assume the use of __pip__ to install required python-ft4222 package.
 
@@ -107,12 +109,17 @@ pip install ft4222
 
 This code may also be used with [circuitpython](https://circuitpython.org/), however __this is not yet supported__.
 
-## Files
+### D2XX Interface
+
+The D2XX interface needs no external libraries as it communicates directly with the MPSSE hardware on an FT4232H, FT232H or FT232R device.
+
+The cable or board connections are identical to the (#MPSSE Cables) section.
+
+## Files and Folder Structure
 
 | File/Folder | Description |
 | --- | --- |
 | bteve2 | Module and library code for BT82x |
-| connectors | Code to interface between library code and hardware |
 | docs | Documentation and images for documentation |
 | common | Common files shared between demos |
 | apprunner.py | Wrapper code to setup library, connector and application |
@@ -129,17 +136,19 @@ This code may also be used with [circuitpython](https://circuitpython.org/), how
 
 ### apprunner
 
-This is a wrapper program that selects the command line parameters and chooses a connector. It establishes a module for the BT82x API library and then calls the example program with the graphics descriptor (`gd`) and EVE definitions (`eve`) setup.
+This is a wrapper program that selects the command line parameters, sets up the required display "panel" and chooses a connector. It establishes a module for the BT82x API library and then calls the example program with the EVE handle (`eve`).
 
 ### bteve2
 
-This makes a module for the BT82x interface allowing calls from python to be encoded as binary commands for the BT82x. 
+This is a python module for the BT82x interface allowing calls from python to be encoded as binary commands for the BT82x. Files for the connectors are within the module.
 
-### connectors
+#### bteve2 connectors
 
 To run the python code and connect to a BT82x a connector is required. The connector is selected in the parameters to the example programs. It opens a port to the device that makes the SPI signals and sets-up the target device. API interfaces for `reset`, `wr`, `rd`, `cs` functions are required. 
 
-There are supported connectors for [FT4232H (`ft4232h.py`)](connectors/ft4232h.py), [FT232H (`ft232h.py`)](connectors/ft232h.py), [FT4222H (`ft4222module.py`)](connectors/ft4222module.py). The FT4232H connector uses the first MPSSE interface, if it fails to open that then the second MPSSE interface (USB Interface 1) is used. The the CN2 connector on the UMFTPD2A board is connected to the second MPSSE interface.
+There are supported connectors for [FT4232H (`ft4232h.py`)](bteve2/connectors/ft4232h.py), [FT232H (`ft232h.py`)](bteve2/connectors/ft232h.py), [FT4222H (`ft4222module.py`)](bteve2/connectors/ft4222module.py), [D2XX (`d2xx.py`)](bteve2/connectors/d2xx.py). 
+
+The FT4232H connector uses the first MPSSE interface, if it fails to open that then the second MPSSE interface (USB Interface 1) is used. The the CN2 connector on the UMFTPD2A board is connected to the second MPSSE interface.
 
 Connectors to other transports are simple to make. The `reset` function must be able to setup the BT82x in line with the provided code in supported connectors. The use of Chip Select in the `cs` function is required rather than automatic action of chip select on some devices.
 
@@ -147,7 +156,7 @@ Connectors to other transports are simple to make. The `reset` function must be 
 
 The apprunner wrapper looks for the `--connector` parameter and attempts to find a connector python file in the connectors directory with a matching name. All other parameters are passed to the example code.
 
-In the example code the `apprunner` and `bteve2` libraries are imported. A function is made which takes a parameter called `gd` (graphics descriptor) which is used to access the BT82x. At the top level of python script a call is made to `apprunner` with the name of the function. This sets up the environment for drawing on the BT82x.
+In the example code the `apprunner` and `bteve2` libraries are imported. A function is made which takes a parameter called `eve` which is used to access the BT82x. At the top level of python script a call is made to `apprunner` with the name of the function. This sets up the environment for drawing on the BT82x.
 
 The simplest example code will therefore be:
 
@@ -155,14 +164,15 @@ The simplest example code will therefore be:
 import apprunner
 import bteve2 as eve
 
-def simple(gd):
+def simple(eve):
     # Start drawing test screen.
-    gd.begin()
-    gd.ClearColorRGB(64,72,64)
-    gd.Clear(1,1,1)
+    eve.CMD_DLSTART()
+    eve.CLEAR_COLOR_RGB(64,72,64)
+    eve.CLEAR(1,1,1)
 
-    gd.Display()
-    gd.swap()
+    eve.DISPLAY()
+    eve.CMD_SWAP()
+    eve.LIB_AWAITCOPROEMPTY()
     
 apprunner.run(simple)
 ```
@@ -189,3 +199,48 @@ python simple.py --connector ft4222module "simple program to write to the screen
 ```
 
 The string in quotes is used in a CMD_TEXT call with the font number set in the `--font` parameter. Make sure that the font number is a valid ROM FONT.
+
+# CircuitPython Development
+
+At the moment CircuitPython is not supported.
+
+# API
+
+The API for using the python interface is simple. All keywords, commands, options, and registers are in capital letters.
+* Display List commands have no decoration.
+* Coprocessor commands are in prefixed with "CMD_".
+* Library functions that automate a coprocessor command are prefixed with "LIB_".
+* Registers are prefixed with "REG_".
+* Special memory addresses are prefixed with "RAM_".
+* Options are prefixed with "OPT_".
+* Other constants are prefixed with the function they are related to.
+
+## Display List Commands
+
+These are as described in Chapter 4 of the "BT82X Series Programming Guide". The function for display list commands will add that command to the display list. 
+
+Non-reserved bitfields in the commands are passed as parameters in the call to the function. The parameters are used to set the bits in the 32-bit display list command without modification.
+
+All parameters must be an "int" type.
+
+## Coprocessor Commands
+
+These are as described in Chapter 5 of the "BT82X Series Programming Guide". The function for coprocessor commands will add that command to the display list, they will not retrieve any result fields from the coprocessor FIFO.
+
+All results fields for commands will need to be passed as a parameter, even though the result will overwrite this value in the coprocessor FIFO.
+
+## Library Functions
+
+These are provided to generate a coprocessor command and return a result from commands which update the coprocessor FIFO with a result value. 
+
+The reason that the coprocessor commands and the library functions both exist is so that the user has the option of ignoring the result of a coprocessor command without reading the result. This can result in a significant performance improvement.
+
+It is also possible to use coprocessor commands such as CMD_RESULT to copy result values to memory to be checked after a block of coprocessor activity.
+
+## Registers
+
+These are as described in Chapter 3 of the "BT82X Series Programming Guide".
+
+## Options and Constants
+
+Options for display list and coprocessor commands are described in the Chapter 4 and 5 of the "BT82X Series Programming Guide". The naming of the options and constants is made to clarify the function(s) that they are associated with.  e.g. "BEGIN_LINE_STRIP" for use with the display list BEGIN command.

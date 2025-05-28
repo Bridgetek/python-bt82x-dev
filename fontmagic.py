@@ -15,13 +15,6 @@ family = "BT82x"
 device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
 assert(family in device_families)
 
-if family == "BT82x":
-    # This loads BT82x family definitions only.
-    import bteve2 as eve
-else:
-    # This loads FT80x, FT81x, BT81x family definitions.
-    import bteve as eve
-
 # Valid program actions.
 actions = ["standard", "ascii", "symbol"]
 
@@ -177,99 +170,99 @@ def getwidth(fontcache):
 def cmd_textrotate(gd, x, y, fontcache, text):
     (handle, first_character, width, height, widths, glyphs, cell) = fontcache
     if (family == "BT82x") and False: # ignore regions for now.
-        gd.cmd_region() # BT82x
+        gd.CMD_REGION() # BT82x
     else:
-        gd.SaveContext() # BT82x, BT81x, FT81x, FT80x
+        gd.SAVE_CONTEXT() # BT82x, BT81x, FT81x, FT80x
 
     # Setup the font.
-    gd.VertexFormat(2)
-    gd.Cell(0)
+    gd.VERTEX_FORMAT(2)
+    gd.CELL(0)
     # Select the handle for the font.
-    gd.Begin(eve.BITMAPS)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
     # Manipulate the font display.
-    gd.cmd_loadidentity()
+    gd.CMD_LOADIDENTITY()
     # Rotate around point width/2, height/2,
     #   rotate 90 degrees clockwise, scale factor 1.0.
-    gd.cmd_rotatearound(width // 2, height // 2, 16384, 65536)
-    gd.cmd_setmatrix()
+    gd.CMD_ROTATEAROUND(width // 2, height // 2, 16384, 65536)
+    gd.CMD_SETMATRIX()
 
     x1,y1 = x,y
     for ch in text:
         if cell:
             # This is a Legacy font.
             if (y > 511) or (x > 511):
-                gd.VertexTranslateX(x)
-                gd.VertexTranslateY(y)
-                gd.Vertex2ii(0, 0, handle, ord(ch))
+                gd.VERTEX_TRANSLATE_X(x)
+                gd.VERTEX_TRANSLATE_Y(y)
+                gd.VERTEX2II(0, 0, handle, ord(ch))
             else:
-                gd.Vertex2ii(x, y, handle, ord(ch))
+                gd.VERTEX2II(x, y, handle, ord(ch))
         else:
             # This is a RAM font.
-            gd.BitmapSourceH(glyphs[ord(ch)] >> 24)
-            gd.BitmapSource(glyphs[ord(ch)])
+            gd.BITMAP_SOURCE_H(glyphs[ord(ch)] >> 24)
+            gd.BITMAP_SOURCE(glyphs[ord(ch)])
             if (y > 511) or (x > 511):
-                gd.VertexTranslateX(x)
-                gd.VertexTranslateY(y)
-                gd.Vertex2f(0, 0)
+                gd.VERTEX_TRANSLATE_X(x)
+                gd.VERTEX_TRANSLATE_Y(y)
+                gd.VERTEX2F(0, 0)
             else:
-                gd.Vertex2f(x, y)
-                #gd.Vertex2f(x // 4, y // 4)
+                gd.VERTEX2F(x, y)
+                #gd.VERTEX2F(x // 4, y // 4)
         # Move the cursor down the y-axis.
         y = y + widths[ord(ch)]
 
     if (family == "BT82x") and False: # ignore regions for now.
-        gd.cmd_endregion(x1, y1, x, y) # BT820
+        gd.CMD_ENDREGION(x1, y1, x, y) # BT820
     else:
-        gd.RestoreContext() # BT820, BT817, FT81x, FT80x
+        gd.RESTORE_CONTEXT() # BT820, BT817, FT81x, FT80x
 
 # Zoom a text string by a factor.
 def cmd_textzoom(gd, x, y, fontcache, zoom, text):
     (handle, first_character, width, height, widths, glyphs, cell) = fontcache
     if (family == "BT82x") and False: # ignore regions for now.
-        gd.cmd_region() # BT82x
+        gd.CMD_REGION() # BT82x
     else:
-        gd.SaveContext() # BT82x, BT81x, FT81x, FT80x
+        gd.SAVE_CONTEXT() # BT82x, BT81x, FT81x, FT80x
 
     # Setup the font.
-    gd.VertexFormat(2)
-    gd.Cell(0)
+    gd.VERTEX_FORMAT(2)
+    gd.CELL(0)
     # Select the handle for the font.
-    gd.Begin(eve.BITMAPS)
+    gd.BEGIN(gd.BEGIN_BITMAPS)
     # Manipulate the font display.
-    gd.cmd_loadidentity()
-    gd.BitmapSize(eve.NEAREST, eve.BORDER, eve.BORDER, int(width * zoom), int(height * zoom))
+    gd.CMD_LOADIDENTITY()
+    gd.BITMAP_SIZE(gd.FILTER_NEAREST, gd.WRAP_BORDER, gd.WRAP_BORDER, int(width * zoom), int(height * zoom))
     # Apply scale to text.
-    gd.cmd_scale(zoom, zoom)
-    gd.cmd_setmatrix()
+    gd.CMD_SCALE(zoom, zoom)
+    gd.CMD_SETMATRIX()
 
     x1,y1 = x,y
     for ch in text:
         if cell:
             # This is a ROM font.
             if (y > 511) or (x > 511):
-                gd.VertexTranslateX(x)
-                gd.VertexTranslateY(y)
-                gd.Vertex2ii(0, 0, handle, ord(ch))
+                gd.VERTEX_TRANSLATE_X(x)
+                gd.VERTEX_TRANSLATE_Y(y)
+                gd.VERTEX2II(0, 0, handle, ord(ch))
             else:
-                gd.Vertex2ii(x, y, handle, ord(ch))
+                gd.VERTEX2II(x, y, handle, ord(ch))
         else:
             # This is a RAM font.
-            gd.BitmapSourceH(glyphs[ord(ch)] >> 24)
-            gd.BitmapSource(glyphs[ord(ch)])
+            gd.BITMAP_SOURCE_H(glyphs[ord(ch)] >> 24)
+            gd.BITMAP_SOURCE(glyphs[ord(ch)])
             if (y > 511) or (x > 511):
-                gd.VertexTranslateX(x)
-                gd.VertexTranslateY(y)
-                gd.Vertex2f(0, 0)
+                gd.VERTEX_TRANSLATE_X(x)
+                gd.VERTEX_TRANSLATE_Y(y)
+                gd.VERTEX2F(0, 0)
             else:
-                gd.Vertex2f(x, y)
-                #gd.Vertex2f(x // 4, y // 4)
+                gd.VERTEX2F(x, y)
+                #gd.VERTEX2F(x // 4, y // 4)
         # Move the cursor in the x-axis accounting for zoom factor.
         x = x + (int(widths[ord(ch)] * zoom))
 
     if (family == "BT82x") and False: # ignore regions for now.
-        gd.cmd_endregion(x1, y1, x, y) # BT820
+        gd.CMD_ENDREGION(x1, y1, x, y) # BT820
     else:
-        gd.RestoreContext() # BT820, BT817, FT81x, FT80x
+        gd.RESTORE_CONTEXT() # BT820, BT817, FT81x, FT80x
 
 def fontmagic(gd):
     # Default/unset parameters.
@@ -306,7 +299,7 @@ def fontmagic(gd):
 
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #gd.calibrate()
+    #gd.LIB_CALIBRATE()
 
     # Install a custom font. 
     # This must be installed in RAM_G memory before the details of the font
@@ -325,20 +318,21 @@ def fontmagic(gd):
     format = int.from_bytes(dd[0:4], byteorder='little')
     if format == 0x0100aa44:
         # Use loadasset for relocatable assets.
-        gd.cmd_loadasset(address, 0)
+        gd.CMD_LOADASSET(address, 0)
         gd.ram_cmd(pad4(dd))
     else:
         # Load normal assets in place directly.
-        gd.cmd_inflate(address, 0)
+        gd.CMD_INFLATE(address, 0)
         gd.ram_cmd(pad4(zlib.compress(dd)))
-    gd.finish()
+    gd.LIB_AWAITCOPROEMPTY()
     """print(f"0x{address:x}: 0x{gd.rd32(address):08x} 0x{gd.rd32(address+4):08x} 0x{gd.rd32(address+8):08x} 0x{gd.rd32(address+12):08x}")"""
 
     # Update the font table with the custom font.
     print("Setfont...")
-    gd.begin()
-    gd.cmd_setfont(customfont, address, first_character)
-    gd.swap()
+    gd.CMD_DLSTART()
+    gd.CMD_SETFONT(customfont, address, first_character)
+    gd.CMD_SWAP()
+    gd.LIB_AWAITCOPROEMPTY()
 
     """print(f"0x{address:x}: ")
     for i in range(0, 256, 4):
@@ -358,17 +352,17 @@ def fontmagic(gd):
 
     print("Draw test screen...")
     # Start drawing test screen.
-    gd.begin()
-    gd.ClearColorRGB(64,72,64)
-    gd.Clear(1,1,1)
+    gd.CMD_DLSTART()
+    gd.CLEAR_COLOR_RGB(64,72,64)
+    gd.CLEAR(1,1,1)
     # Restore properties of custom font.
-    gd.cmd_setfont(customfont, address, first_character)
+    gd.CMD_SETFONT(customfont, address, first_character)
 
     if args.action == actions[0]:
         # Draw test text using the custom font.
         y = 100
         x = 100
-        gd.cmd_text(x, y, customfont, 0, "Custom font text")
+        gd.CMD_TEXT(x, y, customfont, 0, "Custom font text")
         y += getheight(customfontcache)
         cmd_textzoom(gd, x, y, customfontcache, 2, "Custom zoomed in text!")
         y += (2 * getheight(customfontcache))
@@ -379,7 +373,7 @@ def fontmagic(gd):
         y = 100
         x = 600
         # Draw test text using a ROM font.
-        gd.cmd_text(x, y, romfont, 0, "ROM font text")
+        gd.CMD_TEXT(x, y, romfont, 0, "ROM font text")
         y += getheight(romfontcache)
         cmd_textzoom(gd, x, y, romfontcache, 0.5, "ROM zoomed out text!")
         y = 100
@@ -389,17 +383,17 @@ def fontmagic(gd):
     elif args.action == actions[1]:
         y = 100
         # Draw test text of all ASCII characters.
-        gd.cmd_text(100, y, customfont, 0, "!\"#$%&'()*+,-./0123456789:;<=>?")
+        gd.CMD_TEXT(100, y, customfont, 0, "!\"#$%&'()*+,-./0123456789:;<=>?")
         y += getheight(customfontcache)
-        gd.cmd_text(100, y, customfont, 0, "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_")
+        gd.CMD_TEXT(100, y, customfont, 0, "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_")
         y += getheight(customfontcache)
-        gd.cmd_text(100, y, customfont, 0, "`abcdefghijklmnopqrstuvwxyz{|}")
+        gd.CMD_TEXT(100, y, customfont, 0, "`abcdefghijklmnopqrstuvwxyz{|}")
         y += getheight(customfontcache)
-        gd.cmd_text(100, y, romfont, 0, "!\"#$%&'()*+,-./0123456789:;<=>?")
+        gd.CMD_TEXT(100, y, romfont, 0, "!\"#$%&'()*+,-./0123456789:;<=>?")
         y += getheight(romfontcache)
-        gd.cmd_text(100, y, romfont, 0, "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_")
+        gd.CMD_TEXT(100, y, romfont, 0, "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_")
         y += getheight(romfontcache)
-        gd.cmd_text(100, y, romfont, 0, "`abcdefghijklmnopqrstuvwxyz{|}")
+        gd.CMD_TEXT(100, y, romfont, 0, "`abcdefghijklmnopqrstuvwxyz{|}")
         y += getheight(romfontcache)
 
     elif args.action == actions[2]:
@@ -408,15 +402,15 @@ def fontmagic(gd):
         # with the parameter "-l 0" as well.
         y = 100
         # Draw test text of all ASCII characters.
-        gd.Begin(eve.BITMAPS)
-        # Miss out \x0a since that is a carriage return to cmd_text.
-        gd.cmd_text(100, y, customfont, eve.OPT_FILL, "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0d\x0e\x0f" \
+        gd.BEGIN(gd.BEGIN_BITMAPS)
+        # Miss out \x0a since that is a carriage return to CMD_TEXT.
+        gd.CMD_TEXT(100, y, customfont, eve.OPT_FILL, "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0d\x0e\x0f" \
                     "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f")
         y += getheight(customfontcache)
-        gd.cmd_text(100, y, customfont, 0, "\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f" \
+        gd.CMD_TEXT(100, y, customfont, 0, "\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f" \
                     "\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x3a\x3b\x3c\x3d\x3e\x3f")
         y += getheight(customfontcache)
-        gd.cmd_text(100, y, customfont, 0, "\x40\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4a\x4b\x4c\x4d\x4e\x4f" \
+        gd.CMD_TEXT(100, y, customfont, 0, "\x40\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4a\x4b\x4c\x4d\x4e\x4f" \
                     "\x50\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5a\x5b\x5c\x5d\x5e\x5f")
         y += getheight(customfontcache)
         cmd_textzoom(gd, 100, y, customfontcache, 2, "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0d\x0e\x0f" \
@@ -428,7 +422,8 @@ def fontmagic(gd):
         cmd_textzoom(gd, 100, y, customfontcache, 2, "\x40\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4a\x4b\x4c\x4d\x4e\x4f" \
                     "\x50\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5a\x5b\x5c\x5d\x5e\x5f")
 
-    gd.Display()
-    gd.swap()
+    gd.DISPLAY()
+    gd.CMD_SWAP()
+    gd.LIB_AWAITCOPROEMPTY()
     
 apprunner.run(fontmagic)

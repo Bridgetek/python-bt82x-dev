@@ -13,13 +13,6 @@ family = "BT82x"
 device_families = ["FT80x", "FT81x", "BT81x", "BT82x"]
 assert(family in device_families)
 
-if family == "BT82x":
-    # This loads BT82x family definitions only.
-    import bteve2 as eve
-else:
-    # This loads FT80x, FT81x, BT81x family definitions.
-    import bteve as eve
-
 # Load the sevensegment source code from the "common" directory.
 sys.path.append('common')
 import sevensegment
@@ -41,12 +34,12 @@ def segment(gd):
         
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #gd.calibrate()
+    #gd.LIB_CALIBRATE()
 
     # Start drawing test screen.
-    gd.begin()
-    gd.ClearColorRGB(64,72,64)
-    gd.Clear(1,1,1)
+    gd.CMD_DLSTART()
+    gd.CLEAR_COLOR_RGB(64,72,64)
+    gd.CLEAR(1,1,1)
 
     redfg = (255, 0, 0)
     redbg = (32, 0, 0)
@@ -67,7 +60,8 @@ def segment(gd):
     sevensegment.cmd_sevenseg(gd, x + (gap * 6), y, size, int((number/10)%10), fg, bg)
     sevensegment.cmd_sevenseg(gd, x + (gap * 7), y, size, int((number/1)%10), fg, bg)
 
-    gd.Display()
-    gd.swap()
+    gd.DISPLAY()
+    gd.CMD_SWAP()
+    gd.LIB_AWAITCOPROEMPTY()
 
 apprunner.run(segment)

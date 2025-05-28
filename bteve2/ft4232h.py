@@ -20,10 +20,12 @@ from pyftdi.ftdi import Ftdi
 
 import bteve2 as eve
 
-FREQUENCY = 72_000_000      # system clock frequency, in Hz
+class connector():
+    FREQUENCY = 72_000_000      # system clock frequency, in Hz
 
-class EVE2(eve.EVE2):
     def __init__(self):
+        print("Initialise FT4232H interface")
+
         spi = SpiController()
 
         # Configure the first interface (IF/1) of the FTDI device as a SPI master
@@ -36,6 +38,7 @@ class EVE2(eve.EVE2):
                 spi.configure('ftdi://ftdi:4232h/2')
                 print("Using Interface 2 on FT4232H")
             except: 
+                print("Has the libusb-win32 driver been installed for the connector board?")
                 raise Exception("Sorry, no FTDI FT4232H device for SPI master")
         # Note MPSSE is required and there are 2 MPSSE channels on FT4232H.
 
@@ -44,7 +47,6 @@ class EVE2(eve.EVE2):
         self.gpio = spi.get_gpio()
         self.gpio.set_direction(0x80, 0x80)
         spi.ftdi.set_latency_timer(1)
-        self.boot()
 
     def setup_flash(self):
         pass
@@ -55,6 +57,9 @@ class EVE2(eve.EVE2):
     def addr(self, a):
         return struct.pack(">I", a)
 
+    def rd32(self, a):
+        return struct.unpack("I", self.rd(a, 4))[0]
+        
     def rd(self, a, nn):
         assert (a & 3) == 0
         assert (nn & 3) == 0
@@ -63,11 +68,14 @@ class EVE2(eve.EVE2):
         a1 = a + nn
         r = b''
         while a != a1:
-            n = min(a1 - a, 32)
+            # Timout for a read is 7uS for BT82x.
+            # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
+            # Read a maximum of 4 bytes before the "0x01" that signifies data ready.
+            n = min(a1 - a, 4 + nn)
             self.slave.write(self.addr(a), start = True, stop = False)
             def recv(n):
                 return self.slave.read(n, start = False, stop = False)
-            bb = recv(32 + n)
+            bb = recv(4 + n)
             if 1 in bb:             # Got READY byte in response
                 i = bb.index(1)
                 response = bb[i + 1:i + 1 + n]
@@ -122,11 +130,13 @@ class EVE2(eve.EVE2):
             exchange(bytes([0xFF, 0xEB, 0x08, 0x00, 0x00]))
             # Set DDR, JT and AUD in Boot Control
             exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]))
-            # Clear BootCfgEn
+            # CLEAR BootCfgEn
             exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]))
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
-            time.sleep(.1)
+            # Set ACTIVE
+            exchange(bytes([0x00, 0x00, 0x00, 0x00, 0x00]))
+            time.sleep(.2)
 
             self.slave.write(self.addr(0), start = True, stop = False)
             def recv(n):
@@ -136,17 +146,20 @@ class EVE2(eve.EVE2):
             fault = False
             if 1 in bb:
                 # Wait for the REG_ID register to be set to 0x7c to
-                while self.rd32(eve.REG_ID) != 0x7c:
+                while self.rd32(eve.EVE2.REG_ID) != 0x7c:
                     pass
-                while not fault and self.rd32(eve.REG_BOOT_STATUS) != 0x522e2e2e:
+                while not fault and self.rd32(eve.EVE2.REG_BOOT_STATUS) != 0x522e2e2e:
                     fault = 1e-9 * (time.monotonic_ns() - t0) > 0.1
                 if fault:
-                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.REG_BOOT_STATUS):08x}, retrying...]")
+                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.EVE2.REG_BOOT_STATUS):08x}, retrying...]")
                     continue
-                actual = self.rd32(eve.REG_FREQUENCY)
-                if actual != FREQUENCY:
-                    print(f"[Requested {FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
+                actual = self.rd32(eve.EVE2.REG_FREQUENCY)
+                if actual != self.FREQUENCY:
+                    print(f"[Requested {self.FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
                     continue
                 return
 
             print(f"[Boot fail after reset, retrying...]")
+
+        # Disable QSPI burst mode
+        #self.wr32(eve.EVE2.REG_SYS_CFG, 1 << 10)

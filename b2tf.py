@@ -26,14 +26,15 @@ sys.path.append('common')
 import sevensegment 
 
 def ledbox(gd, x, y, count, segsize):
-    gd.Begin(eve.RECTS)
-    gd.VertexTranslateX((x - (segsize//3)))
-    gd.VertexTranslateY((y - (segsize//3)))
-    gd.Vertex2f(0, 0)
-    gd.Vertex2f(((count * (segsize + (segsize//3))) + (segsize//3)) * 4, 
+    gd.VERTEX_FORMAT(2)
+    gd.BEGIN(gd.BEGIN_RECTS)
+    gd.VERTEX_TRANSLATE_X((x - (segsize//3)))
+    gd.VERTEX_TRANSLATE_Y((y - (segsize//3)))
+    gd.VERTEX2F(0, 0)
+    gd.VERTEX2F(((count * (segsize + (segsize//3))) + (segsize//3)) * 4, 
                  ((2 * segsize + (segsize//3)) + (segsize//3)) * 4)
-    gd.VertexTranslateX(0)
-    gd.VertexTranslateY(0)
+    gd.VERTEX_TRANSLATE_X(0)
+    gd.VERTEX_TRANSLATE_Y(0)
 
 def lednumber(gd, x, y, count, segsize, value, fg, bg):
     for i in range(count):
@@ -41,20 +42,20 @@ def lednumber(gd, x, y, count, segsize, value, fg, bg):
         value = value // 10
 
 def tapebox(gd, x, y, w, h):
-    gd.Begin(eve.RECTS)
-    gd.VertexTranslateX(x)
-    gd.VertexTranslateY(y)
-    gd.Vertex2f(0, 0)
-    gd.VertexTranslateX((x + w))
-    gd.VertexTranslateY((y + h))
-    gd.Vertex2f(0, 0)
-    gd.VertexTranslateX(0)
-    gd.VertexTranslateY(0)
+    gd.BEGIN(gd.BEGIN_RECTS)
+    gd.VERTEX_TRANSLATE_X(x)
+    gd.VERTEX_TRANSLATE_Y(y)
+    gd.VERTEX2F(0, 0)
+    gd.VERTEX_TRANSLATE_X((x + w))
+    gd.VERTEX_TRANSLATE_Y((y + h))
+    gd.VERTEX2F(0, 0)
+    gd.VERTEX_TRANSLATE_X(0)
+    gd.VERTEX_TRANSLATE_Y(0)
 
 def gradbox(gd, x, y, w, h):
-    gd.ScissorXY(x, y)
-    gd.ScissorSize(w, h)
-    gd.cmd_gradient(x, y, 0x808080, x, y+h, 0x404040)
+    gd.SCISSOR_XY(x, y)
+    gd.SCISSOR_SIZE(w, h)
+    gd.CMD_GRADIENT(x, y, 0x808080, x, y+h, 0x404040)
 
 def b2tf(gd):
 
@@ -71,9 +72,9 @@ def b2tf(gd):
               + str(now.minute) + " minutes "
               )"""
         
-        gd.cmd_dlstart()
-        gd.ClearColorRGB(0x0, 0x0, 0x0)
-        gd.Clear(1,1,1)
+        gd.CMD_DLSTART()
+        gd.CLEAR_COLOR_RGB(0x0, 0x0, 0x0)
+        gd.CLEAR(1,1,1)
 
         segsize = 80
 
@@ -83,17 +84,17 @@ def b2tf(gd):
 
         dx = x
         dy = y
-        gd.ColorRGB(0x80, 0x80, 0x80)
-        gd.SaveContext()
+        gd.COLOR_RGB(0x80, 0x80, 0x80)
+        gd.SAVE_CONTEXT()
         gradbox(gd, dx - segsize // 2, dy - segsize // 2, 20 * segsize, segsize * 4)
         dy = dy + segsize * 4
         gradbox(gd, dx - segsize // 2, dy - segsize // 2, 20 * segsize, segsize * 4)
         dy = dy + segsize * 4
         gradbox(gd, dx - segsize // 2, dy - segsize // 2, 20 * segsize, segsize * 4)
-        gd.RestoreContext()
+        gd.RESTORE_CONTEXT()
 
         dy = y
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         tapebox(gd, gd.w//2 - 300, dy + 5 * segsize // 2, 600, 60)
         dy = dy + segsize * 4
         tapebox(gd, gd.w//2 - 300, dy + 5 * segsize // 2, 600, 60)
@@ -101,112 +102,113 @@ def b2tf(gd):
         tapebox(gd, gd.w//2 - 300, dy + 5 * segsize // 2, 600, 60)
 
         dy = y
-        gd.ColorRGB(255, 255, 255)
-        gd.cmd_text(gd.w//2, dy + 5 * segsize // 2 + 30, 31, eve.OPT_CENTER, "DESTINATION TIME")
+        gd.COLOR_RGB(255, 255, 255)
+        gd.CMD_TEXT(gd.w//2, dy + 5 * segsize // 2 + 30, 31, gd.OPT_CENTER, "DESTINATION TIME")
         dy = dy + segsize * 4
-        gd.cmd_text(gd.w//2, dy + 5 * segsize // 2 + 30, 31, eve.OPT_CENTER, "PRESENT TIME")
+        gd.CMD_TEXT(gd.w//2, dy + 5 * segsize // 2 + 30, 31, gd.OPT_CENTER, "PRESENT TIME")
         dy = dy + segsize * 4
-        gd.cmd_text(gd.w//2, dy + 5 * segsize // 2 + 30, 31, eve.OPT_CENTER, "LAST TIME DEPARTED")
+        gd.CMD_TEXT(gd.w//2, dy + 5 * segsize // 2 + 30, 31, gd.OPT_CENTER, "LAST TIME DEPARTED")
         dy = dy + segsize * 4
 
-        gd.cmd_bgcolor(0x100000)
+        gd.CMD_BGCOLOR(0x100000)
         bg = (0x10, 0, 0)
 
         # Red LEDs
-        gd.cmd_fgcolor(0xff0000)
+        gd.CMD_FGCOLOR(0xff0000)
         fg = (0xff, 0, 0)
 
         dx = x
         dy = y
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, destination.month, fg, bg)
         
         dx = dx + (7 * segsize // 2)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, destination.day, fg, bg)
 
         dx = dx + (7 * segsize // 2)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 4, segsize)
         lednumber(gd, dx, dy, 4, segsize, destination.year, fg, bg)
 
         dx = dx + (25 * segsize // 4)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, destination.hour, fg, bg)
 
         dx = dx + (7 * segsize // 2)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, destination.minute, fg, bg)
 
         # Green LEDs
-        gd.cmd_fgcolor(0x00ff00)
+        gd.CMD_FGCOLOR(0x00ff00)
         fg = (0, 0xff, 0)
 
         dx = x
         dy = dy + segsize * 4
 
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, present.month, fg, bg)
         
         dx = dx + (7 * segsize // 2)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, present.day, fg, bg)
 
         dx = dx + (7 * segsize // 2)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 4, segsize)
         lednumber(gd, dx, dy, 4, segsize, present.year, fg, bg)
 
         dx = dx + (25 * segsize // 4)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, present.hour, fg, bg)
 
         dx = dx + (7 * segsize // 2)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, 88, fg, bg)
 
         # Amber LEDs
-        gd.cmd_fgcolor(0xffff00)
+        gd.CMD_FGCOLOR(0xffff00)
         fg = (0xff, 0xff, 0)
 
         dx = x
         dy = dy + segsize * 4
 
-        gd.ColorRGB(0, 0, 0)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, lasttime.month, fg, bg)
         
         dx = dx + (7 * segsize // 2)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, lasttime.day, fg, bg)
 
         dx = dx + (7 * segsize // 2)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 4, segsize)
         lednumber(gd, dx, dy, 4, segsize, lasttime.year, fg, bg)
 
         dx = dx + (25 * segsize // 4)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, lasttime.hour, fg, bg)
 
         dx = dx + (7 * segsize // 2)
-        gd.ColorRGB(0, 0, 0)
+        gd.COLOR_RGB(0, 0, 0)
         ledbox(gd, dx, dy, 2, segsize)
         lednumber(gd, dx, dy, 2, segsize, lasttime.minute, fg, bg)
 
-        gd.Display()
-        gd.swap()
+        gd.DISPLAY()
+        gd.CMD_SWAP()
+        gd.LIB_AWAITCOPROEMPTY()
 
         present = present - datetime.timedelta(hours=1)
         lasttime = datetime.datetime.now()
