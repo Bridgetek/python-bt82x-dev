@@ -24,7 +24,7 @@ def pad4(s):
 
 def audioloop(eve):
 
-    print("Patch: ", extplotmemsevenseg.loadpatch(eve))
+    print("Extension: ", extplotmemsevenseg.loadpatch(eve))
 
     # Calibrate screen if necessary. 
     # Don't do this for now.
@@ -157,6 +157,12 @@ def audioloop(eve):
     geqbass = 0
     geqmid = 0
     geqtreb = 0
+    
+    eve.LIB_BEGINCOPROLIST()
+    eve.CMD_DLSTART()
+    r = eve.LIB_SDATTACH(eve.OPT_IS_SD)
+    if r != 0:
+        print(f"Could not attach SD card. 0x{r:x}")
 
     while (1):
         vu_sample = 0
@@ -384,6 +390,11 @@ def audioloop(eve):
             eve.CMD_TEXT(eve.EVE_DISP_WIDTH, 0, 34, eve.OPT_RIGHTX | eve.OPT_FORMAT, "FPS: %d", perf_fps)
 
         eve.DISPLAY()
+        if trigger_count == 90:
+            r = eve.LIB_FSSNAPSHOT(0x10000, f"audioloo.bmp")
+            if r != 0:
+                print(f"Could not write SD card. 0x{r:x}")
+            exit(0)
         tstart = time.monotonic()
         eve.CMD_SWAP()
         eve.LIB_AWAITCOPROEMPTY()

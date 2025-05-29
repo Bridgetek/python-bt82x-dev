@@ -8,7 +8,7 @@ The `b2tf.py` and `b2tf2.py` examples demonstrate drawing a multiple seven segme
 
 ### Extension
 
-In the `b2tf2.py` program the `ext-sevenseg` extension is loaded with the `extplotmemsevenseg` code. This loads the `cmd_sevenseg` function into the device. To verify the version of the extension loaded and the components the function the loader code for the `extplotmemsevenseg` returns a string containing information on the extension code. This is printed on the console when the extension is loaded:
+In the `b2tf2.py` program the `ext-sevenseg` extension is loaded with the `extplotmemsevenseg` code. This loads the `CMD_SEVENSEG` function into the device. To verify the version of the extension loaded and the components the function the loader code for the `extplotmemsevenseg` returns a string containing information on the extension code. This is printed on the console when the extension is loaded:
 
 ```
 print(extplotmemsevenseg.loadpatch(eve))

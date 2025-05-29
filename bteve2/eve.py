@@ -1592,7 +1592,7 @@ class EVE2:
         self.c4(int(args[6]))
 
     def LIB_FSCROPSHOT(self, temp, filename, x, y, w, h):
-        self.CMD_FSSNAPSHOT(temp, filename, x, y, w, h, 0)
+        self.CMD_FSCROPSHOT(temp, filename, x, y, w, h, 0)
         return self.previous()
 
     # CMD_SEVENSEG(int16_t x, int16_t y, uint16_t s, uint16_t n)
