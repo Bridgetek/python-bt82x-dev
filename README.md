@@ -174,18 +174,18 @@ apprunner.run(simplest)
 
 The following example code is available:
 
-| Folder | Description |
-| --- | --- |
-| [examples/simple](examples/simple) | Simple example code |
-| [examples/fontmagic](examples/fontmagic)fontmagic.py | Simple example code demonstrating scaling and rotating fonts |
-| [examples/segment](examples/segment)segment.py | Simple seven segment demo code |
-| [examples/b2tf](examples/b2tf)b2tf.py | Advanced seven segment demo code |
-| [examples/teapot](examples/teapot).py | 3D teapot rotation demo code |
-| [examples/plottest](examples/plottest) | Simple plot graph demo code |
-| [examples/audioloop](examples/audioloop) | Advanced plot graph widget demo |
-| TODO: bitmap-split-merge.py | Simple bitmap split/merge demo code |
-| TODO: bitmap-crop.py | Simple bitmap crop demo code |
-| TODO: tsd.py | Time-series data live display, using HISTOGRAM |
+| Folder | File | Description |
+| --- | --- | --- |
+| [examples/simple](examples/simple) | simple.py | Simple example code |
+| [examples/fontmagic](examples/fontmagic) | fontmagic.py | Simple example code demonstrating scaling and rotating fonts |
+| [examples/segment](examples/segment) | segment.py | Simple seven segment demo code |
+| [examples/b2tf](examples/b2tf) | b2tf.py | Advanced seven segment demo code |
+| [examples/teapot](examples/teapot) | teapot.py | 3D teapot rotation demo code |
+| [examples/plottest](examples/plottest) | plottest.py | Simple plot graph demo code |
+| [examples/audioloop](examples/audioloop) | audioloop.py | Advanced plot graph widget demo |
+| TODO: |  bitmap-split-merge.py | Simple bitmap split/merge demo code |
+| TODO: |  bitmap-crop.py | Simple bitmap crop demo code |
+| [examples/tsd](examples/tsd) | tsd.py | Time-series data live display, using HISTOGRAM |
 
 ### Examples Common Code
 
