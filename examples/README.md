@@ -1,6 +1,7 @@
 # Python BT82x Development Examples
 
-[Back](../README.md)
+[Back](../READM
+E.md)
 
 ## Runnable Examples
 
@@ -11,10 +12,10 @@ The following example code is available:
 | Folder | Description |
 | --- | --- |
 | [simple](simple/README.md) | Simple example code |
-| [fontmagic](fontmagic/README.md)fontmagic.py | Simple example code demonstrating scaling and rotating fonts |
-| [segment](segment/README.md)segment.py | Simple seven segment demo code |
-| [b2tf](b2tf/README.md)b2tf.py | Advanced seven segment demo code |
-| [teapot](teapot/README.md).py | 3D teapot rotation demo code |
+| [fontmagic](fontmagic/README.md) | Simple example code demonstrating scaling and rotating fonts |
+| [segment](segment/README.md) | Simple seven segment demo code |
+| [b2tf](b2tf/README.md) | Advanced seven segment demo code |
+| [teapot](teapot/README.md) | 3D teapot rotation demo code |
 | [plottest](plottest/README.md) | Simple plot graph demo code |
 | [audioloop](audioloop/README.md) | Advanced plot graph widget demo |
 | TODO: bitmap-split-merge.py | Simple bitmap split/merge demo code |

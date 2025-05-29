@@ -12,7 +12,7 @@ The second program is useful for cases where an image may be rendered ahead of t
 
 ### Extension
 
-The ext-plotgraph extension is loaded with the `extplotmem` code. This loads the `cmd_plotdraw` function into the device. To verify the version of the extension loaded and the components the function the loader code for the `extplotmem` returns a string containing information on the extension code. This is printed on the console when the extension is loaded:
+The `ext-plotgraph` extension is loaded with the `extplotmem` code. This loads the `cmd_plotdraw` function into the device. To verify the version of the extension loaded and the components the function the loader code for the `extplotmem` returns a string containing information on the extension code. This is printed on the console when the extension is loaded:
 
 ```
 print(extplotmem.loadpatch(eve))

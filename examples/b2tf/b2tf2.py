@@ -12,7 +12,7 @@ import apprunner
 
 # Load the sevensegment source code from the "common" directory.
 sys.path.append('../common')
-import sevensegment 
+import extplotmemsevenseg 
 
 def ledbox(gd, x, y, count, segsize):
     gd.VERTEX_FORMAT(2)
@@ -26,8 +26,10 @@ def ledbox(gd, x, y, count, segsize):
     gd.VERTEX_TRANSLATE_Y(0)
 
 def lednumber(gd, x, y, count, segsize, value, fg, bg):
+    _ = fg
+    _ = bg
     for i in range(count):
-        sevensegment.cmd_sevenseg(gd, x + ((count - i - 1) * (segsize + (segsize//3))), y, segsize, int(value) % 10, fg, bg)
+        gd.CMD_SEVENSEG(x + ((count - i - 1) * (segsize + (segsize//3))), y, segsize, int(value) % 10)
         value = value // 10
 
 def tapebox(gd, x, y, w, h):
@@ -47,6 +49,8 @@ def gradbox(gd, x, y, w, h):
     gd.CMD_GRADIENT(x, y, 0x808080, x, y+h, 0x404040)
 
 def b2tf(gd):
+
+    print("Extension: ", extplotmemsevenseg.loadpatch(gd))
 
     destination = datetime.datetime(1985, 10, 26, 1, 21)
     present = datetime.datetime.now()

@@ -1,5 +1,4 @@
-# This is the EVE library.
-import bteve2 as eve
+# plot6;plot-0.3;mem-0.1;
 
 arr = bytes([
 	# Offset 0x00000000 to 0x0000085B
