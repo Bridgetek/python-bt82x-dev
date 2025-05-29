@@ -19,7 +19,7 @@ family = "BT82x"
 
 def plottest(eve):
 
-    extplotmem.loadpatch(eve)
+    print(extplotmem.loadpatch(eve))
 
     arr = bytes([
             # Offset 0x00000000 to 0x00000400
@@ -122,7 +122,10 @@ def plottest(eve):
     eve.CLEAR_COLOR_RGB(30, 30, 90)
     eve.CLEAR(1,1,1)
 
+    eve.CMD_TEXT(350, 0, 34, 0, "Demo Render Direct")
     eve.VERTEX_FORMAT(0)
+    eve.VERTEX_TRANSLATE_X(100)
+    eve.VERTEX_TRANSLATE_Y(100)
     eve.COLOR_RGB(0, 255,0)
     eve.LINE_WIDTH(2)
     eve.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTHORIZONTAL, 14, 10, 0x14000, 0x18000, 1)

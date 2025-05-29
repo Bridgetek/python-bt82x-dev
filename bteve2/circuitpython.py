@@ -5,14 +5,8 @@ import time
 import struct
 
 import board
-import busio
 import digitalio
 
-import sdcardio
-import storage
-
-# from rpsoftspi import SPI
-# from rppiospi import SPI
 from busio import SPI
 
 import bteve2 as eve
@@ -39,7 +33,6 @@ class connector():
         self.pdn = self.pin(board.GP7) #power down pin of Eve
 
         self.setup_spi()
-        #print('SD', self.setup_sd())
 
     def pin(self,p):
         r = digitalio.DigitalInOut(p)
@@ -50,18 +43,6 @@ class connector():
     @spilock
     def setup_spi(self):
         self.sp.configure(baudrate=20_000_000, phase=0, polarity=0)
-
-    def setup_sd(self):
-        """ Setup sdcard"""
-        spi_sdcard = busio.SPI(board.GP10, MOSI=board.GP11, MISO=board.GP12)
-        sdcs = board.GP13 #cs of SPI for SD card
-        try:
-            self.sdcard = sdcardio.SDCard(spi_sdcard, sdcs)
-        except OSError:
-            return False
-        self.vfs = storage.VfsFat(self.sdcard)
-        storage.mount(self.vfs, "/sd")
-        return True
 
     @spilock
     def exchange(self, wr, rd = 0):

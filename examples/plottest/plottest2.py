@@ -30,7 +30,7 @@ def write_memory_block(eve, base_addr, arrint, indices):
 
 def plottest2(eve):
 
-    extplotmem.loadpatch(eve)
+    print(extplotmem.loadpatch(eve))
 
     arr = bytes([
             # Offset 0x00000000 to 0x00000400
@@ -163,7 +163,7 @@ def plottest2(eve):
     eve.CLEAR_COLOR_RGB(30, 30, 90)
     eve.CLEAR(1,1,1)
 
-    eve.CMD_TEXT(350, 0, 34, 0, "Eve plot Graphs demo")
+    eve.CMD_TEXT(350, 0, 34, 0, "Demo Render Target")
     eve.VERTEX_FORMAT(0) # integer coordinates
     eve.BEGIN(eve.BEGIN_BITMAPS)
     eve.CMD_SETBITMAP(render_addr, render_format, render_w, render_h)

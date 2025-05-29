@@ -22,6 +22,8 @@ import bteve2 as evelib
 #   If the format is not supported then it will raise an exception.
 #
 def get(eve, img_data, verbose = 0):
+    assert(type(eve) == evelib.EVE2)
+    
     # Check for file types and get width and heights
     if img_data[0:8] == b'\x89PNG\x0d\x0a\x1a\x0a':
         # PNG File
