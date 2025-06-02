@@ -151,4 +151,4 @@ width,height,imagetype = eveimageproperties.get(eve, img_data)
 
 ## Extensions
 
-TODO:
+TODO: Add extplotmem.py and extplotmemsevenseg.py documentation.
