@@ -390,11 +390,6 @@ def audioloop(eve):
             eve.CMD_TEXT(eve.EVE_DISP_WIDTH, 0, 34, eve.OPT_RIGHTX | eve.OPT_FORMAT, "FPS: %d", perf_fps)
 
         eve.DISPLAY()
-        if trigger_count == 90:
-            r = eve.LIB_FSSNAPSHOT(0x10000, f"audioloo.bmp")
-            if r != 0:
-                print(f"Could not write SD card. 0x{r:x}")
-            exit(0)
         tstart = time.monotonic()
         eve.CMD_SWAP()
         eve.LIB_AWAITCOPROEMPTY()
