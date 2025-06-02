@@ -301,7 +301,7 @@ def fontmagic(gd):
 
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #gd.LIB_CALIBRATE()
+    #gd.LIB_Calibrate()
 
     # Install a custom font. 
     # This must be installed in RAM_G memory before the details of the font
@@ -322,12 +322,12 @@ def fontmagic(gd):
     if format == 0x0100aa44:
         # Use loadasset for relocatable assets.
         gd.CMD_LOADASSET(address, 0)
-        gd.ram_cmd(pad4(dd))
+        gd.LIB_WriteDataToCMD(pad4(dd))
     else:
         # Load normal assets in place directly.
         gd.CMD_INFLATE(address, 0)
-        gd.ram_cmd(pad4(zlib.compress(dd)))
-    gd.LIB_AWAITCOPROEMPTY()
+        gd.LIB_WriteDataToCMD(pad4(zlib.compress(dd)))
+    gd.LIB_AwaitCoProEmpty()
     """print(f"0x{address:x}: 0x{gd.rd32(address):08x} 0x{gd.rd32(address+4):08x} 0x{gd.rd32(address+8):08x} 0x{gd.rd32(address+12):08x}")"""
 
     # Update the font table with the custom font.
@@ -335,7 +335,7 @@ def fontmagic(gd):
     gd.CMD_DLSTART()
     gd.CMD_SETFONT(customfont, address, first_character)
     gd.CMD_SWAP()
-    gd.LIB_AWAITCOPROEMPTY()
+    gd.LIB_AwaitCoProEmpty()
 
     # Obtain details on custom installed fonts from RAM_G.
     print("Get custom font info...")
@@ -422,7 +422,7 @@ def fontmagic(gd):
 
     gd.DISPLAY()
     gd.CMD_SWAP()
-    gd.LIB_AWAITCOPROEMPTY()
+    gd.LIB_AwaitCoProEmpty()
 
     
 apprunner.run(fontmagic)

@@ -122,12 +122,7 @@ def plottest2(eve):
             0x3B, 0x3C, 0x40, 0x41,
         ])
 
-    # Turn byte array into uint32s
-    arrint = array.array('I', arr)
-
-    # Program graph data into RAM_G
-    for i,a in enumerate(arrint):
-        eve.wr32(i * 4, a)
+    eve.LIB_WriteDataToRAMG(arr, 0)
 
     # demonstrate rendering to a BITMAP in a buffer
     render_addr = 0x8000
@@ -154,7 +149,7 @@ def plottest2(eve):
 
     eve.DISPLAY()
     eve.CMD_SWAP()
-    eve.LIB_AWAITCOPROEMPTY()
+    eve.LIB_AwaitCoProEmpty()
 
     # Set render target back to the to display (SWAPCHAIN0)
     eve.CMD_RENDERTARGET(eve.SWAPCHAIN_0, eve.FORMAT_RGB6, 1920, 1200)
@@ -171,6 +166,6 @@ def plottest2(eve):
 
     eve.DISPLAY()
     eve.CMD_SWAP()
-    eve.LIB_AWAITCOPROEMPTY()
+    eve.LIB_AwaitCoProEmpty()
 
 apprunner.run(plottest2)

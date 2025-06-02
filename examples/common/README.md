@@ -101,7 +101,7 @@ _Parameters:_
 -   **eve**: Handle to class of bteve2.
 
 _Returns:_
-   This returns the status from an SD card operation. A value of zero is success, any other value is a failure. SD card return values are decoded into strings in the `LIB_SDCARD_ERROR` function in the EVE module.
+   This returns the status from an SD card operation. A value of zero is success, any other value is a failure. SD card return values are decoded into strings in the `LIB_SDCardError` function in the EVE module.
 
 #### Screenshot Command
 
@@ -113,7 +113,7 @@ _Parameters:_
 -   **filename**: Filename to write BMP file to on SD card.
 
 _Returns:_
-   This returns the status from an SD card operation. A value of zero is success, any other value is a failure. SD card return values are decoded into strings in the `LIB_SDCARD_ERROR` function in the EVE module.
+   This returns the status from an SD card operation. A value of zero is success, any other value is a failure. SD card return values are decoded into strings in the `LIB_SDCardError` function in the EVE module.
 
 _Example:_
 ```
@@ -125,7 +125,7 @@ drawscreen(gd)
 gd.DISPLAY()
 screenshot.cmd_screenshot(gd, "segments.bmp")
 gd.CMD_SWAP()
-gd.LIB_AWAITCOPROEMPTY()
+gd.LIB_AwaitCoProEmpty()
 ```
 
 ### Image Size Utility

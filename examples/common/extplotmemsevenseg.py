@@ -227,11 +227,11 @@ def pad4(s):
 extplotmemsevenseg = pad4(arr)
 
 def loadpatch(eve):
-    eve.LIB_BEGINCOPROLIST()
+    eve.LIB_BeginCoProList()
     eve.CMD_DLSTART()
     eve.CMD_LOADPATCH(0)
-    eve.LIB_WRITEDATATOCMD(extplotmemsevenseg)
-    eve.LIB_ENDCOPROLIST()
-    eve.LIB_AWAITCOPROEMPTY()
-    versions = eve.LIB_GETCOPROEXCEPTION()
+    eve.LIB_WriteDataToCMD(extplotmemsevenseg)
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
+    versions = eve.LIB_GetCoProException()
     return (versions)

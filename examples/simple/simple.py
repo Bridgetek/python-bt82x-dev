@@ -24,7 +24,7 @@ def simple(eve):
         
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #eve.LIB_CALIBRATE()
+    #eve.LIB_AutoCalibrate()
 
     # Start drawing test screen.
     eve.CMD_DLSTART()
@@ -35,6 +35,6 @@ def simple(eve):
 
     eve.DISPLAY()
     eve.CMD_SWAP()
-    eve.LIB_AWAITCOPROEMPTY()
+    eve.LIB_AwaitCoProEmpty()
     
 apprunner.run(simple)

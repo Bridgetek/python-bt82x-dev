@@ -28,7 +28,7 @@ def audioloop(eve):
 
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #eve.LIB_CALIBRATE()
+    #eve.LIB_AutoCalibrate()
     
     TRACE_COUNT = 4
     TRACE_POINTS = 400
@@ -62,28 +62,28 @@ def audioloop(eve):
         raise(f"Error: asset not found.")
 
 
-    eve.LIB_BEGINCOPROLIST()
+    eve.LIB_BeginCoProList()
     eve.CMD_DLSTART()
     eve.CMD_MEMORYINIT(0x1000, 1024 * 1024)
-    eve.LIB_ENDCOPROLIST()
-    eve.LIB_AWAITCOPROEMPTY()
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
 
     # Program trace data into RAM_G
-    eve.LIB_BEGINCOPROLIST()
+    eve.LIB_BeginCoProList()
     eve.CMD_DLSTART()
     for i in range(TRACE_COUNT):
         # Allocate a bitmap for each trace that is 4 times the size of the input data
         # Two cells are needed to make a subtractive overlay of one image
         # Two images are needed to prevent overwriting the image currently rendered
-        trace_addr.append(eve.LIB_MEMORYBITMAP(eve.FORMAT_BARGRAPH, TRACE_POINTS, 2))
+        trace_addr.append(eve.LIB_MemoryBitmap(eve.FORMAT_BARGRAPH, TRACE_POINTS, 2))
         print(f"Graph {i} bitmap address 0x{trace_addr[i]:x}");
         # Random-ish starting point in sample
         trace_offset.append(0)
         trace_active.append(1)
         trace_counter.append(i * 10)
     eve.CMD_SWAP()
-    eve.LIB_ENDCOPROLIST()
-    eve.LIB_AWAITCOPROEMPTY()
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
 
     # Pseudo random start trigger for samples
     trigger_mask = 0
@@ -158,7 +158,7 @@ def audioloop(eve):
     geqmid = 0
     geqtreb = 0
     
-    eve.LIB_BEGINCOPROLIST()
+    eve.LIB_BeginCoProList()
     eve.CMD_DLSTART()
 
     while (1):
@@ -168,7 +168,7 @@ def audioloop(eve):
         # Alternate between bitmap cells for bitmap to prevent ripping
         trace_cell = 1 if trace_cell == 0 else 0
 
-        eve.LIB_BEGINCOPROLIST()
+        eve.LIB_BeginCoProList()
         eve.CMD_DLSTART()
         eve.CLEAR_COLOR_RGB(30, 30, 90)
         eve.CLEAR(1,1,1)
@@ -184,7 +184,7 @@ def audioloop(eve):
             tracebuf = trace_data[i][tracepoint:tracepoint + remainder]
             if (remainder != TRACE_POINTS):
                 tracebuf += trace_data[i][0:TRACE_POINTS - remainder]
-            eve.LIB_WRITEDATATORAMG(tracebuf)
+            eve.LIB_WriteDataToCMD(tracebuf)
             tend = time.monotonic()
             tplotstream += tend - tstart
 
@@ -389,7 +389,7 @@ def audioloop(eve):
         eve.DISPLAY()
         tstart = time.monotonic()
         eve.CMD_SWAP()
-        eve.LIB_AWAITCOPROEMPTY()
+        eve.LIB_AwaitCoProEmpty()
         tend = time.monotonic()
         tcoprocend += tend - tstart
 

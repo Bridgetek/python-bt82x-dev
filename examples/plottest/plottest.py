@@ -111,12 +111,7 @@ def plottest(eve):
             0x3B, 0x3C, 0x40, 0x41,
         ])
 
-    # Turn byte array into uint32s
-    arrint = array.array('I', arr)
-
-    # Program graph data into RAM_G
-    for i,a in enumerate(arrint):
-        eve.wr32(i * 4, a)
+    eve.LIB_WriteDataToRAMG(arr, 0)
 
     eve.CMD_DLSTART()
     eve.CLEAR_COLOR_RGB(30, 30, 90)
@@ -136,6 +131,6 @@ def plottest(eve):
 
     eve.DISPLAY()
     eve.CMD_SWAP()
-    eve.LIB_AWAITCOPROEMPTY()
+    eve.LIB_AwaitCoProEmpty()
 
 apprunner.run(plottest)

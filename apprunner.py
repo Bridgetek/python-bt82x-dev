@@ -74,6 +74,6 @@ class run:
             eve.CMD_REGWRITE(eve.REG_SC0_PTR1, 18 << 20)
             eve.panel(surface, panel, touch)
             app(eve)
-            eve.LIB_AWAITCOPROEMPTY()
+            eve.LIB_AwaitCoProEmpty()
         else:
             app(eve)

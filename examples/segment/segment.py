@@ -34,7 +34,7 @@ def segment(gd):
         
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #gd.LIB_CALIBRATE()
+    #gd.LIB_Calibrate()
 
     # Start drawing test screen.
     gd.CMD_DLSTART()
@@ -61,6 +61,6 @@ def segment(gd):
     sevensegment.cmd_sevenseg(gd, x + (gap * 7), y, size, int((number/1)%10), fg, bg)
     gd.DISPLAY()
     gd.CMD_SWAP()
-    gd.LIB_AWAITCOPROEMPTY()
+    gd.LIB_AwaitCoProEmpty()
 
 apprunner.run(segment)
