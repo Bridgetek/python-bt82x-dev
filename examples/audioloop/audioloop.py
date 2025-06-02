@@ -160,9 +160,6 @@ def audioloop(eve):
     
     eve.LIB_BEGINCOPROLIST()
     eve.CMD_DLSTART()
-    r = eve.LIB_SDATTACH(eve.OPT_IS_SD)
-    if r != 0:
-        print(f"Could not attach SD card. 0x{r:x}")
 
     while (1):
         vu_sample = 0
