@@ -1,6 +1,6 @@
 # Python BT82x Development
 
-This python module and interface connectors allow python to be used to communicate with a BT82x device using D2XX, FT4232H, FT232H or FT4222H devices. 
+This python module and interface connectors allow python to be used to communicate with a BT82x device using D2XX, FT4232H, FT232H or FT4222H devices. This library is intended to provide a **python** library with similar to the embedded **C** libraries for BT8xx [EVE-MCU-Dev](https://github.com/Bridgetek/EVE-MCU-BRT_AN_025).
 
 ## Contents
 

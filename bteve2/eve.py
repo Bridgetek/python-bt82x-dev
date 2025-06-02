@@ -635,8 +635,15 @@ class EVE2:
     # @param s - Pointer to start of receive data buffer.
     # @param len - Number of bytes to read (rounded up to be 32-bit aligned).
     # @param a - 24 bit memory mapped address on EVE.
-    def LIB_ReadDataFromRAMG(self, s, len, a):
-        pass
+    def LIB_ReadDataFromRAMG(self, n, a):
+        s = b''
+        assert((n & 3) == 0, "Data must be a multiple of 4 bytes")
+        while n > 0:
+            chunk = min((1024 * 4), n)
+            s = s + self.rd(a, chunk)
+            n -= chunk
+            a += chunk
+        return s
 
     # @brief EVE API: Write a buffer to the coprocessor command memory
     # @details Writes a block of data via SPI to the EVE coprocessor.
