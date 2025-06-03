@@ -60,14 +60,14 @@ class connector():
             # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
             # On FT4222H the spiMaster_EndTransaction will take 11uS.
             # This is T0 (12.5nS for 80MHz clock) * 880 clocks from Datasheet.
-            # Read a maximum of 4 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 4 + nn)
+            # Read a maximum of 8 bytes before the "0x01" that signifies data ready.
+            n = min(a1 - a, 8 + nn)
             if self.multi_mode:
-                bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 4 + n)
+                bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 8 + n)
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
-                    if i >= 4: print(f"Oh dear {i}")
+                    if i >= 8: print(f"Oh dear {i}")
                     response = bb[i + 1:i + 1 + n]
                 else:
                     # There is no recovery here.
@@ -77,7 +77,7 @@ class connector():
                 self.devA.spiMaster_SingleWrite(self.addr(a), False)
                 def recv(n):
                     return self.devA.spiMaster_SingleRead(n, False)
-                bb = recv(128 + n)
+                bb = recv(8 + n)
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
@@ -95,6 +95,9 @@ class connector():
             a += n
             r += response
         return r
+
+    def wr32(self, a, v):
+        self.wr(a, struct.pack("I", v))
 
     def wr(self, a, s, inc=True):
         _ = inc
@@ -174,7 +177,7 @@ class connector():
             print(f"[Boot fail after reset, retrying...]")
 
         # Disable QSPI burst mode
-        #self.wr32(self.REG_SYS_CFG, 1 << 10)
+        #self.wr32(self.EVE2.REG_SYS_CFG, 1 << 10)
 
         parser = argparse.ArgumentParser(description="ft4222 module")
         parser.add_argument("--mode", help="spi mode", default="0")     # 0: single, 1: dual, 2: quad
@@ -186,10 +189,10 @@ class connector():
             spi_mode = int(args.mode, 0)
             # Enable Dual/Quad SPI
             if spi_mode in [1,2]:
-                cfg = self.rd32(eve.REG_SYS_CFG) & ~(0x3 << 8)
+                cfg = self.rd32(eve.EVE2.REG_SYS_CFG) & ~(0x3 << 8)
                 # Turn SPI_WIDTH to DUAL/QUAD
                 cfg = cfg | (spi_mode << 8)
-                self.wr32(eve.REG_SYS_CFG, cfg)
+                self.wr32(eve.EVE2.REG_SYS_CFG, cfg)
                 # Instruct ft4222 library to switch to Dual/Quad SPI
                 self.devA.spiMaster_SetLines(Mode.DUAL if spi_mode == 1 else Mode.QUAD)
                 # change to multi mode
