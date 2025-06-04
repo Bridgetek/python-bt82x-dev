@@ -1704,13 +1704,13 @@ class EVE2:
     # CMD_TEXTSIZE(int16_t font, uint16_t options, const char* s, uint16_t w, uint16_t h)
     def CMD_TEXTSIZE(self, *args):
         self.cmd(0xaa, 'hH', [ int(arg) for arg in args[:2] ])
-        self.fstring(args[2])
+        self.fstring((args[2],))
         self.c4(args[3])
 
     def LIB_TextSize(self, font, options, s):
         self.CMD_TEXTSIZE(font, options, s, 0)
         wh = self.previous()
-        return (wh & 0xffff, (wh >> 16) & 0xffff)
+        return ((wh >> 16) & 0xffff, wh & 0xffff)
 
     # CMD_KEYBOARD(int16_t x, int16_t y, uint16_t w, uint16_t h, int16_t font, uint16_t options, const char* s)
     def CMD_KEYBOARD(self, *args):
@@ -1737,12 +1737,12 @@ class EVE2:
         self.CMD_MEMORYFREE(address, 0);
         return self.previous()
 
-    # CMD_MEMORYBITMAP(uint16_t fmt, uint16_t w, uint16_t h, uint16_t resv, uint32_t address)
+    # CMD_MEMORYBITMAP(uint16_t fmt, uint16_t w, uint16_t h, uint16_t addn, uint32_t address)
     def CMD_MEMORYBITMAP(self, *args):
         self.cmd(0xa9, "HHHHI", [ int(arg) for arg in args ])
 
-    def LIB_MemoryBitmap(self, fmt, w, h):
-        self.CMD_MEMORYBITMAP(fmt, w, h, 0, 0);
+    def LIB_MemoryBitmap(self, fmt, w, h, addn):
+        self.CMD_MEMORYBITMAP(fmt, w, h, addn, 0);
         return self.previous()
     
     # CMD_PLOTDRAW(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)

@@ -301,7 +301,7 @@ def fontmagic(gd):
 
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #gd.LIB_Calibrate()
+    #gd.LIB_AutoCalibrate()
 
     # Install a custom font. 
     # This must be installed in RAM_G memory before the details of the font

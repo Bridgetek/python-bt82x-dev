@@ -34,7 +34,7 @@ def segment(gd):
         
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #gd.LIB_Calibrate()
+    #gd.LIB_AutoCalibrate()
 
     # Start drawing test screen.
     gd.CMD_DLSTART()

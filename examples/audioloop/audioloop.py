@@ -24,6 +24,7 @@ def pad4(s):
 
 def audioloop(eve):
 
+    # Load extension code
     print("Extension: ", extplotmemsevenseg.loadpatch(eve))
 
     # Calibrate screen if necessary. 

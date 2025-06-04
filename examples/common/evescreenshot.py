@@ -4,6 +4,7 @@ import struct
 # This is the EVE library.
 import bteve2 as evelib
 
+# Only do a screenshot once!
 oneshot = True
 
 # Screenshot Widget
@@ -22,13 +23,13 @@ oneshot = True
 #   display list has been completed.
 #
 #        eve.DISPLAY()
-#        screenshot.cmd_screenshot(eve, "test.bmp")
+#        evescreenshot.cmd_screenshot(eve, "test.bmp")
 #        eve.CMD_SWAP()
 #        eve.LIB_AwaitCoProEmpty()
 #
 #   The bitmap of the display list will be saved into the file.
 #
-def cmd_screenshot(eve, filename, address=0x10000):
+def cmd_screenshot(eve, filename, address=0x7000000):
     assert(type(eve) == evelib.EVE2)
     global oneshot 
     if (oneshot):
