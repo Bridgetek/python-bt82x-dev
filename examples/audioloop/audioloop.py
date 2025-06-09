@@ -76,7 +76,7 @@ def audioloop(eve):
         # Allocate a bitmap for each trace that is 4 times the size of the input data
         # Two cells are needed to make a subtractive overlay of one image
         # Two images are needed to prevent overwriting the image currently rendered
-        trace_addr.append(eve.LIB_MemoryBitmap(eve.FORMAT_BARGRAPH, TRACE_POINTS, 2))
+        trace_addr.append(eve.LIB_MemoryBitmap(eve.FORMAT_BARGRAPH, TRACE_POINTS, 2, 0))
         print(f"Graph {i} bitmap address 0x{trace_addr[i]:x}");
         # Random-ish starting point in sample
         trace_offset.append(0)
