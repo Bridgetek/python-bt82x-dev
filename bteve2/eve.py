@@ -561,10 +561,13 @@ class EVE2:
     # When the co-processor is idle this will be FIFO_MAX.
     # Note: when bit 0 is set then the co-processor has encountered an error.
     def getspace(self):
+        self.cs(True)
         self.space = self.rd32(self.REG_CMDB_SPACE)
         if self.space & 1:
             message = self.rd(self.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
+            self.cs(False)
             raise CoprocessorException(message)
+        self.cs(False)
 
     # Return True if the co-processor RAM_CMD space is empty (FIFO_MAX 
     # remaining).
@@ -580,11 +583,14 @@ class EVE2:
         while i < len(ss):
             send = ss[i:i + self.space]
             i += self.space
-            self.wr(self.REG_CMDB_WRITE, send, False)
-            self.space -= len(send)
+            if (len(send) > 0): 
+                self.wr(self.REG_CMDB_WRITE, send, False)
+                self.space -= len(send)
+
             if i < len(ss):
-                #self.sleepclocks(10000)
+                self.cs(False)
                 self.getspace()
+                self.cs(True)
 
     # Write data to the RAM_G.
     def write_ramg(self, ss, a):
@@ -594,7 +600,7 @@ class EVE2:
     # @details Starts a coprocessor list. Waits for the coprocessor to be idle
     #  before asserting chip select.
     def LIB_BeginCoProList(self):
-        self.finish(True)
+        #self.finish(True)
         pass
 
     # @brief EVE API: End coprocessor list
@@ -678,15 +684,15 @@ class EVE2:
 
     # Recover from a coprocessor exception.
     def recover(self):
-        #self.flush()
-        #self.cs(False)
         self.cs(True)
         self.wr32(self.REG_CMD_READ, 0)
         self.cs(False)
         # Instructions are write REG_CMD_READ as zero then
         # wait for REG_CMD_WRITE to become zero.
         while True:
+            self.cs(True)
             writeptr = self.rd32(self.REG_CMD_WRITE)
+            self.cs(False)
             if (writeptr == 0): break;
 
     # Return the result field of the preceding command

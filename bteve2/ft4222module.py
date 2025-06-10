@@ -57,17 +57,17 @@ class connector():
         r = b''
         while a != a1:
             # Timeout for a read is 7uS for BT82x.
-            # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
+            # At a 20MHz SPI bus the timeout is approximately 140 clock cycles.
             # On FT4222H the spiMaster_EndTransaction will take 11uS.
             # This is T0 (12.5nS for 80MHz clock) * 880 clocks from Datasheet.
             # Read a maximum of 8 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 8 + nn)
+            n = min(a1 - a, 16 + nn)
             if self.multi_mode:
-                bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 8 + n)
+                bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 16 + n)
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
-                    if i >= 8: print(f"Oh dear {i}")
+                    if i >= 16: print(f"Oh dear {i}")
                     response = bb[i + 1:i + 1 + n]
                 else:
                     # There is no recovery here.
@@ -77,7 +77,7 @@ class connector():
                 self.devA.spiMaster_SingleWrite(self.addr(a), False)
                 def recv(n):
                     return self.devA.spiMaster_SingleRead(n, False)
-                bb = recv(8 + n)
+                bb = recv(16 + n)
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
@@ -89,7 +89,6 @@ class connector():
                     response = b''
             # Handle case of full response not received
             if len(response) < n:
-                #print("Padd")
                 response += recv(n - len(response))
             self.devA.spiMaster_EndTransaction()
             a += n
@@ -113,17 +112,18 @@ class connector():
                 if t > 0:
                     self.devA.spiMaster_SingleWrite(s[:n], True)
                 else:
-                    self.devA.spiMaster_EndTransaction()
+                    pass
             a += n
             t -= n
             s = s[n:]
+            self.devA.spiMaster_EndTransaction()
 
     def cs(self, v):
         if v:
             # No action. CS automatically actioned.
             pass
         else:
-            # End of transaction. Send cumulated buffer contents.
+            # End of transaction.
             self.devA.spiMaster_EndTransaction()
 
     def reset(self):
@@ -177,7 +177,7 @@ class connector():
             print(f"[Boot fail after reset, retrying...]")
 
         # Disable QSPI burst mode
-        #self.wr32(self.EVE2.REG_SYS_CFG, 1 << 10)
+        #self.wr32(eve.EVE2.REG_SYS_CFG, 1 << 10)
 
         parser = argparse.ArgumentParser(description="ft4222 module")
         parser.add_argument("--mode", help="spi mode", default="0")     # 0: single, 1: dual, 2: quad
