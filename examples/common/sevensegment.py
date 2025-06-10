@@ -69,7 +69,7 @@ def cmd_sevenseg(eve, x, y, size, digit, fgcolour = (255,0,0), bgcolour = (20,0,
 
     pt3ly = (y + (2.5 * size)) * 4
 
-    width = (size * 0.64)/8
+    width = size/6.4
 
     if region:
         eve.CMD_REGION()
