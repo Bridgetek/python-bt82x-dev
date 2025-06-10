@@ -581,16 +581,16 @@ class EVE2:
     def write(self, ss):
         i = 0
         while i < len(ss):
-            send = ss[i:i + self.space]
-            i += self.space
-            if (len(send) > 0): 
-                self.wr(self.REG_CMDB_WRITE, send, False)
-                self.space -= len(send)
-
-            if i < len(ss):
-                self.cs(False)
-                self.getspace()
+            avail = max(0, self.space - 16)
+            if (avail > 0): 
+                send = ss[i:i + avail]
+                i += avail
                 self.cs(True)
+                self.wr(self.REG_CMDB_WRITE, send, False)
+                self.cs(False)
+                self.space -= avail
+            else:
+                self.getspace()
 
     # Write data to the RAM_G.
     def write_ramg(self, ss, a):
@@ -643,7 +643,7 @@ class EVE2:
     # @param a - 24 bit memory mapped address on EVE.
     def LIB_ReadDataFromRAMG(self, n, a):
         s = b''
-        assert((n & 3) == 0, "Data must be a multiple of 4 bytes")
+        assert (n & 3) == 0, "Data must be a multiple of 4 bytes"
         while n > 0:
             chunk = min((1024 * 4), n)
             s = s + self.rd(a, chunk)
@@ -677,16 +677,13 @@ class EVE2:
     # Note that this will be synchronised with the frame rate.
     def finish(self, wait = True):
         self.flush()
-        self.cs(False)
         if wait:
             while not self.is_finished():
                 pass
 
     # Recover from a coprocessor exception.
     def recover(self):
-        self.cs(True)
         self.wr32(self.REG_CMD_READ, 0)
-        self.cs(False)
         # Instructions are write REG_CMD_READ as zero then
         # wait for REG_CMD_WRITE to become zero.
         while True:
@@ -699,7 +696,9 @@ class EVE2:
     def previous(self, fmt = "I"):
         self.finish(wait=True)
         size = struct.calcsize(fmt)
+        self.cs(True)
         offset = (self.rd32(self.REG_CMD_READ) - size) & self.FIFO_MAX
+        self.cs(False)
         r = struct.unpack(fmt, self.rd(self.RAM_CMD + offset, size))
         if len(r) == 1:
             return r[0]
@@ -884,11 +883,9 @@ class EVE2:
         assert (len(self.buf) % 4) == 0
         # Flush the co-processor buffer to the EVE device.
         n = len(self.buf)
-        if n >= self.FIFO_MAX:
-            chunk = min(self.FIFO_MAX, n)
-            self.cs(True)
+        if n >= self.FIFO_MAX - 16:
+            chunk = min(self.FIFO_MAX - 16, n)
             self.write(self.buf[:chunk])
-            self.cs(False)
             self.buf = self.buf[chunk:]
 
     def register(self, sub):
@@ -898,9 +895,7 @@ class EVE2:
     # Send the co-processor buffer to the EVE device.
     def flush(self):
         if (len(self.buf)):
-            self.cs(True)
             self.write(self.buf)
-            self.cs(False)
             self.buf = b''
 
     # Send a 32-bit value to the EVE.
@@ -923,14 +918,14 @@ class EVE2:
         n = len(self.buf)
         if n >= self.FIFO_MAX:        
             self.flush()
-        assert((len(s) & 3) == 0, "Data must be a multiple of 4 bytes")
-        n = len(s)
-        while n > 0:
-            chunk = min((1024 * 15), n)
+        assert (len(s) & 3) == 0, "Data must be a multiple of 4 bytes"
+        p = len(s)
+        while p > 0:
+            chunk = min((1024 * 15), self.FIFO_MAX - n)
             self.buf += s[:chunk]
             self.flush()
             s = s[chunk:]
-            n -= chunk
+            p -= chunk
 
     # The basic graphics instructions for DISPLAY Lists.
     def ALPHA_FUNC(self, func,ref):

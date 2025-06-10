@@ -1,3 +1,5 @@
+import traceback
+
 import time
 import struct
 import sys
@@ -37,7 +39,7 @@ class connector():
         pass
 
     def sleepclocks(self, n):
-        time.sleep(n / 72e6)
+        time.sleep(n / self.FREQUENCY)
 
     def addr(self, a):
         return struct.pack(">I", a)
@@ -49,8 +51,6 @@ class connector():
         assert (a & 3) == 0
         assert (nn & 3) == 0
         
-        self.devA.spiMaster_EndTransaction()
-
         if nn == 0:
             return b""
         a1 = a + nn
@@ -87,10 +87,10 @@ class connector():
                     while recv(1) == b'\x00':
                         pass
                     response = b''
+                self.devA.spiMaster_EndTransaction()
             # Handle case of full response not received
             if len(response) < n:
                 response += recv(n - len(response))
-            self.devA.spiMaster_EndTransaction()
             a += n
             r += response
         return r
@@ -103,6 +103,7 @@ class connector():
         assert (a & 3) == 0
         t = len(s)
         assert (t & 3) == 0
+        
         while t:
             n = min(0xf000, t)
             if self.multi_mode:
@@ -112,19 +113,20 @@ class connector():
                 if t > 0:
                     self.devA.spiMaster_SingleWrite(s[:n], True)
                 else:
+                    self.devA.spiMaster_EndTransaction()
                     pass
             a += n
             t -= n
             s = s[n:]
-            self.devA.spiMaster_EndTransaction()
 
+    prevcs = None
     def cs(self, v):
         if v:
             # No action. CS automatically actioned.
             pass
         else:
             # End of transaction.
-            self.devA.spiMaster_EndTransaction()
+            pass
 
     def reset(self):
         self.devB.gpio_Write(Port.P0, 0)

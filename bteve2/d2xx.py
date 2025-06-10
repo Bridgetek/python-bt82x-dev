@@ -179,7 +179,7 @@ class connector():
         pass
 
     def sleepclocks(self, n):
-        time.sleep(n / 72e6)
+        time.sleep(n / self.FREQUENCY)
 
     def addr(self, a):
         return struct.pack(">I", a)
