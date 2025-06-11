@@ -87,10 +87,10 @@ class connector():
                     while recv(1) == b'\x00':
                         pass
                     response = b''
+                # Handle case of full response not received
+                if len(response) < n:
+                    response += recv(n - len(response))
                 self.devA.spiMaster_EndTransaction()
-            # Handle case of full response not received
-            if len(response) < n:
-                response += recv(n - len(response))
             a += n
             r += response
         return r
