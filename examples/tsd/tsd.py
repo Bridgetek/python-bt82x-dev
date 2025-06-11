@@ -66,7 +66,6 @@ class Chart:
         eve.VERTEX2F(x*16, y*16)
 
 def tsd(eve):
-
     w = 1280                # Width in pixels
 
     sz = 2 * w              # Each chart uses (2 * w) bytes
@@ -86,7 +85,9 @@ def tsd(eve):
         for (i, ch) in enumerate(charts):
             ch.draw(100, i * 280)
 
+        eve.DISPLAY()
         eve.CMD_SWAP()
+        eve.LIB_AwaitCoProEmpty()
         eve.CMD_DLSTART()
 
 apprunner.run(tsd)

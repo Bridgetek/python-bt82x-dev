@@ -20,7 +20,7 @@ The following example code is available:
 | [audioloop](audioloop/README.md) | Advanced plot graph widget demo |
 | TODO: bitmap-split-merge.py | Simple bitmap split/merge demo code |
 | TODO: bitmap-crop.py | Simple bitmap crop demo code |
-| TODO: tsd.py | Time-series data live display, using HISTOGRAM |
+| [tsd](tsd/README.md) | Time-series data live display, using HISTOGRAM |
 
 ## Widgets and Utilities
 
