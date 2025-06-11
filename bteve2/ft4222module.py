@@ -18,7 +18,7 @@ class connector():
     # Enable Dual or Quad SPI modes
     multi_mode = False
     # Current chip select setting for assertion when accessing SPI when CS is disabled
-    cs = None
+    curcs = None
 
     def __init__(self):
         print("Initialise FT4222 interface")
@@ -55,7 +55,7 @@ class connector():
         assert (a & 3) == 0
         assert (nn & 3) == 0
         
-        assert self.cs == True, "CS not enabled for read"
+        assert self.curcs == True, "CS not enabled for read"
 
         if nn == 0:
             return b""
@@ -110,7 +110,7 @@ class connector():
         t = len(s)
         assert (t & 3) == 0
         
-        assert self.cs == True, "CS not enabled for write"
+        assert self.curcs == True, "CS not enabled for write"
 
         while t:
             n = min(0xf000, t)
@@ -134,7 +134,7 @@ class connector():
         else:
             # End of transaction.
             pass
-        self.cs = v
+        self.curcs = v
 
     def reset(self):
         self.devB.gpio_Write(Port.P0, 0)

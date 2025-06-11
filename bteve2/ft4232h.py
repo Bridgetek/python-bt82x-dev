@@ -24,7 +24,7 @@ class connector():
     # system clock frequency, in Hz
     FREQUENCY = 72_000_000
     # Current chip select setting for assertion when accessing SPI when CS is disabled
-    cs = None
+    curcs = None
 
     def __init__(self):
         print("Initialise FT4232H interface")
@@ -67,7 +67,7 @@ class connector():
         assert (a & 3) == 0
         assert (nn & 3) == 0
 
-        assert self.cs == True, "CS not enabled for read"
+        assert self.curcs == True, "CS not enabled for read"
 
         if nn == 0:
             return b""
@@ -103,7 +103,7 @@ class connector():
         t = len(s)
         assert (t & 3) == 0
 
-        assert self.cs == True, "CS not enabled for write"
+        assert self.curcs == True, "CS not enabled for write"
 
         while t:
             # Write in 4kB bursts
@@ -119,7 +119,7 @@ class connector():
             self.slave.force_select(0)
         else:
             self.slave.force_select(1)
-        self.cs = v
+        self.curcs = v
 
     def reset(self):
         while 1:
