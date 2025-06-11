@@ -13,8 +13,12 @@ from ft4222.GPIO import Port, Dir
 import bteve2 as eve
 
 class connector():
-    FREQUENCY = 72_000_000      # system clock frequency, in Hz
+    # System clock frequency, in Hz
+    FREQUENCY = 72_000_000
+    # Enable Dual or Quad SPI modes
     multi_mode = False
+    # Current chip select setting for assertion when accessing SPI when CS is disabled
+    cs = None
 
     def __init__(self):
         print("Initialise FT4222 interface")
@@ -51,6 +55,8 @@ class connector():
         assert (a & 3) == 0
         assert (nn & 3) == 0
         
+        assert self.cs == True, "CS not enabled for read"
+
         if nn == 0:
             return b""
         a1 = a + nn
@@ -104,6 +110,8 @@ class connector():
         t = len(s)
         assert (t & 3) == 0
         
+        assert self.cs == True, "CS not enabled for write"
+
         while t:
             n = min(0xf000, t)
             if self.multi_mode:
@@ -119,7 +127,6 @@ class connector():
             t -= n
             s = s[n:]
 
-    prevcs = None
     def cs(self, v):
         if v:
             # No action. CS automatically actioned.
@@ -127,6 +134,7 @@ class connector():
         else:
             # End of transaction.
             pass
+        self.cs = v
 
     def reset(self):
         self.devB.gpio_Write(Port.P0, 0)
@@ -154,14 +162,18 @@ class connector():
             exchange(bytes([0x00, 0x00, 0x00, 0x00, 0x00]), True)
             time.sleep(.2)
 
+            self.cs(True)
             self.devA.spiMaster_SingleWrite(self.addr(0), False)
             def recv(n):
                 return self.devA.spiMaster_SingleRead(n, True)
             bb = recv(128)
+            self.cs(False)
+
             t0 = time.monotonic_ns()
             
             fault = False
             if 1 in bb:
+                self.cs(True)
                 # Wait for the REG_ID register to be set to 0x7c to
                 while self.rd32(eve.EVE2.REG_ID) != 0x7c:
                     pass
@@ -174,6 +186,7 @@ class connector():
                 if actual != self.FREQUENCY:
                     print(f"[Requested {self.FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
                     continue
+                self.cs(False)
                 break
 
             print(f"[Boot fail after reset, retrying...]")
@@ -191,10 +204,14 @@ class connector():
             spi_mode = int(args.mode, 0)
             # Enable Dual/Quad SPI
             if spi_mode in [1,2]:
+                self.cs(True)
                 cfg = self.rd32(eve.EVE2.REG_SYS_CFG) & ~(0x3 << 8)
                 # Turn SPI_WIDTH to DUAL/QUAD
                 cfg = cfg | (spi_mode << 8)
+                self.cs(False)
+                self.cs(True)
                 self.wr32(eve.EVE2.REG_SYS_CFG, cfg)
+                self.cs(False)
                 # Instruct ft4222 library to switch to Dual/Quad SPI
                 self.devA.spiMaster_SetLines(Mode.DUAL if spi_mode == 1 else Mode.QUAD)
                 # change to multi mode

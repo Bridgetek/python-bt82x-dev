@@ -17,7 +17,10 @@ from pyftdi.ftdi import Ftdi
 import bteve2 as eve
 
 class connector():
-    FREQUENCY = 72_000_000      # system clock frequency, in Hz
+    # system clock frequency, in Hz
+    FREQUENCY = 72_000_000
+    # Current chip select setting for assertion when accessing SPI when CS is disabled
+    cs = None
 
     def __init__(self):
         print("Initialise FT232H interface")
@@ -52,6 +55,9 @@ class connector():
     def rd(self, a, nn):
         assert (a & 3) == 0
         assert (nn & 3) == 0
+
+        assert self.cs == True, "CS not enabled for read"
+
         if nn == 0:
             return b""
         a1 = a + nn
@@ -86,6 +92,8 @@ class connector():
         t = len(s)
         assert (t & 3) == 0
 
+        assert self.cs == True, "CS not enabled for write"
+
         while t:
             # Write in 4kB bursts
             n = min(0x1000, t)
@@ -100,6 +108,7 @@ class connector():
             self.slave.force_select(0)
         else:
             self.slave.force_select(1)
+        self.cs = v
 
     def reset(self):
         while 1:
@@ -134,6 +143,7 @@ class connector():
             t0 = time.monotonic_ns()
             fault = False
             if 1 in bb:
+                self.cs(True)
                 # Wait for the REG_ID register to be set to 0x7c to
                 while self.rd32(eve.EVE2.REG_ID) != 0x7c:
                     pass
@@ -146,9 +156,7 @@ class connector():
                 if actual != self.FREQUENCY:
                     print(f"[Requested {self.FREQUENCY/1e6} MHz, but actual is {actual/1e6} MHz after reset, retrying...]")
                     continue
-                return
+                self.cs(False)
+                break
 
             print(f"[Boot fail after reset, retrying...]")
-
-        # Disable QSPI burst mode
-        #self.wr32(eve.EVE2.REG_SYS_CFG, 1 << 10)

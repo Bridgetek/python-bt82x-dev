@@ -627,7 +627,10 @@ class EVE2:
     # @returns Coprocessor exception description. This is a pointer to a string
     #   and must be sufficient to hold 256 characters.
     def LIB_GetCoProException(self):
-        return self.rd(self.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
+        self.cs(True)
+        r = self.rd(self.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
+        self.cs(False)
+        return r
 
     # @brief EVE API: Write a buffer to memory mapped RAM
     # @details Writes a block of data via SPI to the EVE.
@@ -699,7 +702,9 @@ class EVE2:
         self.cs(True)
         offset = (self.rd32(self.REG_CMD_READ) - size) & self.FIFO_MAX
         self.cs(False)
+        self.cs(True)
         r = struct.unpack(fmt, self.rd(self.RAM_CMD + offset, size))
+        self.cs(False)
         if len(r) == 1:
             return r[0]
         else:
