@@ -250,7 +250,6 @@ def eve_load_images(eve, start_addr, handle):
     eve.CMD_LOADIMAGE(start_addr, 0)
     # Send raw JPEG encoded image data to coprocessor. It will be decoded
     # as the data is received.
-    print(img_bridgetek_logo)
     eve.LIB_WriteDataToCMD(img_bridgetek_logo)
     eve.DISPLAY()
     eve.CMD_SWAP()

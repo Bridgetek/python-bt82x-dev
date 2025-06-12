@@ -50,7 +50,6 @@ def eve_display(eve):
 
     units = 1
     for i in range(0, 5):
-        print(font_custom)
         eve.VERTEX_TRANSLATE_X((((eve.EVE_DISP_WIDTH - (simplefont.font_width_in_pixels * 5)) / 2) - (simplefont.font_width_in_pixels) + (simplefont.font_width_in_pixels * (5 - i))) * 16)
         eve.VERTEX2II(0, 0, font_custom, ((counter / units) % 10)+1) # +1 as in the converted font the number '0' is in position 1 in the font table
         units *= 10
@@ -76,10 +75,6 @@ def simple(eve):
     print("Loading images...")
     simpleimage.eve_load_images(eve, font_end, logo_handle)
 
-    dd = eve.LIB_ReadDataFromRAMG(100, 960)
-    print(dd)
-    dd = eve.LIB_ReadDataFromRAMG(1000, font_end-16)
-    print(dd)
     # Start example code
     print("Starting demo:")
     eve_display(eve)
