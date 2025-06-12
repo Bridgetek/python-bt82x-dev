@@ -1,7 +1,6 @@
 # Python BT82x Development Examples
 
-[Back](../READM
-E.md)
+[Back](../README.md)
 
 ## Runnable Examples
 

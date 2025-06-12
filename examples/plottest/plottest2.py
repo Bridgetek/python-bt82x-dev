@@ -140,7 +140,7 @@ def plottest2(eve):
     eve.COLOR_RGB(255, 255, 255)
     eve.VERTEX_FORMAT(0)
     eve.COLOR_RGB(0, 255,0)
-    eve.LINE_WIDTH(2)
+    eve.LINE_WIDTH(2 * 8)
     eve.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTHORIZONTAL, 14, 10, 0x14000, 0x18000, 1)
     eve.COLOR_RGB(255,0,0)
     eve.CMD_PLOTDRAW(0, len(arr), eve.OPT_PLOTHORIZONTAL | eve.OPT_PLOTFILTER, 0, 0, 0x14000, 0x18000, 2)

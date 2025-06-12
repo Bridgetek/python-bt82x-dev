@@ -207,7 +207,7 @@ def audioloop(eve):
             eve.STENCIL_OP(eve.STENCIL_INCR, eve.STENCIL_INCR)
         
             eve.BEGIN(eve.BEGIN_RECTS)
-            eve.LINE_WIDTH(1)
+            eve.LINE_WIDTH(1 * 8)
             height = vu_level
             heightbass = ((geqseg - i - 3) * geqbass) / 256 / (geqseg - 3)
             heightmid = 0 #((i == (geqseg // 2)) * geqtreb) / 256 / geqseg
@@ -224,7 +224,7 @@ def audioloop(eve):
         eve.RESTORE_CONTEXT()
         
         # Sample trigger progress bar
-        eve.LINE_WIDTH(1)
+        eve.LINE_WIDTH(1 * 8)
         eve.CMD_FGCOLOR(0xff0000)
         eve.CMD_BGCOLOR(0x440000)
         progress = ((trigger_count - trigger_offset) * 256) / trigger_offset
@@ -258,13 +258,13 @@ def audioloop(eve):
 
             # Cut-outs for channels
             eve.BEGIN(eve.BEGIN_RECTS)
-            eve.LINE_WIDTH(10)
+            eve.LINE_WIDTH(10 * 8)
             # Border for channel
             eve.COLOR_RGB(128, 128, 128)
             eve.VERTEX2F(tracex - 4 * border, labely - 4 * border)
             eve.VERTEX2F(tracex + tracew + 4 * border, tracey + traceh + 2 * pedalrad + pedalspace + 2 * border)
             # Border for trace graphs
-            eve.LINE_WIDTH(2)
+            eve.LINE_WIDTH(2 * 8)
             eve.COLOR_RGB(trcolour[0], trcolour[1], trcolour[2])
             eve.VERTEX2F(tracex - border, tracey - border)
             eve.VERTEX2F(tracex + tracew + border, tracey + traceh + border)
@@ -303,7 +303,7 @@ def audioloop(eve):
             # Sample current point marker
             eve.COLOR_RGB(255, 255, 255)
             eve.BEGIN(eve.BEGIN_LINES)
-            eve.LINE_WIDTH(1)
+            eve.LINE_WIDTH(1 * 8)
             eve.VERTEX2F(tracex + traceoff, tracey)
             eve.VERTEX2F(tracex + traceoff, tracey + traceh)
             eve.END()
@@ -315,16 +315,16 @@ def audioloop(eve):
             couter = pedalrad * 2
             eve.BEGIN(eve.BEGIN_POINTS)
             eve.COLOR_RGB(trcolour[0], trcolour[1], trcolour[2])
-            eve.POINT_SIZE(couter)
+            eve.POINT_SIZE(couter * 8)
             eve.VERTEX2F(pedx, pedy)
-            eve.POINT_SIZE(cinner)
+            eve.POINT_SIZE(cinner * 8)
             eve.COLOR_RGB(0, 0, 0)
             eve.VERTEX2F(pedx, pedy)
             eve.END()
 
             # Draw pedal glyphs
             eve.COLOR_RGB(255, 255, 255)
-            eve.LINE_WIDTH(border)
+            eve.LINE_WIDTH(border * 8)
             if (trace_active[i]):
                 # Draw a pause symbol (2 rectangles) using line strips
                 eve.BEGIN(eve.BEGIN_LINE_STRIP)

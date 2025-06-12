@@ -59,7 +59,7 @@ def cmd_vumeter(eve, x, y, w, h, vu_level, vu_prev = None, border=5):
 
     eve.BEGIN(eve.BEGIN_LINES)
     eve.COLOR_RGB(0, 0, 0)
-    eve.LINE_WIDTH(2)
+    eve.LINE_WIDTH(2 * 8)
     eve.VERTEX2F(x + ((w * 1) // 12), y + ((h * 4) // 12))
     eve.VERTEX2F(x + w - ((w * 4) // 12), y + ((h * 4) // 12))
     eve.VERTEX2F(x + ((w * 2) // 12), y + ((h * 4) // 12))
@@ -73,7 +73,7 @@ def cmd_vumeter(eve, x, y, w, h, vu_level, vu_prev = None, border=5):
     eve.VERTEX2F(x + ((w * 8) // 12), y + ((h * 4) // 12))
     eve.VERTEX2F(x + ((w * 8) // 12), y + ((h * 3) // 12))
     eve.COLOR_RGB(255, 0, 0)
-    eve.LINE_WIDTH(8)
+    eve.LINE_WIDTH(8 * 8)
     eve.VERTEX2F(x + ((w * 8) // 12), y + ((h * 4) // 12))
     eve.VERTEX2F(x + ((w * 11) // 12), y + ((h * 4) // 12))
     eve.VERTEX2F(x + ((w * 10) // 12), y + ((h * 4) // 12))
@@ -83,8 +83,8 @@ def cmd_vumeter(eve, x, y, w, h, vu_level, vu_prev = None, border=5):
     eve.END()
     eve.COLOR_RGB(0, 0, 0)
     eve.BEGIN(eve.BEGIN_BITMAPS)
-    eve.VERTEX_TRANSLATE_X(x + (w // 2) - 22)
-    eve.VERTEX_TRANSLATE_Y(y + (h // 2))
+    eve.VERTEX_TRANSLATE_X((x + (w // 2) - 22) * 16)
+    eve.VERTEX_TRANSLATE_Y((y + (h // 2)) * 16)
     eve.VERTEX2II(0, 0, 24, 86)
     eve.VERTEX2II(22, 0, 24, 85)
     eve.VERTEX_TRANSLATE_X(0)
@@ -94,7 +94,7 @@ def cmd_vumeter(eve, x, y, w, h, vu_level, vu_prev = None, border=5):
     # Draw VU meter pointer
     eve.BEGIN(eve.BEGIN_LINES)
     eve.COLOR_RGB(0, 0, 0)
-    eve.LINE_WIDTH(2)
+    eve.LINE_WIDTH(2 * 8)
     eve.VERTEX2F(x + (w // 2), y + h - border)
     eve.VERTEX2F(x + (w // 2) + ((math.sin(((vu_level - 128) / 512) * math.pi)) * (h * 3 // 4)), 
                 y + h - border - ((math.cos(((vu_level - 128) / 512) * math.pi)) * (h * 3 // 4)))

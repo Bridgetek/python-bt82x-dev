@@ -194,8 +194,8 @@ def cmd_textrotate(gd, x, y, fontcache, text):
         if cell:
             # This is a Legacy font.
             if (y > 511) or (x > 511):
-                gd.VERTEX_TRANSLATE_X(x)
-                gd.VERTEX_TRANSLATE_Y(y)
+                gd.VERTEX_TRANSLATE_X(x * 16)
+                gd.VERTEX_TRANSLATE_Y(y * 16)
                 gd.VERTEX2II(0, 0, handle, ord(ch))
             else:
                 gd.VERTEX2II(x, y, handle, ord(ch))
@@ -204,8 +204,8 @@ def cmd_textrotate(gd, x, y, fontcache, text):
             gd.BITMAP_SOURCE_H(glyphs[ord(ch)] >> 24)
             gd.BITMAP_SOURCE(glyphs[ord(ch)])
             if (y > 511) or (x > 511):
-                gd.VERTEX_TRANSLATE_X(x)
-                gd.VERTEX_TRANSLATE_Y(y)
+                gd.VERTEX_TRANSLATE_X(x * 16)
+                gd.VERTEX_TRANSLATE_Y(y * 16)
                 gd.VERTEX2F(0, 0)
             else:
                 gd.VERTEX2F(x, y)
@@ -242,8 +242,8 @@ def cmd_textzoom(gd, x, y, fontcache, zoom, text):
         if cell:
             # This is a ROM font.
             if (y > 511) or (x > 511):
-                gd.VERTEX_TRANSLATE_X(x)
-                gd.VERTEX_TRANSLATE_Y(y)
+                gd.VERTEX_TRANSLATE_X(x * 16)
+                gd.VERTEX_TRANSLATE_Y(y * 16)
                 gd.VERTEX2II(0, 0, handle, ord(ch))
             else:
                 gd.VERTEX2II(x, y, handle, ord(ch))
@@ -252,8 +252,8 @@ def cmd_textzoom(gd, x, y, fontcache, zoom, text):
             gd.BITMAP_SOURCE_H(glyphs[ord(ch)] >> 24)
             gd.BITMAP_SOURCE(glyphs[ord(ch)])
             if (y > 511) or (x > 511):
-                gd.VERTEX_TRANSLATE_X(x)
-                gd.VERTEX_TRANSLATE_Y(y)
+                gd.VERTEX_TRANSLATE_X(x * 16)
+                gd.VERTEX_TRANSLATE_Y(y * 16)
                 gd.VERTEX2F(0, 0)
             else:
                 gd.VERTEX2F(x, y)

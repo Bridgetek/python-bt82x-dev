@@ -551,23 +551,27 @@ class EVE2:
 
     # Read a 32 bit word from an address on the EVE.
     def rd32(self, a):
-        return struct.unpack("I", self.rd(a, 4))[0]
+        self.cs(True)
+        r = struct.unpack("I", self.rd(a, 4))[0]
+        self.cs(False)
+        return r
 
     # Write 32 bit word to an address on the EVE.
     def wr32(self, a, v):
+        self.cs(True)
         self.wr(a, struct.pack("I", v))
+        self.cs(False)
 
     # Query the co-processor RAM_CMD space.
     # When the co-processor is idle this will be FIFO_MAX.
     # Note: when bit 0 is set then the co-processor has encountered an error.
     def getspace(self):
-        self.cs(True)
         self.space = self.rd32(self.REG_CMDB_SPACE)
         if self.space & 1:
+            self.cs(True)
             message = self.rd(self.RAM_REPORT, 256).strip(b'\x00').decode('ascii')
             self.cs(False)
             raise CoprocessorException(message)
-        self.cs(False)
 
     # Return True if the co-processor RAM_CMD space is empty (FIFO_MAX 
     # remaining).
@@ -637,7 +641,9 @@ class EVE2:
     # @param s - data buffer.
     # @param a - Memory mapped address on EVE.
     def LIB_WriteDataToRAMG(self, s, a):
+        self.cs(True)
         self.write_ramg(s, a)
+        self.cs(False)
 
     # @brief EVE API: Read a buffer from memory mapped RAM
     # @details Reads a block of data via SPI from the EVE.
@@ -649,7 +655,9 @@ class EVE2:
         assert (n & 3) == 0, "Data must be a multiple of 4 bytes"
         while n > 0:
             chunk = min((1024 * 4), n)
+            self.cs(True)
             s = s + self.rd(a, chunk)
+            self.cs(False)
             n -= chunk
             a += chunk
         return s
@@ -690,18 +698,14 @@ class EVE2:
         # Instructions are write REG_CMD_READ as zero then
         # wait for REG_CMD_WRITE to become zero.
         while True:
-            self.cs(True)
             writeptr = self.rd32(self.REG_CMD_WRITE)
-            self.cs(False)
             if (writeptr == 0): break;
 
     # Return the result field of the preceding command
     def previous(self, fmt = "I"):
         self.finish(wait=True)
         size = struct.calcsize(fmt)
-        self.cs(True)
         offset = (self.rd32(self.REG_CMD_READ) - size) & self.FIFO_MAX
-        self.cs(False)
         self.cs(True)
         r = struct.unpack(fmt, self.rd(self.RAM_CMD + offset, size))
         self.cs(False)
@@ -762,8 +766,10 @@ class EVE2:
             self.CMD_CALIBRATE(0)
             self.LIB_AwaitCoProEmpty()
             self.CMD_DLSTART()
+            self.cs(True)
             with open(fn, "wb") as f:
                 f.write(self.rd(self.REG_TOUCH_TRANSFORM_A, 24))
+            self.cs(False)
 
     # Load from a file-like into the command buffer.
     def load(self, f):
@@ -779,6 +785,13 @@ class EVE2:
     def cmdr(self, code, fmt, args):
         self.cmd(code, fmt, args)
         return self.result()
+
+    # Get the touch panel X,Y coordinates
+    def LIB_GetTouch(self):
+        self.cs(True)
+        (ty, tx) = struct.unpack("hh", self.rd(self.REG_TOUCH_SCREEN_XY, 4))
+        self.cs(False)
+        return (tx, ty)
 
     # Resolve an SD card error to a description
     def LIB_SDCardError(self, r):
@@ -1002,7 +1015,7 @@ class EVE2:
     def JUMP(self, dest):
         self.c4((30 << 24) | ((int(dest) & 65535)))
     def LINE_WIDTH(self, width):
-        self.c4((14 << 24) | ((int(8 * width) & 4095)))
+        self.c4((14 << 24) | ((int(width) & 4095)))
     def MACRO(self, m):
         self.c4((37 << 24) | ((int(m) & 1)))
     def NOP(self):
@@ -1012,7 +1025,7 @@ class EVE2:
     def PALETTE_SOURCE_H(self, addr):
         self.c4((50 << 24) | (((addr >> 24) & 255)))
     def POINT_SIZE(self, size):
-        self.c4((13 << 24) | ((int(8 * size) & 8191)))
+        self.c4((13 << 24) | ((int(size) & 8191)))
     def REGION(self,y,h,dest):
         self.c4((52 << 24) | ((int(y) & 63) << 18) | ((int(h) & 63 ) << 12) | (int(dest) & 4095))
     def RESTORE_CONTEXT(self):
@@ -1042,9 +1055,9 @@ class EVE2:
     def VERTEX2II(self, x, y, handle = 0, cell = 0):
         self.c4((2 << 30) | ((int(x) & 511) << 21) | ((int(y) & 511) << 12) | ((int(handle) & 31) << 7) | ((int(cell) & 127)))
     def VERTEX_TRANSLATE_X(self, x):
-        self.c4((43 << 24) | (((int(16 * x)) & 131071)))
+        self.c4((43 << 24) | (((int(x)) & 131071)))
     def VERTEX_TRANSLATE_Y(self, y):
-        self.c4((44 << 24) | (((int(16 * y)) & 131071)))
+        self.c4((44 << 24) | (((int(y)) & 131071)))
 
     # CMD_ANIMDRAW(int32_t ch)
     def CMD_ANIMDRAW(self, *args):
@@ -1081,6 +1094,9 @@ class EVE2:
     # CMD_BGCOLOR(uint32_t c)
     def CMD_BGCOLOR(self, *args):
         self.cmd(0x07, 'I', [ int(arg) for arg in args ])
+
+    def CMD_BGCOLOR_RGB(self, red,green,blue):
+        self.CMD_BGCOLOR((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255))
 
     # CMD_BITMAP_TRANSFORM(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2, uint16_t result)
     def CMD_BITMAP_TRANSFORM(self, *args):
@@ -1154,6 +1170,9 @@ class EVE2:
     # CMD_FGCOLOR(uint32_t c)
     def CMD_FGCOLOR(self, *args):
         self.cmd(0x08, 'I', [ int(arg) for arg in args ])
+
+    def CMD_FGCOLOR_RGB(self, red,green,blue):
+        self.CMD_FGCOLOR(((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255)))
 
     # CMD_FILLWIDTH(uint32_t s)
     def CMD_FILLWIDTH(self, *args):

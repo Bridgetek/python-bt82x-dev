@@ -84,9 +84,9 @@ def teapot(gd):
 
     gd.CMD_NEWLIST(draw_list)
     gd.COLOR_RGB(255, 255, 255)
-    gd.VERTEX_TRANSLATE_X(gd.w // 2)
-    gd.VERTEX_TRANSLATE_Y(gd.h // 2)
-    gd.LINE_WIDTH(gd.w / 2000)
+    gd.VERTEX_TRANSLATE_X((gd.w // 2) * 16)
+    gd.VERTEX_TRANSLATE_Y((gd.h // 2) * 16)
+    gd.LINE_WIDTH((gd.w / 2000) * 8)
     for s in strips:
         gd.BEGIN(gd.BEGIN_LINE_STRIP)
         for i in s:
@@ -128,7 +128,7 @@ def teapot(gd):
         gd.CMD_SWAP()
         gd.LIB_AwaitCoProEmpty() 
 
-        (ty, tx) = struct.unpack("hh", gd.rd(gd.REG_TOUCH_SCREEN_XY, 4))
+        (ty, tx) = gd.LIB_GetTouch()
         touching = (tx != -32768)
         sx = (2 * tx - gd.w) / gd.w
         sy = (gd.h - 2 * ty) / gd.h

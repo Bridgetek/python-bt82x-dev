@@ -17,8 +17,8 @@ import extplotmemsevenseg
 def ledbox(eve, x, y, count, segsize):
     eve.VERTEX_FORMAT(2)
     eve.BEGIN(eve.BEGIN_RECTS)
-    eve.VERTEX_TRANSLATE_X((x - (segsize//3)))
-    eve.VERTEX_TRANSLATE_Y((y - (segsize//3)))
+    eve.VERTEX_TRANSLATE_X((x - (segsize//3)) * 16)
+    eve.VERTEX_TRANSLATE_Y((y - (segsize//3)) * 16)
     eve.VERTEX2F(0, 0)
     eve.VERTEX2F(((count * (segsize + (segsize//3))) + (segsize//3)) * 4, 
                  ((2 * segsize + (segsize//3)) + (segsize//3)) * 4)
@@ -34,11 +34,11 @@ def lednumber(eve, x, y, count, segsize, value, fg, bg):
 
 def tapebox(eve, x, y, w, h):
     eve.BEGIN(eve.BEGIN_RECTS)
-    eve.VERTEX_TRANSLATE_X(x)
-    eve.VERTEX_TRANSLATE_Y(y)
+    eve.VERTEX_TRANSLATE_X(x * 16)
+    eve.VERTEX_TRANSLATE_Y(y * 16)
     eve.VERTEX2F(0, 0)
-    eve.VERTEX_TRANSLATE_X((x + w))
-    eve.VERTEX_TRANSLATE_Y((y + h))
+    eve.VERTEX_TRANSLATE_X((x + w) * 16)
+    eve.VERTEX_TRANSLATE_Y((y + h) * 16)
     eve.VERTEX2F(0, 0)
     eve.VERTEX_TRANSLATE_X(0)
     eve.VERTEX_TRANSLATE_Y(0)
