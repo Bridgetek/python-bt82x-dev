@@ -156,6 +156,7 @@ def bitmap_split(gd):
 
     oe_split(gd, dst0, dst1, src)
     gd.CMD_GRAPHICSFINISH()
+    gd.LIB_EndCoProList()
     gd.LIB_AwaitCoProEmpty()
 
     gd.CMD_DLSTART()
@@ -170,6 +171,7 @@ def bitmap_split(gd):
     gd.CMD_SETBITMAP(*dst1)
     gd.VERTEX2F(1024, 0)
     gd.CMD_SWAP()
+    gd.LIB_EndCoProList()
     gd.LIB_AwaitCoProEmpty()
 
 def bitmap_merge(gd):
@@ -188,6 +190,7 @@ def bitmap_merge(gd):
 
     oe_merge(gd, dst, src0, src1)
     gd.CMD_GRAPHICSFINISH()
+    gd.LIB_EndCoProList()
     gd.LIB_AwaitCoProEmpty()
 
     gd.CMD_DLSTART()
@@ -199,6 +202,7 @@ def bitmap_merge(gd):
     gd.CMD_SETBITMAP(*dst)
     gd.VERTEX2F(0, 0)
     gd.CMD_SWAP()
+    gd.LIB_EndCoProList()
     gd.LIB_AwaitCoProEmpty()
 
 def bitmap_main(gd):

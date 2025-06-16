@@ -65,6 +65,7 @@ def b2tf(eve):
               + str(now.minute) + " minutes "
               )"""
         
+        eve.LIB_BeginCoProList()
         eve.CMD_DLSTART()
         eve.CLEAR_COLOR_RGB(0x33, 0x44, 0x55)
         eve.CLEAR(1,1,1)

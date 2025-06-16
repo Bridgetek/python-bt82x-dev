@@ -520,15 +520,18 @@ class EVE2:
     Co-processor commands are defined in this file and begin with "cmd_".
 
     Typically the library will be called like this:
+        gd.LIB_BeginCoProList()
         gd.CMD_DLSTART()
         gd.CLEAR_COLOR_RGB(64,72,64)
         gd.CLEAR(1,1,1)
         gd.CMD_TEXT(10, 10, 25, 0, "Hello, World!")
         # Send CMD_SWAP then wait for the co-processor to finish.
         gd.CMD_SWAP()
+        gd.LIB_EndCoProList()
         gd.LIB_AwaitCoProEmpty() 
 
     However, if required the display list can be ended with finish
+        gd.LIB_BeginCoProList()
         gd.CMD_DLSTART()
         gd.CLEAR_COLOR_RGB(64,72,64)
         gd.CLEAR(1,1,1)
@@ -536,11 +539,12 @@ class EVE2:
         # Send CMD_SWAP to the display list.
         gd.CMD_SWAP()
         # Wait for the co-processor to finish.
+        gd.LIB_EndCoProList()
         gd.LIB_AwaitCoProEmpty()
     
     More advanced usage can have multiple display lists sent to the 
     co-processor.
-
+        gd.LIB_BeginCoProList()
         gd.CMD_DLSTART()
         gd.CLEAR_COLOR_RGB(64,72,64)
         gd.CLEAR(1,1,1)
@@ -548,6 +552,7 @@ class EVE2:
         # Send CMD_SWAP to the display list.
         gd.CMD_SWAP()
         # Start the co-processor, but do not wait to finish.
+        gd.LIB_EndCoProList()
         gd.LIB_AwaitCoProEmpty()
         # Perform some processing for a long time in parallel to the
         # co-processor working.
@@ -774,6 +779,7 @@ class EVE2:
             with open(fn, "rb") as f:
                 self.wr(self.REG_TOUCH_TRANSFORM_A, f.read())
         except FileNotFoundError:
+            self.LIB_BeginCoProList()
             self.CMD_DLSTART()
             self.CLEAR()
             self.CMD_TEXT(self.w // 2, self.h // 2, 34, self.OPT_CENTER, "Tap the dot")
@@ -827,6 +833,7 @@ class EVE2:
 
     # Setup the EVE registers to match the surface created.
     def panel(self, surface, panelset=None, touch=None):
+        self.LIB_BeginCoProList()
         self.CMD_RENDERTARGET(*surface)
         self.CLEAR()
         self.CMD_SWAP()

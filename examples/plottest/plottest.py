@@ -113,6 +113,7 @@ def plottest(eve):
 
     eve.LIB_WriteDataToRAMG(arr, 0)
 
+    eve.LIB_BeginCoProList()
     eve.CMD_DLSTART()
     eve.CLEAR_COLOR_RGB(30, 30, 90)
     eve.CLEAR(1,1,1)
@@ -131,6 +132,7 @@ def plottest(eve):
 
     eve.DISPLAY()
     eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
 apprunner.run(plottest)

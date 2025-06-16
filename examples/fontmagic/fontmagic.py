@@ -428,5 +428,4 @@ def fontmagic(eve):
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
-    
 apprunner.run(fontmagic)

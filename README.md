@@ -205,6 +205,7 @@ def simplest(eve):
 
     eve.DISPLAY()
     eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
     
 apprunner.run(simplest)
