@@ -133,6 +133,7 @@ def plottest2(eve):
     # Set render target to offscreen buffer
     eve.CMD_RENDERTARGET(render_addr, render_format, render_w, render_h)
 
+    eve.LIB_BeginCoProList()
     eve.CMD_DLSTART()
     eve.CLEAR_COLOR_RGB(30, 30, 90)
     eve.CLEAR(1,1,1)
@@ -149,11 +150,13 @@ def plottest2(eve):
 
     eve.DISPLAY()
     eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
     # Set render target back to the to display (SWAPCHAIN0)
     eve.CMD_RENDERTARGET(eve.SWAPCHAIN_0, eve.FORMAT_RGB6, 1920, 1200)
 
+    eve.LIB_BeginCoProList()
     eve.CMD_DLSTART()
     eve.CLEAR_COLOR_RGB(30, 30, 90)
     eve.CLEAR(1,1,1)
@@ -166,6 +169,7 @@ def plottest2(eve):
 
     eve.DISPLAY()
     eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
 apprunner.run(plottest2)

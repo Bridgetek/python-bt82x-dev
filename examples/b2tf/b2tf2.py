@@ -202,6 +202,7 @@ def b2tf(eve):
 
         eve.DISPLAY()
         eve.CMD_SWAP()
+        eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
 
         present = present - datetime.timedelta(hours=1)

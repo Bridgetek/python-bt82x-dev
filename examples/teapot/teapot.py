@@ -22,34 +22,34 @@ import apprunner
 
 from assets import teapot_trackball
 
-def setup_scroll(gd):
-    gd.BITMAP_HANDLE(63)
-    #gd.CMD_LOADIMAGE(0xffffffff, 0)
-    gd.CMD_LOADIMAGE(80 << 20, 0)
+def setup_scroll(eve):
+    eve.BITMAP_HANDLE(63)
+    #eve.CMD_LOADIMAGE(0xffffffff, 0)
+    eve.CMD_LOADIMAGE(80 << 20, 0)
     with open("assets/teapot_logo.png", "rb") as f:
-        gd.load(f)
-    gd.BITMAP_SIZE(gd.FILTER_NEAREST, gd.WRAP_REPEAT, gd.WRAP_BORDER, 0, 129)
-    gd.BITMAP_SIZE_H(0, 0)
+        eve.load(f)
+    eve.BITMAP_SIZE(eve.FILTER_NEAREST, eve.WRAP_REPEAT, eve.WRAP_BORDER, 0, 129)
+    eve.BITMAP_SIZE_H(0, 0)
 
-def draw_scroll(gd, frame):
-    gd.CLEAR_COLOR_RGB(0x1a, 0x1a, 0x1a)
-    gd.CLEAR(1,1,1)
+def draw_scroll(eve, frame):
+    eve.CLEAR_COLOR_RGB(0x1a, 0x1a, 0x1a)
+    eve.CLEAR(1,1,1)
 
-    gd.SAVE_CONTEXT()
-    gd.VERTEX_FORMAT(0)
-    gd.BITMAP_HANDLE(63)
-    gd.BEGIN(gd.BEGIN_BITMAPS)
+    eve.SAVE_CONTEXT()
+    eve.VERTEX_FORMAT(0)
+    eve.BITMAP_HANDLE(63)
+    eve.BEGIN(eve.BEGIN_BITMAPS)
 
-    gd.COLOR_RGB(0x80, 0x80, 0x80)
-    gd.BITMAP_TRANSFORM_C(frame*256)
+    eve.COLOR_RGB(0x80, 0x80, 0x80)
+    eve.BITMAP_TRANSFORM_C(frame*256)
     for i in (0, 2, 4):
-        gd.VERTEX2F(0, 40 + 200 * i)
-    gd.BITMAP_TRANSFORM_C(-frame*256)
+        eve.VERTEX2F(0, 40 + 200 * i)
+    eve.BITMAP_TRANSFORM_C(-frame*256)
     for i in (1, 3, 5):
-        gd.VERTEX2F(0, 40 + 200 * i)
-    gd.RESTORE_CONTEXT()
+        eve.VERTEX2F(0, 40 + 200 * i)
+    eve.RESTORE_CONTEXT()
 
-def teapot(gd):
+def teapot(eve):
 
     def c4(i):
         return struct.pack("I", i)
@@ -62,9 +62,9 @@ def teapot(gd):
             z = np.dot(xyz, rr[2])
             D = 300
             d = D / (D - z)
-            q = 8 * (gd.h / 150) * d
+            q = 8 * (eve.h / 150) * d
         else:
-            q = 8 * (gd.h / 150)
+            q = 8 * (eve.h / 150)
         return (
             np.array(x * q, dtype = np.int32),
             np.array(y * q, dtype = np.int32)
@@ -73,27 +73,31 @@ def teapot(gd):
     (vertices, strips) = json.load(open("assets/teapot_geometry.json"))
     curquat = teapot_trackball.trackball(0, 0, 0, 0)
 
-    gd.CMD_DLSTART()
-    gd.CLEAR()
-    setup_scroll(gd)
-    gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+    eve.LIB_BeginCoProList()
+    eve.CMD_DLSTART()
+    eve.CLEAR()
+    setup_scroll(eve)
+    eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
 
     vertex_array    = 0x000000
     draw_list       = 0x4040000
 
-    gd.CMD_NEWLIST(draw_list)
-    gd.COLOR_RGB(255, 255, 255)
-    gd.VERTEX_TRANSLATE_X((gd.w // 2) * 16)
-    gd.VERTEX_TRANSLATE_Y((gd.h // 2) * 16)
-    gd.LINE_WIDTH((gd.w / 2000) * 8)
+    eve.LIB_BeginCoProList()
+    eve.CMD_NEWLIST(draw_list)
+    eve.COLOR_RGB(255, 255, 255)
+    eve.VERTEX_TRANSLATE_X((eve.w // 2) * 16)
+    eve.VERTEX_TRANSLATE_Y((eve.h // 2) * 16)
+    eve.LINE_WIDTH((eve.w / 2000) * 8)
     for s in strips:
-        gd.BEGIN(gd.BEGIN_LINE_STRIP)
+        eve.BEGIN(eve.BEGIN_LINE_STRIP)
         for i in s:
-            gd.CMD_APPEND(vertex_array + 4 * i, 4)
-    gd.CMD_ENDLIST()
-    gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+            eve.CMD_APPEND(vertex_array + 4 * i, 4)
+    eve.CMD_ENDLIST()
+    eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
 
     xyz = np.array(vertices)
 
@@ -116,22 +120,27 @@ def teapot(gd):
         for (vx, vy) in vtx:
             vxybuf += c4((0x1 << 30) | ((vx & 32767) << 15) | (vy & 32767) ) 
         # Write the VERTEX2F commands to RAMG
-        gd.CMD_MEMWRITE(0, len(vxybuf))
-        gd.LIB_WriteDataToCMD(vxybuf)
-        gd.LIB_AwaitCoProEmpty()
+        eve.LIB_BeginCoProList()
+        eve.CMD_MEMWRITE(0, len(vxybuf))
+        eve.LIB_WriteDataToCMD(vxybuf)
+        eve.LIB_EndCoProList()
+        eve.LIB_AwaitCoProEmpty()
 
-        gd.CMD_DLSTART()
-        gd.CLEAR()
-        draw_scroll(gd, scroll_frame)
-        gd.VERTEX_FORMAT(3)
-        gd.CMD_CALLLIST(draw_list)
-        gd.CMD_SWAP()
-        gd.LIB_AwaitCoProEmpty() 
+        eve.LIB_BeginCoProList()
+        eve.CMD_DLSTART()
+        eve.CLEAR()
+        draw_scroll(eve, scroll_frame)
+        eve.VERTEX_FORMAT(3)
+        eve.CMD_CALLLIST(draw_list)
+        eve.CMD_SWAP()
+        eve.LIB_EndCoProList()
+        eve.LIB_AwaitCoProEmpty() 
 
-        (ty, tx) = gd.LIB_GetTouch()
+        eve.LIB_BeginCoProList()
+        (ty, tx) = eve.LIB_GetTouch()
         touching = (tx != -32768)
-        sx = (2 * tx - gd.w) / gd.w
-        sy = (gd.h - 2 * ty) / gd.h
+        sx = (2 * tx - eve.w) / eve.w
+        sy = (eve.h - 2 * ty) / eve.h
         if touching:
             if prev_touch is not None:
                 spin = teapot_trackball.trackball(prev_touch[0], prev_touch[1], sx, sy)
@@ -144,8 +153,9 @@ def teapot(gd):
         curquat = teapot_trackball.add_quats(curquat, spin)
         scroll_frame += 1
 
-        gd.CMD_GRAPHICSFINISH()
-        gd.LIB_AwaitCoProEmpty()
+        eve.CMD_GRAPHICSFINISH()
+        eve.LIB_EndCoProList()
+        eve.LIB_AwaitCoProEmpty()
 
     t1 = time.monotonic()
     took = t1 - t0

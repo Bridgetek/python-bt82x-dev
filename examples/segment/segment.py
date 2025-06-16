@@ -17,7 +17,7 @@ import apprunner
 # Target EVE device.
 family = "BT82x"
 
-def segment(gd):
+def segment(eve):
     # Handle for fonts to use in the test.
     size = 100
     number = 0
@@ -34,12 +34,13 @@ def segment(gd):
         
     # Calibrate screen if necessary. 
     # Don't do this for now.
-    #gd.LIB_AutoCalibrate()
+    #eve.LIB_AutoCalibrate()
 
     # Start drawing test screen.
-    gd.CMD_DLSTART()
-    gd.CLEAR_COLOR_RGB(0,0,0)
-    gd.CLEAR(1,1,1)
+    eve.LIB_BeginCoProList()
+    eve.CMD_DLSTART()
+    eve.CLEAR_COLOR_RGB(0,0,0)
+    eve.CLEAR(1,1,1)
 
     redfg = (255, 0, 0)
     redbg = (32, 0, 0)
@@ -59,8 +60,9 @@ def segment(gd):
     sevensegment.cmd_sevenseg(gd, x + (gap * 5), y, size, int((number/100)%10), fg, bg)
     sevensegment.cmd_sevenseg(gd, x + (gap * 6), y, size, int((number/10)%10), fg, bg)
     sevensegment.cmd_sevenseg(gd, x + (gap * 7), y, size, int((number/1)%10), fg, bg)
-    gd.DISPLAY()
-    gd.CMD_SWAP()
-    gd.LIB_AwaitCoProEmpty()
+    eve.DISPLAY()
+    eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
 
 apprunner.run(segment)

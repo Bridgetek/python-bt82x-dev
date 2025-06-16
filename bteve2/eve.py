@@ -778,6 +778,7 @@ class EVE2:
             self.CLEAR()
             self.CMD_TEXT(self.w // 2, self.h // 2, 34, self.OPT_CENTER, "Tap the dot")
             self.CMD_CALIBRATE(0)
+            self.LIB_EndCoProList()
             self.LIB_AwaitCoProEmpty()
             self.CMD_DLSTART()
             self.cs(True)
@@ -830,6 +831,7 @@ class EVE2:
         self.CLEAR()
         self.CMD_SWAP()
         self.CMD_GRAPHICSFINISH()
+        self.LIB_EndCoProList()
         self.LIB_AwaitCoProEmpty()
 
         (self.w, self.h) = (surface.w, surface.h)
@@ -903,7 +905,8 @@ class EVE2:
         self.CMD_REGWRITE(self.REG_SO_SOURCE, surface.addr)
         self.CMD_REGWRITE(self.REG_SO_FORMAT, surface.fmt)
         self.CMD_REGWRITE(self.REG_SO_EN, 1)
-
+        
+        self.LIB_EndCoProList()
         self.LIB_AwaitCoProEmpty()
 
     # Add commands to the co-processor buffer.

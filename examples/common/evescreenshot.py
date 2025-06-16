@@ -120,6 +120,7 @@ def cmd_screenshot(eve, filename, address=0x7000000):
             eve.CMD_RESULT(eve.REG_RE_DEST)
             eve.CMD_REGREAD(eve.RAM_REPORT + 68, 0)
             eve.CMD_RESULT(eve.REG_RE_FORMAT)
+            eve.LIB_EndCoProList()
             eve.LIB_AwaitCoProEmpty()
         
         print(f"completed.")

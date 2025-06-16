@@ -390,7 +390,9 @@ def audioloop(eve):
         eve.DISPLAY()
         tstart = time.monotonic()
         eve.CMD_SWAP()
+        eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
+        
         tend = time.monotonic()
         tcoprocend += tend - tstart
 

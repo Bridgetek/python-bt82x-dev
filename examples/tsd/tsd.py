@@ -80,6 +80,8 @@ def tsd(eve):
             speed = 0.01 + ((i * i) / 200)
             th[i] += speed
 
+        eve.LIB_BeginCoProList()
+    
         eve.CLEAR_COLOR_RGB(64, 64, 64)
         eve.CLEAR()
         for (i, ch) in enumerate(charts):
@@ -87,6 +89,7 @@ def tsd(eve):
 
         eve.DISPLAY()
         eve.CMD_SWAP()
+        eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
         eve.CMD_DLSTART()
 
