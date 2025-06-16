@@ -1,3 +1,5 @@
+# For Bridgetek Pte. Ltd. license see `LICENSE.txt`
+
 from collections import namedtuple
 
 __version__ = '0.3.0'

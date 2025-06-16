@@ -1,4 +1,4 @@
-import traceback
+# For Bridgetek Pte. Ltd. license see `LICENSE.txt`
 
 import time
 import struct

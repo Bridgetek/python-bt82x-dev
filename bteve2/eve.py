@@ -1,3 +1,5 @@
+# For Bridgetek Pte. Ltd. license see `LICENSE.txt`
+
 import struct
 import array
 from collections import namedtuple
@@ -469,6 +471,18 @@ class EVE2:
     FLASH_STATUS_BASIC             = 2
     FLASH_STATUS_FULL              = 3
 
+    ROMFONT_WIDTHS = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+        8,8,8,8,10,13,14,17,24,30, 
+        14,15,18,22,28,38,48,62,83]
+    ROMFONT_HEIGHTS = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+        8,8,16,16,13,17,20,22,29,38, 
+        16,18,22,27,33,46,58,74,98]
+    ROMFONT_FORMATS = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+        FORMAT_L1,FORMAT_L1,FORMAT_L1,FORMAT_L1,FORMAT_L1, 
+        FORMAT_L1,FORMAT_L1,FORMAT_L1,FORMAT_L1,FORMAT_L1, 
+        FORMAT_L4,FORMAT_L4,FORMAT_L4,FORMAT_L4,FORMAT_L4, 
+        FORMAT_L4,FORMAT_L4,FORMAT_L4,FORMAT_L4 ]
+    
     # Definitions used for target display resolution selection
     WQVGA   = 480     # e.g. VM800B with 5" or 4.3" display
     WVGA    = 800     # e.g. ME813A-WH50C or VM816

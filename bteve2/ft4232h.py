@@ -1,6 +1,7 @@
+# For Bridgetek Pte. Ltd. license see `LICENSE.txt`
+
 import time
 import struct
-import argparse
 
 # Use the PyFtdi library to interface with an FT4232H device. See
 # https://eblot.github.io/pyftdi/ for more information.

@@ -1,3 +1,5 @@
+# For Bridgetek Pte. Ltd. license see `LICENSE.txt`
+
 import sys
 import ctypes
 import struct
