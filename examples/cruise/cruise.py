@@ -12,7 +12,6 @@ import apprunner
 # Load the sevensegment source code from the "common" directory.
 sys.path.append('../common')
 import sevensegment 
-import evescreenshot 
 
 # Draw a stencil to show a circular display
 TARGET_CIRCULAR = True
@@ -224,7 +223,6 @@ def eve_display(eve):
         eve.CMD_BUTTON((TARGET_SCREEN_RADIUS * 2) + 50, 50 + (eve.ROMFONT_HEIGHTS[EXT_FONT] * 12), 400, (eve.ROMFONT_HEIGHTS[EXT_FONT] * 2), 28, 0, "Brake!")
 
         eve.DISPLAY()
-        evescreenshot.cmd_screenshot(eve, "ccruise.bmp")
         eve.CMD_SWAP()
         eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
