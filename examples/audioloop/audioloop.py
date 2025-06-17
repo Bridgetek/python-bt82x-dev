@@ -12,8 +12,8 @@ sys.path.append('../../bteve2')
 # This module provides the connector to the EVE hardware.
 import apprunner
 
-# Load the extension code from the "common" directory.
-sys.path.append('../common')
+# Load the extension code from the "snippets" directory.
+sys.path.append('../snippets')
 import extplotmemsevenseg
 import vumeter
 

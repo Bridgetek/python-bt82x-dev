@@ -7,8 +7,8 @@ import array
 sys.path.append('../..')
 sys.path.append('../../bteve2')
 
-# Load the extension code from the "common" directory.
-sys.path.append('../common')
+# Load the extension code from the "snippets" directory.
+sys.path.append('../snippets')
 import extplotmem
 
 # This module provides the connector to the EVE hardware.

@@ -10,8 +10,8 @@ sys.path.append('../../bteve2')
 # This module provides the connector to the EVE hardware.
 import apprunner
 
-# Load the sevensegment source code from the "common" directory.
-sys.path.append('../common')
+# Load the sevensegment source code from the "snippets" directory.
+sys.path.append('../snippets')
 import extplotmemsevenseg 
 
 def ledbox(eve, x, y, count, segsize):

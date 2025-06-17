@@ -1,8 +1,8 @@
-# Python BT82x Development Example Code
+# Python BT82x Development Example Code Snippets
 
 [Back](../README.md)
 
-The `common` directory contains code that is used in the examples for the Python BT82x Development module. The following common code is available:
+The `snippets` directory contains code that is used in the examples for the Python BT82x Development module. The following code is available in that directory:
 
 ## Contents
 

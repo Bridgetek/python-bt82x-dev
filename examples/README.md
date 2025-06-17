@@ -28,7 +28,7 @@ In addition to runable demo code there are libraries of widgets and utilities th
 
 | File/Folder | Description |
 | --- | --- |
-| [common](common/README.md) | Common files and widgets for the examples |
+| [snippets](snippets/README.md) | Common files and widgets for the examples |
 
 Many of the examples load code or modules from this directory. 
 

@@ -4,7 +4,7 @@
 
 ## Cruise Example
 
-The `cruise.py` example demonstrates drawing multiple seven segment displays on the same screen, blending, scissoring, and trackers. The `cruise.py` code uses the `sevensegment.py` widget from the [common](../common) directory to perform some of the drawing. 
+The `cruise.py` example demonstrates drawing multiple seven segment displays on the same screen, blending, scissoring, and trackers. The `cruise.py` code uses the `sevensegment.py` widget from the [snippets](../snippets) directory to perform some of the drawing. 
 
 The example is intended to show a reimaginged cruise control for a vehicle. The physical control for which would be a rotating turn wheel (with presumably a shaft encoder), an integrated click button (the whole rotating wheel physically registers a press) and a touchscreen display. An external input would provide a signal for when the vehicle would disengage cruise control, e.g. when the brakes are depressed. The touchscreen would be overridden and disabled in software by the click button.
 

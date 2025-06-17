@@ -4,7 +4,7 @@
 
 ## Audioloop Example
 
-The `audioloop.py` example demonstrates drawing a multiple widgets and actions on the same screen while maintaining a high frame rate. The `audioloop.py` code uses the `vumeter.py` widget from the [common](../common) directory, the `ext-sevenseg` extension to draw seven segment displays, the `ext-plotgraph` extension to draw BARGRAPH bitmaps, and the `ext-memory` extension to manage memory allocation.
+The `audioloop.py` example demonstrates drawing a multiple widgets and actions on the same screen while maintaining a high frame rate. The `audioloop.py` code uses the `vumeter.py` widget from the [snippets](../snippets) directory, the `ext-sevenseg` extension to draw seven segment displays, the `ext-plotgraph` extension to draw BARGRAPH bitmaps, and the `ext-memory` extension to manage memory allocation.
 
 Four BARGRAPH bitmaps are used to render data into a scrolling area that simulates an audio signal, a pair of seven segment LEDs count up as the animation progresses. Two VU meters and a simulated EQ display are used to give another view of the simulated audio signal. Finally, a `CMD_GAUGE` control shows elapsed time while transitioning from green to red.
 

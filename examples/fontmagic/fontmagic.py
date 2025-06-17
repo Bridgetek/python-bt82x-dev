@@ -9,8 +9,8 @@ import argparse
 sys.path.append('../..')
 sys.path.append('../../bteve2')
 
-# Load the extension code from the "common" directory.
-sys.path.append('../common')
+# Load the extension code from the "snippets" directory.
+sys.path.append('../snippets')
 
 # This module provides the connector to the EVE hardware.
 import apprunner

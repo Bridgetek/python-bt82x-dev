@@ -4,7 +4,7 @@
 
 ## Font Magic Example
 
-The `fontmagic.py` example demonstrates loading a custom font and using the `textzoom` and `textangle` widgets. See [common](../common/README.md) files documentation. It parses arguments and uses them to determine the display list for the BT82x.
+The `fontmagic.py` example demonstrates loading a custom font and using the `textzoom` and `textangle` widgets. See [snippets](../snippets/README.md) files documentation. It parses arguments and uses them to determine the display list for the BT82x.
 
 The demo will write text on the BT82x screen using both a custom and ROM font. 
 

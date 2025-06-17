@@ -4,7 +4,7 @@
 
 ## Segment Example
 
-The `segment.py` example demonstrates writing a number to the screen using the `sevensegment` widget. See [common](../common/README.md) files documentation. It parses arguments and uses them to determine the display list for the BT82x.
+The `segment.py` example demonstrates writing a number to the screen using the `sevensegment` widget. See [snippets](../snippets/README.md) files documentation. It parses arguments and uses them to determine the display list for the BT82x.
 
 The demo will draw 8 LED seven segment widgets on the BT82x screen displaying the decimal number passed in the command line and draw the widget with the size set in the `--size` parameter. Up to 8 decimals are displayed, the number is zero-padded.
 

@@ -4,7 +4,7 @@
 
 ## Advanced Seven Segment Example
 
-The `b2tf.py` and `b2tf2.py` examples demonstrate drawing a multiple seven segment displays on the same screen. The `b2tf.py` code uses the `sevensegment.py` widget from the [common](../common) directory to perform the drawing. The `b2tf2.py` performs the same task but uses the `ext-sevenseg` extension to draw the seven segment displays.
+The `b2tf.py` and `b2tf2.py` examples demonstrate drawing a multiple seven segment displays on the same screen. The `b2tf.py` code uses the `sevensegment.py` widget from the [snippets](../snippets) directory to perform the drawing. The `b2tf2.py` performs the same task but uses the `ext-sevenseg` extension to draw the seven segment displays.
 
 ### Extension
 
