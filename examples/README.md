@@ -14,6 +14,7 @@ The following example code is available:
 | [fontmagic](fontmagic/README.md) | Simple example code demonstrating scaling and rotating fonts |
 | [segment](segment/README.md) | Simple seven segment demo code |
 | [b2tf](b2tf/README.md) | Advanced seven segment demo code |
+| [cruise](cruise/README.md) | Circular click-wheel display demo code |
 | [teapot](teapot/README.md) | 3D teapot rotation demo code |
 | [plottest](plottest/README.md) | Simple plot graph demo code |
 | [audioloop](audioloop/README.md) | Advanced plot graph widget demo |
