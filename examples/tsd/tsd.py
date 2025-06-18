@@ -54,16 +54,17 @@ class Chart:
 
     def draw(self, x, y):
         eve = self.eve
+        eve.VERTEX_FORMAT(0) # integer coordinates
         eve.BEGIN(eve.BEGIN_BITMAPS)
         eve.BITMAP_HANDLE(self.handle)
 
         eve.COLOR_RGB(0, 255, 0)
         eve.CELL(0)
-        eve.VERTEX2F(x*16, y*16)
+        eve.VERTEX2F(x, y)
 
         eve.COLOR_RGB(80, 0, 0)
         eve.CELL(1)
-        eve.VERTEX2F(x*16, y*16)
+        eve.VERTEX2F(x, y)
 
 def tsd(eve):
     w = 1280                # Width in pixels
