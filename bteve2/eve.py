@@ -777,7 +777,9 @@ class EVE2:
 
         try:
             with open(fn, "rb") as f:
+                self.cs(True)
                 self.wr(self.REG_TOUCH_TRANSFORM_A, f.read())
+                self.cs(False)
         except FileNotFoundError:
             self.LIB_BeginCoProList()
             self.CMD_DLSTART()

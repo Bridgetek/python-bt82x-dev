@@ -21,6 +21,7 @@ The following example code is available:
 | TODO: bitmap-split-merge.py | Simple bitmap split/merge demo code |
 | TODO: bitmap-crop.py | Simple bitmap crop demo code |
 | [tsd](tsd/README.md) | Time-series data live display, using HISTOGRAM |
+| [localbehavior](localbehavior/README.md) | localbehavior button demo code |
 
 ## Widgets and Utilities
 
