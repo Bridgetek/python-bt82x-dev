@@ -12,8 +12,7 @@ import apprunner
 
 # Load source code from the "snippets" directory.
 sys.path.append('../snippets')
-import evescreenshot
-count = 0
+
 TARGET_SCREEN_RADIUS = 350
 
 e_disabled = False
@@ -269,9 +268,6 @@ def aiwidget(eve, x, y, radius, pitch, climb, roll):
     eve.RESTORE_CONTEXT()
 
     eve.DISPLAY()
-    global count
-    count += 1
-    if count==40: evescreenshot.cmd_screenshot(eve, "attitude.bmp")
     eve.CMD_SWAP()
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
