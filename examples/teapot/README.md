@@ -35,7 +35,7 @@ python teapot.py --connector ft4222module
 _FT4222 example in dual mode (--mode 1) or quad mode (--mode 2):_
 
 ```
-python teapot.py --connector ft4222module 
+python teapot.py --connector ft4222module --mode 2
 
 ```
 

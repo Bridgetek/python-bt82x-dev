@@ -43,7 +43,7 @@ python fontmagic.py --connector ft4222module standard assets/Roboto-BoldCondense
 _FT4222 example in dual mode (--mode 1) or quad mode (--mode 2):_
 
 ```
-python fontmagic.py --connector ft4222module standard assets/Roboto-BoldCondensed_32_L4.raw 
+python fontmagic.py --connector ft4222module --mode 2 standard assets/Roboto-BoldCondensed_32_L4.raw 
 
 ```
 
