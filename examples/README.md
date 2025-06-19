@@ -18,8 +18,7 @@ The following example code is available:
 | [teapot](teapot/README.md) | 3D teapot rotation demo code |
 | [plottest](plottest/README.md) | Simple plot graph demo code |
 | [audioloop](audioloop/README.md) | Advanced plot graph widget demo |
-| TODO: bitmap-split-merge.py | Simple bitmap split/merge demo code |
-| TODO: bitmap-crop.py | Simple bitmap crop demo code |
+| [bitmap](bitmap/README.md) | Simple bitmap demo code |
 | [tsd](tsd/README.md) | Time-series data live display, using HISTOGRAM |
 | [localbehavior](localbehavior/README.md) | localbehavior button demo code |
 
