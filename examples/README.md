@@ -10,18 +10,18 @@ The following example code is available:
 
 | Folder | Description |
 | --- | --- |
-| [simple](simple/README.md) | Simple example code |
-| [fontmagic](fontmagic/README.md) | Simple example code demonstrating scaling and rotating fonts |
-| [segment](segment/README.md) | Simple seven segment demo code |
+| [attitude](attitude/README.md) | Attitude example demo code |
+| [audioloop](audioloop/README.md) | Advanced plot graph widget demo code |
 | [b2tf](b2tf/README.md) | Advanced seven segment demo code |
+| [bitmap](bitmap/README.md) | Simple bitmap demo code |
 | [cruise](cruise/README.md) | Circular click-wheel display demo code |
-| [teapot](teapot/README.md) | 3D teapot rotation demo code |
-| [plottest](plottest/README.md) | Simple plot graph demo code |
-| [audioloop](audioloop/README.md) | Advanced plot graph widget demo |
-| TODO: bitmap-split-merge.py | Simple bitmap split/merge demo code |
-| TODO: bitmap-crop.py | Simple bitmap crop demo code |
-| [tsd](tsd/README.md) | Time-series data live display, using HISTOGRAM |
+| [fontmagic](fontmagic/README.md) | Simple example code demonstrating scaling and rotating fonts |
 | [localbehavior](localbehavior/README.md) | localbehavior button demo code |
+| [plottest](plottest/README.md) | Simple plot graph demo code |
+| [segment](segment/README.md) | Simple seven segment demo code |
+| [simple](simple/README.md) | Simple example code |
+| [teapot](teapot/README.md) | 3D teapot rotation demo code |
+| [tsd](tsd/README.md) | Time-series data live display, using HISTOGRAM |
 
 ## Widgets and Utilities
 
