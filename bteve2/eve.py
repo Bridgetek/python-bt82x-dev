@@ -643,7 +643,7 @@ class EVE2:
     #  command buffer is returned.
     # @returns result of a previous coprocessor command.
     def LIB_GetResult(self, offset = 1):
-        return self.previous()
+        return self.previous(offset)
     
     # @brief EVE API: Get coprocessor exception description
     # @details Will query the coprocessor exception description to a string.
@@ -721,12 +721,17 @@ class EVE2:
             if (writeptr == 0): break;
 
     # Return the result field of the preceding command
-    def previous(self, fmt = "I"):
+    def previous(self, offset = 1, fmt = "I"):
+        assert offset > 0, "Offset to result must be greater than zero"
+        offset -= 1
+        # Change the offset to 32-bit word offset
+        offset *= 4
         self.finish(wait=True)
         size = struct.calcsize(fmt)
-        offset = (self.rd32(self.REG_CMD_READ) - size) & self.FIFO_MAX
+        assert (size % 4) == 0, "Result format must be a mulitple of 4 bytes"
+        cmdoffset = (self.rd32(self.REG_CMD_READ) - offset - size) & self.FIFO_MAX
         self.cs(True)
-        r = struct.unpack(fmt, self.rd(self.RAM_CMD + offset, size))
+        r = struct.unpack(fmt, self.rd(self.RAM_CMD + cmdoffset, size))
         self.cs(False)
         if len(r) == 1:
             return r[0]
@@ -922,9 +927,9 @@ class EVE2:
     # It is only sent when flush is called or the buffer exceeds
     # the size of the FIFO.
     def cc(self, s):
-        assert (len(s) % 4) == 0
+        assert (len(s) % 4) == 0, "Coprocessor commands must be a multiple of 4 bytes"
         self.buf += s
-        assert (len(self.buf) % 4) == 0
+        assert (len(self.buf) % 4) == 0, "Coprocessor command buffer must be a multiple of 4 bytes"
         # Flush the co-processor buffer to the EVE device.
         n = len(self.buf)
         if n >= self.FIFO_MAX - 16:
@@ -1804,6 +1809,22 @@ class EVE2:
     def CMD_PLOTSTREAM(self, *args):
         self.cmd(0xac, "HHhhIII", [ int(arg) for arg in args ])
 
-   #  EVE_CMD_PLOTBITMAP(uint32_t addr, uint16_t len, uint16_t opt, uint32_t handle)
+    # CMD_PLOTBITMAP(uint32_t addr, uint16_t len, uint16_t opt, uint32_t handle)
     def CMD_PLOTBITMAP(self, *args):
         self.cmd(0xad, "IHHI", [ int(arg) for arg in args ])
+
+    # CMD_LVDSINIT(uint16_t setup, uint16_t ctrl)
+    def CMD_LVDSINIT(self, *args):
+        self.cmd(0x9f, 'HH', [ int(arg) for arg in args ])
+
+    # CMD_LVDSCONN(uint32_t connected")
+    def CMD_LVDSCONN(self, *args):
+        self.cmd(0xa0, 'I', [ int(arg) for arg in args ])
+
+    # CMD_LVDSSTOP(void)
+    def CMD_LVDSSTOP(self, *args):
+        self.cmd0(0xa1)
+
+    # CMD_LVDSSTART(void)
+    def CMD_LVDSSTART(self, *args):
+        self.cmd0(0xa2)

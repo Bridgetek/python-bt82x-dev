@@ -12,7 +12,8 @@ import apprunner
 
 # Load source code from the "snippets" directory.
 sys.path.append('../snippets')
-
+import evescreenshot
+counter = 0
 TARGET_SCREEN_RADIUS = 350
 
 e_disabled = False
@@ -26,6 +27,157 @@ def circ_x(scale, deg):
     return (scale * math.sin(deg/180 * math.pi))
 def circ_y(scale, deg):
     return (scale * math.cos(deg/180 * math.pi))
+
+def altwidget(eve, x, y, radius, alt):
+    # Like a real altitude instrument it will never go beyond the limits
+    alt = max(alt, 0)
+    alt = min(alt, 10000)
+
+    # Dimensions of the widget are detemined by the radius
+    radius_outer = radius
+    radius_b1 = (radius_outer * 39) // 40
+    radius_b2 = (radius_outer * 37) // 40
+    radius_inner = (radius_outer * 36) // 40
+    radius_major = (radius_outer * 30) // 40
+    radius_minor = (radius_inner + radius_major) // 2
+    # Altitude indicator line widths
+    alt_ref_bold = radius_outer * 2 // 10
+    alt_ref_narrow = radius_outer * 1 // 10
+    alt_needle = radius_outer * 5 // 10
+
+    # Bezel colours
+    bezel_col = 0x505050
+    bezel_col_bright = 0xaaaaaa
+    bezel_col_dark = 0x333333
+
+    alt_reference = 0xffffff
+    alt_background = 0x000000
+    alt_covering = 0x202020
+
+    eve.VERTEX_FORMAT(0)
+
+    # Draw bezel
+    eve.SAVE_CONTEXT()
+    eve.CLEAR(0,1,0)
+    eve.COLOR(bezel_col)
+    # Draw the circles to make the bezel in three levels in the stencil buffer
+    eve.STENCIL_OP(eve.STENCIL_INCR, eve.STENCIL_INCR)	# Set the stencil to increment
+    eve.BEGIN(eve.BEGIN_POINTS)
+    eve.POINT_SIZE(radius_outer * 16)
+    eve.VERTEX2F(x, y)
+    eve.POINT_SIZE(radius_b1 * 16)
+    eve.VERTEX2F(x, y)
+    eve.POINT_SIZE(radius_b2 * 16)
+    eve.VERTEX2F(x, y)
+    eve.POINT_SIZE(radius_inner * 16)
+    eve.VERTEX2F(x, y)
+    eve.END()
+    eve.STENCIL_OP(eve.STENCIL_KEEP, eve.STENCIL_KEEP) # Stop the stencil INCR
+    # Gradient (light at top) for outer of bezel
+    eve.STENCIL_FUNC(eve.TEST_EQUAL, 1, 255)
+    eve.CMD_GRADIENT(x - radius_outer, y + radius_outer, bezel_col_dark, x - radius_outer, y - radius_outer, bezel_col_bright)
+    # Flat colour for centre of bezel
+    eve.STENCIL_FUNC(eve.TEST_EQUAL, 2, 255)
+    eve.POINT_SIZE(radius_outer * 16)
+    eve.VERTEX2F(x, y)
+    # Gradient (dark at top) for inner of bezel
+    eve.STENCIL_FUNC(eve.TEST_EQUAL, 3, 255)
+    eve.CMD_GRADIENT(x - radius_outer, y + radius_outer, bezel_col_bright, x - radius_outer, y - radius_outer, bezel_col_dark)
+    eve.RESTORE_CONTEXT()
+
+    # Altitude graduations
+    eve.SAVE_CONTEXT()
+    eve.CLEAR_STENCIL(0)
+    eve.CLEAR(0,1,0)
+    eve.COLOR(alt_covering)
+    eve.STENCIL_OP(eve.STENCIL_KEEP, eve.STENCIL_INCR)
+    # Draw ground and sky stencil
+    eve.BEGIN(eve.BEGIN_POINTS)
+    eve.POINT_SIZE(radius_inner * 16)
+    eve.VERTEX2F(x, y)
+    eve.POINT_SIZE(radius_minor * 16)
+    eve.VERTEX2F(x, y)
+    eve.POINT_SIZE(radius_major * 16)
+    eve.VERTEX2F(x, y)
+    eve.BEGIN(eve.BEGIN_LINES)
+    # bold at 1000ft intervals
+    eve.STENCIL_FUNC(eve.TEST_NOTEQUAL, 0, 255)
+    eve.LINE_WIDTH(alt_ref_bold)
+    eve.COLOR(alt_reference)
+    for deg in range(0, 10):
+        dx1 = x + circ_x(radius_inner, deg * 36)
+        dy1 = y - circ_y(radius_inner, deg * 36)
+        dx2 = x + circ_x(radius_major, deg * 36)
+        dy2 = y - circ_y(radius_major, deg * 36)
+        eve.VERTEX2F(dx1, dy1)
+        eve.VERTEX2F(dx2, dy2)
+    # narrow at 10 and 20 degrees
+    eve.LINE_WIDTH(alt_ref_narrow)
+    for deg in range(0, 100, 2):
+        dx1 = x + circ_x(radius_inner, deg * 3.6)
+        dy1 = y - circ_y(radius_inner, deg * 3.6)
+        dx2 = x + circ_x(radius_minor, deg * 3.6)
+        dy2 = y - circ_y(radius_minor, deg * 3.6)
+        eve.VERTEX2F(dx1, dy1)
+        eve.VERTEX2F(dx2, dy2)
+        #print(deg, dx1, dy1, dx2, dy2)
+    eve.STENCIL_FUNC(eve.TEST_ALWAYS, 0, 255)
+    eve.COLOR(alt_covering)
+    eve.BEGIN(eve.BEGIN_POINTS)
+    eve.POINT_SIZE(radius_major * 16)
+    eve.VERTEX2F(x, y)
+    eve.RESTORE_CONTEXT()
+
+    # Indicators choose a font which is about 1/5th of the radius
+    font = len(eve.ROMFONT_HEIGHTS)
+    for n in reversed(eve.ROMFONT_HEIGHTS):
+        if n < radius_inner / 5:
+            break
+        font -= 1
+    if font:
+        font = min(font, len(eve.ROMFONT_HEIGHTS) - 1)
+        for deg in range(0, 10):
+            dx = x + circ_x(radius_inner * 7 / 10, deg * 36)
+            dy = y - circ_y(radius_inner * 7 / 10, deg * 36)
+            eve.CMD_NUMBER(dx, dy, font, eve.OPT_CENTER, deg)
+
+        eve.CMD_TEXT(x, y - (radius_inner * 3 / 10), font, eve.OPT_CENTER, "Altitude")
+        eve.CMD_TEXT(x, y + (radius_inner * 3 / 10), font, eve.OPT_CENTER, "10000ft")
+    # Altitude needle
+    eve.SAVE_CONTEXT()
+    eve.CLEAR(0,1,0)
+    eve.COLOR(alt_reference)
+    eve.BEGIN(eve.BEGIN_LINES)
+    degthou = alt * 360 / 10000
+    deghund = (alt % 1000) * 360 / 100
+    dx = x
+    dy = y
+    dxt1 = x + circ_x(radius_major, degthou)
+    dyt1 = y - circ_y(radius_major, degthou)
+    dxt2 = x + circ_x((radius_major + radius_minor) / 2, degthou)
+    dyt2 = y - circ_y((radius_major + radius_minor) / 2, degthou)
+    dxt3 = x + circ_x(radius_minor, degthou)
+    dyt3 = y - circ_y(radius_minor, degthou)
+    dxh = x + circ_x(radius_major, deghund)
+    dyh = y - circ_y(radius_major, deghund)
+    for c,a in ((alt_background, 32), (alt_reference, 0)):
+        eve.COLOR(c)
+        eve.LINE_WIDTH(alt_needle/2 + a)
+        eve.VERTEX2F(dx, dy)
+        eve.VERTEX2F(dxt3, dyt3)
+        eve.VERTEX2F(dx, dy)
+        eve.VERTEX2F(dxh, dyh)
+        eve.LINE_WIDTH(alt_needle*2/3 + a)
+        eve.VERTEX2F(dx, dy)
+        eve.VERTEX2F(dxt2, dyt2)
+        eve.LINE_WIDTH(alt_needle + a)
+        eve.VERTEX2F(dx, dy)
+        eve.VERTEX2F(dxt1, dyt1)
+    eve.COLOR(alt_background)
+    eve.BEGIN(eve.BEGIN_POINTS)
+    eve.POINT_SIZE((radius_inner / 5) * 16)
+    eve.VERTEX2F(x, y)
+    eve.RESTORE_CONTEXT()
 
 def aiwidget(eve, x, y, radius, pitch, climb, roll):
     
@@ -57,14 +209,11 @@ def aiwidget(eve, x, y, radius, pitch, climb, roll):
     ovl_reference = 0xffaa00
     ovl_reference_dark = 0x505050
 
-    eve.LIB_BeginCoProList()
-    eve.CMD_DLSTART()
-    eve.CLEAR_COLOR_RGB(0, 0, 0)
-    eve.CLEAR(1,1,1)
     eve.VERTEX_FORMAT(0)
 
     # Draw bezel
     eve.SAVE_CONTEXT()
+    eve.CLEAR(0,1,0)
     eve.COLOR(bezel_col)
     # Draw the circles to make the bezel in three levels in the stencil buffer
     eve.STENCIL_OP(eve.STENCIL_INCR, eve.STENCIL_INCR)	# Set the stencil to increment
@@ -84,6 +233,8 @@ def aiwidget(eve, x, y, radius, pitch, climb, roll):
     eve.CMD_GRADIENT(x - radius_outer, y + radius_outer, bezel_col_dark, x - radius_outer, y - radius_outer, bezel_col_bright)
     # Flat colour for centre of bezel
     eve.STENCIL_FUNC(eve.TEST_EQUAL, 2, 255)
+    eve.POINT_SIZE(radius_outer * 16)
+    eve.VERTEX2F(x, y)
     # Gradient (dark at top) for inner of bezel
     eve.STENCIL_FUNC(eve.TEST_EQUAL, 3, 255)
     eve.CMD_GRADIENT(x - radius_outer, y + radius_outer, bezel_col_bright, x - radius_outer, y - radius_outer, bezel_col_dark)
@@ -267,11 +418,6 @@ def aiwidget(eve, x, y, radius, pitch, climb, roll):
     eve.VERTEX2F(dx, dy)
     eve.RESTORE_CONTEXT()
 
-    eve.DISPLAY()
-    eve.CMD_SWAP()
-    eve.LIB_EndCoProList()
-    eve.LIB_AwaitCoProEmpty()
-
 def eve_display(eve):
 
     key = 0
@@ -281,10 +427,12 @@ def eve_display(eve):
     anim_pitch = 1.5
     anim_climb = 0.3
     anim_roll = 1
+    anim_alt = 0.05
     # Limits of animation positions
     max_pitch = 60
     max_climb = 20
     max_roll = 50
+    max_alt = 9500
     # Animation counter
     anim = 0
 
@@ -292,20 +440,38 @@ def eve_display(eve):
     pitch = 0
     climb = 0
     roll = 0
+    alt = 0
     
     # Variables for size and position
     radius = TARGET_SCREEN_RADIUS
     # Centre the widget
-    x = (eve.EVE_DISP_WIDTH / 2)
-    y = (eve.EVE_DISP_HEIGHT / 2)
+    xatt = (eve.EVE_DISP_WIDTH / 4)
+    yatt = (eve.EVE_DISP_HEIGHT / 2)
+    xalt = (eve.EVE_DISP_WIDTH * 3 / 4)
+    yalt = (eve.EVE_DISP_HEIGHT / 2)
 
     while True:
 
-        aiwidget(eve, x, y, radius, pitch, climb, roll)
+        eve.LIB_BeginCoProList()
+        eve.CMD_DLSTART()
+        eve.CLEAR_COLOR_RGB(0, 0, 0)
+        eve.CLEAR(1,1,1)
+
+        aiwidget(eve, xatt, yatt, radius, pitch, climb, roll)
+        altwidget(eve, xalt, yalt, radius, alt)
+
+        eve.DISPLAY()
+        global counter
+        if counter == 40: evescreenshot.cmd_screenshot(eve, "flightdeck.bmp")
+        counter += 1
+        eve.CMD_SWAP()
+        eve.LIB_EndCoProList()
+        eve.LIB_AwaitCoProEmpty()
 
         pitch = max_pitch * math.sin(anim * (math.pi/360) * anim_pitch)
         climb = max_climb * math.sin(anim * (math.pi/360) * anim_climb)
         roll = max_roll * math.sin(anim * (math.pi/360) * anim_roll)
+        alt = (max_alt / 2) + (max_alt / 2) * math.sin(anim * (math.pi/360) * anim_alt)
         anim+=1
 
         # No keypresses involved yet
