@@ -12,8 +12,7 @@ import apprunner
 
 # Load source code from the "snippets" directory.
 sys.path.append('../snippets')
-import evescreenshot
-counter = 0
+
 TARGET_SCREEN_RADIUS = 350
 
 e_disabled = False
@@ -461,9 +460,6 @@ def eve_display(eve):
         altwidget(eve, xalt, yalt, radius, alt)
 
         eve.DISPLAY()
-        global counter
-        if counter == 40: evescreenshot.cmd_screenshot(eve, "flightdeck.bmp")
-        counter += 1
         eve.CMD_SWAP()
         eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
