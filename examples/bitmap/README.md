@@ -42,4 +42,5 @@ The example contains two files which comprises all the demo functionality.
 | --- | --- |
 | [bitmap-split.py](bitmap-split.py) | Example source code file |
 | [bitmap-crop.py](bitmap-crop.py) | Example source code file |
+| [assets](assets) | Source bitmap for demo |
 | [docs](docs) | Documentation support files |

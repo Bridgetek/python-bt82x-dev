@@ -27,7 +27,7 @@ The name of the extension code is "plot6", it contains the ext-plotgraph extensi
 
 ### Running the Example
 
-The format of the command call is as follows:
+The format of the command call to run `plottest` is as follows:
 
 _MPSSE example:_
 ```
@@ -56,5 +56,6 @@ The example contains a single file which comprises all the demo functionality.
 
 | File/Folder | Description |
 | --- | --- |
-| [segment.py](segment.py) | Example source code file |
+| [plottest.py](plottest.py) | Example source code file |
+| [plottest2.py](plottest2.py) | Example source code file |
 | [docs](docs) | Documentation support files |

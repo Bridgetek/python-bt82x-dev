@@ -52,14 +52,14 @@ def segment(eve):
     x = 40
     y = 40
     gap = size * 1.4
-    sevensegment.cmd_sevenseg(gd, x + (gap * 0), y, size, int((number/10000000)%10), fg, bg)
-    sevensegment.cmd_sevenseg(gd, x + (gap * 1), y, size, int((number/1000000)%10), fg, bg)
-    sevensegment.cmd_sevenseg(gd, x + (gap * 2), y, size, int((number/100000)%10), fg, bg)
-    sevensegment.cmd_sevenseg(gd, x + (gap * 3), y, size, int((number/10000)%10), fg, bg)
-    sevensegment.cmd_sevenseg(gd, x + (gap * 4), y, size, int((number/1000)%10), fg, bg)
-    sevensegment.cmd_sevenseg(gd, x + (gap * 5), y, size, int((number/100)%10), fg, bg)
-    sevensegment.cmd_sevenseg(gd, x + (gap * 6), y, size, int((number/10)%10), fg, bg)
-    sevensegment.cmd_sevenseg(gd, x + (gap * 7), y, size, int((number/1)%10), fg, bg)
+    sevensegment.cmd_sevenseg(eve, x + (gap * 0), y, size, int((number/10000000)%10), fg, bg)
+    sevensegment.cmd_sevenseg(eve, x + (gap * 1), y, size, int((number/1000000)%10), fg, bg)
+    sevensegment.cmd_sevenseg(eve, x + (gap * 2), y, size, int((number/100000)%10), fg, bg)
+    sevensegment.cmd_sevenseg(eve, x + (gap * 3), y, size, int((number/10000)%10), fg, bg)
+    sevensegment.cmd_sevenseg(eve, x + (gap * 4), y, size, int((number/1000)%10), fg, bg)
+    sevensegment.cmd_sevenseg(eve, x + (gap * 5), y, size, int((number/100)%10), fg, bg)
+    sevensegment.cmd_sevenseg(eve, x + (gap * 6), y, size, int((number/10)%10), fg, bg)
+    sevensegment.cmd_sevenseg(eve, x + (gap * 7), y, size, int((number/1)%10), fg, bg)
     eve.DISPLAY()
     eve.CMD_SWAP()
     eve.LIB_EndCoProList()
