@@ -8,7 +8,7 @@ The `flightdeck.py` example demonstrates drawing multiple scissored areas, handl
 
 The example is intended to show an aircraft attitude and altitude instruments. The attitude instrument has bank/roll and pitch displays. The physical control for this would be a gyroscopic device with rotating gimbals for pitch and roll. The altitude instrument has a graduations at 200ft and reads up to 10000ft. A real altritude gauge typically uses barometeric pressure.
 
-The atttude drawing comprises four parts: the bezel which uses gradients to shade the outer and inner edges of the bezel; the bank/roll area which is the outer circle of the drawing; the pitch area which is the inner part; a reference overlay which is fixed in position. The stencilling is used to make sure that graphical elements of each part do not spill over into the other parts. The altitude drawing uses the same bezel method and internal graduation lines clipped with a stencil. The reading needle is outlined in a single pixel of black for clarity.
+The attitude drawing comprises four parts: the bezel which uses gradients to shade the outer and inner edges of the bezel; the bank/roll area which is the outer circle of the drawing; the pitch area which is the inner part; a reference overlay which is fixed in position. The stencilling is used to make sure that graphical elements of each part do not spill over into the other parts. The altitude drawing uses the same bezel method and internal graduation lines clipped with a stencil. The reading needle is outlined in a single pixel of black for clarity.
 
 ![Flightdeck Example](docs/flightdeck.png)
 

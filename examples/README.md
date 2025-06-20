@@ -10,11 +10,11 @@ The following example code is available:
 
 | Folder | Description |
 | --- | --- |
-| [attitude](attitude/README.md) | Attitude example demo code |
 | [audioloop](audioloop/README.md) | Advanced plot graph widget demo code |
 | [b2tf](b2tf/README.md) | Advanced seven segment demo code |
 | [bitmap](bitmap/README.md) | Simple bitmap demo code |
 | [cruise](cruise/README.md) | Circular click-wheel display demo code |
+| [flightdeck](flightdeck/README.md) | Flightdeck example demo code |
 | [fontmagic](fontmagic/README.md) | Simple example code demonstrating scaling and rotating fonts |
 | [localbehavior](localbehavior/README.md) | localbehavior button demo code |
 | [plottest](plottest/README.md) | Simple plot graph demo code |
