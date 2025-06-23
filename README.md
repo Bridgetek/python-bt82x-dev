@@ -50,13 +50,13 @@ This code may also be used with [circuitpython](https://circuitpython.org/), how
 
 #### Windows Setup
 
-To connunicate with the MPSSE interface on Windows the standard FTDI drivers cannot be used. These must be replaced with a libusb driver in order for pyftdi to access the device directly. It is not necessary to replace the drivers for all the interfaces on the FTDI devices, just the one used for MPSSE.
+To communicate with the MPSSE interface on Windows the standard FTDI drivers cannot be used. These must be replaced with a libusb driver in order for pyftdi to access the device directly. It is not necessary to replace the drivers for all the interfaces on the FTDI devices, just the one used for MPSSE.
 
 The [Zadig](https://zadig.akeo.ie/) utility is a handy utility that will replace a driver with libusb. Click on the menu item "Options", then "List all Devices". For a UMFTPD2A board,from the drop-down box select __UMFTPD2A (Interface 1)__ and for the driver choose __libusb-win32__, then click "Replace Driver".
 
 ![Zadig screenshot](docs/zadig.png)
 
-It may be neccessary to reboot the PC or remove and replug the MPSSE device. Once this is done the interface for the device will show in Windows Device Manager. Note that there is a missing USB Serial Port (COM4) now.
+It may be neccessary to reboot the PC or remove and replug the MPSSE device. Once this is done, the interface for the device will show in Windows Device Manager. Note that there is a missing USB Serial Port (COM4) now.
 
 ![Device Manager screenshot](docs/devman.png)
 
@@ -178,11 +178,11 @@ This is a python module for the BT82x interface allowing calls from python to be
 
 #### bteve2 Connectors
 
-To run the python code and connect to a BT82x a connector is required. The connector is selected in the parameters to the example programs. It opens a port to the device that makes the SPI signals and sets-up the target device. API interfaces for `reset`, `wr`, `rd`, `cs` functions are required. 
+To run the python code and connect to a BT82x, a connector is required. The connector is selected in the parameters to the example programs. It opens a port to the device that makes the SPI signals and sets-up the target device. API interfaces for `reset`, `wr`, `rd`, `cs` functions are required. 
 
 There are supported connectors for [FT4232H (`ft4232h.py`)](bteve2/ft4232h.py), [FT232H (`ft232h.py`)](bteve2/ft232h.py), [FT4222H (`ft4222module.py`)](bteve2/ft4222module.py), [D2XX (`d2xx.py`)](bteve2/d2xx.py). 
 
-The FT4232H connector uses the first MPSSE interface, if it fails to open that then the second MPSSE interface (USB Interface 1) is used. The the CN2 connector on the UMFTPD2A board is connected to the second MPSSE interface.
+The FT4232H connector uses the first MPSSE interface; if it fails to open, the second MPSSE interface (USB Interface 1) is used. The CN2 connector on the UMFTPD2A board is connected to the second MPSSE interface.
 
 Connectors to other transports are simple to make. The `reset` function must be able to setup the BT82x in line with the provided code in supported connectors. The use of Chip Select in the `cs` function is required rather than automatic action of chip select on some devices.
 
@@ -199,6 +199,7 @@ import apprunner
 
 def simplest(eve):
     # Start drawing test screen.
+    eve.LIB_BeginCoProList()
     eve.CMD_DLSTART()
     eve.CLEAR_COLOR_RGB(64,72,64)
     eve.CLEAR(1,1,1)

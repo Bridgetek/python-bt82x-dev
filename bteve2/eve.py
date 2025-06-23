@@ -1320,7 +1320,7 @@ class EVE2:
     #   width, height, and palette of the loaded image.
     def LIB_GetImage(self):
         self.CMD_GETIMAGE(0,0,0,0,0)
-        return self.previous("IIiiI")
+        return self.previous(1, "IIiiI")
 
     # CMD_GETMATRIX(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f)
     def CMD_GETMATRIX(self, *args):
@@ -1331,7 +1331,7 @@ class EVE2:
     # @returns tuple with a, b, c, d, e, f components of the matrix.
     def LIB_GetMatrix(self):
         self.CMD_GETMATRIX(0,0,0,0,0,0)
-        return tuple([x/0x10000 for x in self.previous("6i")])
+        return tuple([x/0x10000 for x in self.previous(1, "6i")])
 
     # CMD_GETPROPS(uint32_t ptr, uint32_t w, uint32_t h)
     def CMD_GETPROPS(self, *args):
@@ -1344,7 +1344,7 @@ class EVE2:
     # @returns - tuple with image start address, image width, image height.
     def LIB_GetProps(self):
         self.CMD_GETPROPS(0,0,0)
-        return self.previous("Iii")
+        return self.previous(1, "Iii")
 
     # CMD_GETPTR(uint32_t result)
     def CMD_GETPTR(self, *args):
