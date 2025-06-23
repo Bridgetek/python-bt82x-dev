@@ -41,3 +41,4 @@ The example contains three files which comprises all the demo functionality.
 | [simple.py](simple.py) | Example source code file |
 | [simplefont.py](simplefont.py) | Example source code file containing the custom font data and upload code |
 | [simpleimage.py](simpleimage.py) | Example source code file containing the Bridgetek logo and upload code |
+| [docs](docs) | Documentation support files |

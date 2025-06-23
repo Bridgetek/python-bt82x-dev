@@ -171,7 +171,7 @@ This extension comprises of only the `fssnapshot` extension. The following copro
 
 #### Screenshot Setup
 
-The setup code must be called at some point before the display list to screenshot is drawn, it will load extension code to allow writing to the SD card. This will interfere with other patches that are loaded in the EVE device. The `ext-fssnapshot` extension can be added to a another patch that is loaded in the device.
+The setup code must be called at some point before the display list to screenshot whatever is drawn, it will load extension code to allow writing to the SD card. This will interfere with other patches that are loaded in the EVE device. The `ext-fssnapshot` extension can be added to the patch that is loaded in the device.
 
 _Calling format:_
    `extscreenshot.setup(eve)` 
