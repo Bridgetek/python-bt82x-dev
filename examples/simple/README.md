@@ -6,6 +6,9 @@
 
 The `simple.py` example demonstrates using a custom font and loading a JPG image in a program. The custom font and the image are loaded to RAM_G and display using font/bitmap handles. The data for the font and the image are stored as python byte arrays and loaded using the coprocessor. The image is in JPG format and is decoded using the CMD_LOADIMAGE command.
 
+# Screen Display
+![simple](docs/simple.png)
+
 ### Running the Example
 
 The format of the command call is as follows:
