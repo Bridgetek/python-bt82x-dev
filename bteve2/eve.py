@@ -849,6 +849,7 @@ class EVE2:
         self.LIB_AwaitCoProEmpty()
 
         (self.w, self.h) = (surface.w, surface.h)
+        self.LIB_BeginCoProList()
         self.CMD_REGWRITE(self.REG_GPIO, 0x80)
         self.CMD_REGWRITE(self.REG_DISP, 1)
 
@@ -912,8 +913,10 @@ class EVE2:
         # 0: 1 pixel single // 1: 2 pixel single // 2: 2 pixel dual // 3: 4 pixel dual
         extsyncmode = 3
         TXPLLDiv = 0x03
-        self.CMD_APBWRITE(self.REG_LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
-        self.CMD_APBWRITE(self.REG_LVDSTX_EN, 7) # Enable PLL
+        #self.CMD_APBWRITE(self.REG_LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
+        #self.CMD_APBWRITE(self.REG_LVDSTX_EN, 7) # Enable PLL
+        self.CMD_REGWRITE(self.REG_LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
+        self.CMD_REGWRITE(self.REG_LVDSTX_EN, 7) # Enable PLL
 
         self.CMD_REGWRITE(self.REG_SO_MODE, extsyncmode)
         self.CMD_REGWRITE(self.REG_SO_SOURCE, surface.addr)

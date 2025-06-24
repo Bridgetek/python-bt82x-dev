@@ -272,7 +272,7 @@ class connector():
             # Set DDR, JT and AUD in Boot Control
             exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]))
             # CLEAR BootCfgEn
-            exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]))
+            exchange(bytes([0xFF, 0xE9, 0xe0, 0x00, 0x00]))
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
             # Set ACTIVE

@@ -73,9 +73,9 @@ class run:
             eve.CMD_REGWRITE(eve.REG_SC0_SIZE, 2)
             eve.CMD_REGWRITE(eve.REG_SC0_PTR0, 0x7a00000)
             eve.CMD_REGWRITE(eve.REG_SC0_PTR1, 0x7a00000 + scrsize)
-            eve.panel(surface, panel, touch)
-            app(eve)
             eve.LIB_EndCoProList()
             eve.LIB_AwaitCoProEmpty()
-        else:
-            app(eve)
+
+            eve.panel(surface, panel, touch)
+
+        app(eve)
