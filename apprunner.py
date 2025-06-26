@@ -69,7 +69,7 @@ class run:
         eve.register(eve)
 
         if not minimal:
-            scrsize = (eve.EVE_DISP_WIDTH * eve.EVE_DISP_HEIGHT * 3)
+            scrsize = (surface.w * surface.h * 3)
             eve.CMD_REGWRITE(eve.REG_SC0_SIZE, 2)
             eve.CMD_REGWRITE(eve.REG_SC0_PTR0, 0x7a00000)
             eve.CMD_REGWRITE(eve.REG_SC0_PTR1, 0x7a00000 + scrsize)

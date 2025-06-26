@@ -77,11 +77,6 @@ def video_LVDS(eve):
     lvdsrx_data_addr_new = 0
     lvdsrx_data_addr = eve.LIB_GetResult()
 
-    eve.LIB_BeginCoProList()
-    eve.CMD_REGWRITE(eve.REG_SC2_STATUS, 0x3)
-    eve.LIB_EndCoProList()
-    eve.LIB_AwaitCoProEmpty()
-
     # Variables detemining how the animation of the widget appears
     anim_pitch = 1.5
     anim_climb = 0.3
@@ -132,7 +127,6 @@ def video_LVDS(eve):
         eve.CMD_LVDSCONN(0)
         eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
-        connr = eve.rd32(eve.REG_LVDSRX_STAT)
 
         conn = eve.LIB_GetResult(1)
         lvdsrx_data_addr_new = eve.LIB_GetResult(3)
@@ -190,6 +184,8 @@ def video_LVDS(eve):
             eve.CMD_SWAP()
             eve.LIB_EndCoProList()
             eve.LIB_AwaitCoProEmpty()
+
+            exit(0)
 
             pitch = max_pitch * math.sin(anim * (math.pi/360) * anim_pitch)
             climb = max_climb * math.sin(anim * (math.pi/360) * anim_climb)
