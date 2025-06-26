@@ -42,4 +42,5 @@ The example contains a single file which comprises all the demo functionality.
 | File/Folder | Description |
 | --- | --- |
 | [cruise.py](cruise.py) | Example source code file for the cruise demo |
+| [sevensegment.py](../snippets/sevensegment.py) | Snippet source code for seven segment displays |
 | [docs](docs) | Documentation support files |

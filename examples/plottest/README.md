@@ -58,4 +58,5 @@ The example contains a single file which comprises all the demo functionality.
 | --- | --- |
 | [plottest.py](plottest.py) | Example source code file |
 | [plottest2.py](plottest2.py) | Example source code file |
+| [extplotmem.py](../snippets/extplotmem.py) | Snippet source code for memory and graph plotting extension |
 | [docs](docs) | Documentation support files |

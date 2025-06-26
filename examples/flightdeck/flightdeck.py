@@ -1,5 +1,5 @@
 # Typical command line:
-# python attitude.py --connector ft4222module
+# python flightdeck.py --connector ft4222module
 import sys
 import math
 
@@ -64,7 +64,7 @@ def eve_display(eve):
 
         eve.CMD_CGRADIENT(eve.CGRADIENT_CORNER_ZERO, 0, 0, eve.EVE_DISP_WIDTH, eve.EVE_DISP_HEIGHT, 0x000020, 0x000080)
 
-        eveflightcontrols.aiwidget(eve, xatt, yatt, dial_radius, pitch, climb, roll)
+        eveflightcontrols.attwidget(eve, xatt, yatt, dial_radius, pitch, climb, roll)
         eveflightcontrols.altwidget(eve, xalt, yalt, dial_radius, alt)
 
         eve.DISPLAY()
@@ -86,7 +86,7 @@ def eve_display(eve):
             keyprev = key
 
 
-def attitude(eve):
+def flightdeck(eve):
     # Calibrate the display
     print("Calibrating display...")
     # Calibrate screen if necessary. 
@@ -97,4 +97,4 @@ def attitude(eve):
     print("Starting demo:")
     eve_display(eve)
 
-apprunner.run(attitude)
+apprunner.run(flightdeck)

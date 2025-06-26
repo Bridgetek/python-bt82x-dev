@@ -52,4 +52,5 @@ The example contains a single file which comprises all the demo functionality.
 | --- | --- |
 | [b2tf.py](b2tf.py) | Example source code file using the sevensegment widget |
 | [b2tf2.py](b2tf.py) | Example source code file using the  function |
+| [sevensegment.py](../snippets/sevensegment.py) | Snippet source code for seven segment displays |
 | [docs](docs) | Documentation support files |

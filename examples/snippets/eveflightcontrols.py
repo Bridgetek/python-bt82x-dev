@@ -108,7 +108,6 @@ def altwidget(eve, x, y, radius, alt):
         dy2 = y - circ_y(radius_minor, deg * 3.6)
         eve.VERTEX2F(dx1, dy1)
         eve.VERTEX2F(dx2, dy2)
-        #print(deg, dx1, dy1, dx2, dy2)
     eve.STENCIL_FUNC(eve.TEST_ALWAYS, 0, 255)
     eve.COLOR(alt_covering)
     eve.BEGIN(eve.BEGIN_POINTS)
@@ -137,7 +136,7 @@ def altwidget(eve, x, y, radius, alt):
     eve.COLOR(alt_reference)
     eve.BEGIN(eve.BEGIN_LINES)
     degthou = alt * 360 / 10000
-    deghund = (alt % 1000) * 360 / 100
+    deghund = (alt % 1000) * 360 / 1000
     dx = x
     dy = y
     dxt1 = x + circ_x(radius_major, degthou)
@@ -167,7 +166,7 @@ def altwidget(eve, x, y, radius, alt):
     eve.VERTEX2F(x, y)
     eve.RESTORE_CONTEXT()
 
-def aiwidget(eve, x, y, radius, pitch, climb, roll):
+def attwidget(eve, x, y, radius, pitch, climb, roll):
     assert(type(eve) == evelib.EVE2)
     
     # Dimensions of the widget are detemined by the radius
@@ -321,8 +320,10 @@ def aiwidget(eve, x, y, radius, pitch, climb, roll):
             dx1 = dx + circ_x(radius_roll, -pitch + deg)
             dy1 = dy + circ_y(radius_roll, -pitch + deg)
             eve.VERTEX2F(dx1, dy1)
+    # Draw the pitch and climb reference lines
     eve.COLOR(ai_reference)
     eve.LINE_WIDTH(ai_ref_narrow)
+    # Major reference lines
     for i in (20, 10, -10, -20):
         pw = ((radius_roll * climb) / 40) + ((radius_roll * i) / 40)
         dx = x + circ_x(pw, -pitch)
@@ -331,6 +332,7 @@ def aiwidget(eve, x, y, radius, pitch, climb, roll):
             dx1 = dx + circ_x(radius_roll * i / 50, -pitch + deg)
             dy1 = dy + circ_y(radius_roll * i / 50, -pitch + deg)
             eve.VERTEX2F(dx1, dy1)
+    # Minor reference lines
     for i in (15, 5, -5, -15):
         pw = ((radius_roll * climb) / 40) + ((radius_roll * i) / 40)
         dx = x + circ_x(pw, -pitch)

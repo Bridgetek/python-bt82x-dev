@@ -53,4 +53,6 @@ The example contains a single file which comprises all the demo functionality.
 | File/Folder | Description |
 | --- | --- |
 | [audioloop.py](audioloop.py) | Example source code file |
+| [vumeter.py](../snippets/vumeter.py) | Snippet source code for vumeter displays |
+| [extplotmemsevenseg.py](../snippets/extplotmemsevenseg.py) | Snippet source code for seven segment extension |
 | [docs](docs) | Documentation support files |
