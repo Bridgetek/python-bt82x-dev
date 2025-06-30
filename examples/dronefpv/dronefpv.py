@@ -15,8 +15,8 @@ import apprunner
 # Load source code from the "snippets" directory.
 sys.path.append('../snippets')
 import eveflightcontrols
-import evescreenshot
-count = 0
+#import evescreenshot
+#count = 0
 
 HND_LVDSRX = 1
 
@@ -178,14 +178,12 @@ def video_LVDS(eve):
             eveflightcontrols.altwidget(eve, xalt, yalt, dial_radius, alt)
 
             eve.DISPLAY()
-            if (count == 50):
-                evescreenshot.cmd_screenshot(eve, "dronefpv.bmp")
-            count += 1
+            #if (count == 50):
+            #    evescreenshot.cmd_screenshot(eve, "dronefpv.bmp")
+            #count += 1
             eve.CMD_SWAP()
             eve.LIB_EndCoProList()
             eve.LIB_AwaitCoProEmpty()
-
-            exit(0)
 
             pitch = max_pitch * math.sin(anim * (math.pi/360) * anim_pitch)
             climb = max_climb * math.sin(anim * (math.pi/360) * anim_climb)
@@ -195,7 +193,6 @@ def video_LVDS(eve):
 
 def eve_display(eve):
 
-    fbformat = eve.FORMAT_RGB8
     TXPLLDiv = 0x05
     valcfg = 0
 
@@ -211,8 +208,8 @@ def eve_display(eve):
 
     eve.CMD_REGWRITE(eve.REG_SC2_SIZE, 2)
     # Start the swapchain 2 buffer at 0x6000000 - second buffer immediately after
-    eve.CMD_REGWRITE(eve.REG_SC2_PTR0, (6 << 24));
-    eve.CMD_REGWRITE(eve.REG_SC2_PTR1, (6 << 24) + (LVDSRX_W * LVDSRX_W * 3));
+    eve.CMD_REGWRITE(eve.REG_SC2_PTR0, (5 << 24));
+    eve.CMD_REGWRITE(eve.REG_SC2_PTR1, (5 << 24) + (LVDSRX_W * LVDSRX_W * 3));
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
