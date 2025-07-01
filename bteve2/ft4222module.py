@@ -180,7 +180,7 @@ class connector():
                 while not fault and self.rd32(eve.EVE2.REG_BOOT_STATUS) != 0x522e2e2e:
                     fault = 1e-9 * (time.monotonic_ns() - t0) > 0.1
                 if fault:
-                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.EVE2.BOOT_STATUS):08x}, retrying...]")
+                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.EVE2.REG_BOOT_STATUS):08x}, retrying...]")
                     continue
                 actual = self.rd32(eve.EVE2.REG_FREQUENCY)
                 if actual != self.FREQUENCY:

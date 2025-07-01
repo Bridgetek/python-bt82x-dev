@@ -207,9 +207,9 @@ def eve_display(eve):
     eve.CMD_REGWRITE(eve.REG_LVDSTX_EN, 7) # Enable PLL
 
     eve.CMD_REGWRITE(eve.REG_SC2_SIZE, 2)
-    # Start the swapchain 2 buffer at 0x6000000 - second buffer immediately after
+    # Start the swapchain 2 buffer at 0x5000000 - second buffer immediately after
     eve.CMD_REGWRITE(eve.REG_SC2_PTR0, (5 << 24));
-    eve.CMD_REGWRITE(eve.REG_SC2_PTR1, (5 << 24) + (LVDSRX_W * LVDSRX_W * 3));
+    eve.CMD_REGWRITE(eve.REG_SC2_PTR1, (5 << 24) + (LVDSRX_W * LVDSRX_H * 3));
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 

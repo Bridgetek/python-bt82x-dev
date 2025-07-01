@@ -70,6 +70,7 @@ class run:
 
         if not minimal:
             scrsize = (surface.w * surface.h * 3)
+            eve.LIB_BeginCoProList()
             eve.CMD_REGWRITE(eve.REG_SC0_SIZE, 2)
             eve.CMD_REGWRITE(eve.REG_SC0_PTR0, 0x7d80000 - scrsize)
             eve.CMD_REGWRITE(eve.REG_SC0_PTR1, 0x7d80000 - (2 * scrsize))
