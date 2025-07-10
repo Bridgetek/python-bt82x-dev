@@ -673,7 +673,7 @@ class EVE2:
         s = b''
         assert (n & 3) == 0, "Data must be a multiple of 4 bytes"
         while n > 0:
-            chunk = min((1024 * 4), n)
+            chunk = min((1024 * 32), n)
             self.cs(True)
             s = s + self.rd(a, chunk)
             self.cs(False)

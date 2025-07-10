@@ -66,12 +66,13 @@ class connector():
         while a != a1:
             # Timout for a read is 7uS for BT82x.
             # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
-            # Read a maximum of 4 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 4 + nn)
+            # Read a maximum of 16 bytes before the "0x01" that signifies data ready.
+            n = min(a1 - a, 0x8000)
             self.slave.write(self.addr(a), start = True, stop = False)
             def recv(n):
                 return self.slave.read(n, start = False, stop = False)
-            bb = recv(4 + n)
+            bb = recv(16 + n)
+            # Read until the "0x01" that signifies data ready.
             if 1 in bb:             # Got READY byte in response
                 i = bb.index(1)
                 response = bb[i + 1:i + 1 + n]
