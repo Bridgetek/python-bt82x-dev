@@ -834,10 +834,6 @@ class EVE2:
         }.get(r, "Unknown code")
         return message
 
-    # Command used to setup LVDSTX registers.
-    def CMD_APBWRITE(self, *args):
-        self.cmd(0x63, 'II', args)
-
     # Setup the EVE registers to match the surface created.
     def panel(self, surface, panelset=None, touch=None):
         self.LIB_BeginCoProList()
@@ -909,18 +905,20 @@ class EVE2:
         self.CMD_REGWRITE(self.REG_VSYNC1, self.EVE_DISP_VSYNC1)
         self.CMD_REGWRITE(self.REG_PCLK_POL, self.EVE_DISP_PCLKPOL)
         self.CMD_REGWRITE(self.REG_RE_DITHER, self.EVE_DISP_DITHER)
+        self.LIB_EndCoProList()
+        self.LIB_AwaitCoProEmpty()
 
         # 0: 1 pixel single // 1: 2 pixel single // 2: 2 pixel dual // 3: 4 pixel dual
         extsyncmode = 3
         TXPLLDiv = 0x03
-        self.CMD_APBWRITE(self.REG_LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
-        self.CMD_APBWRITE(self.REG_LVDSTX_EN, 7) # Enable PLL
+        self.wr32(self.REG_LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
+        self.wr32(self.REG_LVDSTX_EN, 7) # Enable PLL
 
+        self.LIB_BeginCoProList()
         self.CMD_REGWRITE(self.REG_SO_MODE, extsyncmode)
         self.CMD_REGWRITE(self.REG_SO_SOURCE, surface.addr)
         self.CMD_REGWRITE(self.REG_SO_FORMAT, surface.fmt)
         self.CMD_REGWRITE(self.REG_SO_EN, 1)
-        
         self.LIB_EndCoProList()
         self.LIB_AwaitCoProEmpty()
 
