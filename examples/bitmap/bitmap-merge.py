@@ -82,7 +82,7 @@ def convert(eve, im, fmt, dither = False):
 def oe_merge(eve, dst, src0, src1):
     eve.CMD_RENDERTARGET(*dst)
 
-    scratch = 0x07d8_0000
+    scratch = eve.ramgtop # maximum allowable address in RAM_G
     mask = bteve2.Surface(scratch, eve.FORMAT_L8, 2, 1)
     eve.CMD_REGWRITE(scratch, 0xff00)
 

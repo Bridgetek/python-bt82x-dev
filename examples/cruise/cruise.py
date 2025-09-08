@@ -159,9 +159,9 @@ def eve_display(eve):
         eve.COLOR(rgb(fg_setpt))
         eve.CMD_TEXT(x + (((SEGMENT_GAP * 2) + SEGMENT_SIZE) / 2), y - eve.ROMFONT_HEIGHTS[UNITS_FONT], UNITS_FONT, eve.OPT_CENTER, "km/h")
         if (cruise_arm == e_enabled):
-            sevensegment.cmd_sevenseg(eve, x + (SEGMENT_GAP * 0), y, SEGMENT_SIZE, ((set_speed/100)%10), fg_setpt, bg_setpt)
-            sevensegment.cmd_sevenseg(eve, x + (SEGMENT_GAP * 1), y, SEGMENT_SIZE, ((set_speed/10)%10), fg_setpt, bg_setpt)
-            sevensegment.cmd_sevenseg(eve, x + (SEGMENT_GAP * 2), y, SEGMENT_SIZE, ((set_speed/1)%10), fg_setpt, bg_setpt)
+            sevensegment.cmd_sevenseg(eve, x + (SEGMENT_GAP * 0), y, SEGMENT_SIZE, int((set_speed/100)%10), fg_setpt, bg_setpt)
+            sevensegment.cmd_sevenseg(eve, x + (SEGMENT_GAP * 1), y, SEGMENT_SIZE, int((set_speed/10)%10), fg_setpt, bg_setpt)
+            sevensegment.cmd_sevenseg(eve, x + (SEGMENT_GAP * 2), y, SEGMENT_SIZE, int((set_speed/1)%10), fg_setpt, bg_setpt)
         else:
             sevensegment.cmd_sevenseg(eve, x + (SEGMENT_GAP * 0), y, SEGMENT_SIZE, 16, fg_setpt, bg_setpt)
             sevensegment.cmd_sevenseg(eve, x + (SEGMENT_GAP * 1), y, SEGMENT_SIZE, 16, fg_setpt, bg_setpt)
@@ -227,7 +227,8 @@ def eve_display(eve):
         eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
 
-        #while (eve_read_tag(&key) == 0)
+        # Read the tag register on the device
+        key = eve.rd32(eve.REG_TOUCH_TAG)
 
         # Debounce keys.
         if (key != keyprev):
@@ -303,8 +304,7 @@ def cruise(eve):
     # Calibrate the display
     print("Calibrating display...")
     # Calibrate screen if necessary. 
-    # Don't do this for now.
-    #eve.LIB_AutoCalibrate()
+    eve.LIB_AutoCalibrate()
 
     # Start example code
     print("Starting demo:")

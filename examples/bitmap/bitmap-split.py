@@ -105,9 +105,9 @@ def bitmap_split(eve):
 
     fmt = eve.FORMAT_RGB565
     block_addr = 0x400000       # allocate 4MB per block
-    src = bteve2.Surface(block_addr * 5, fmt, 2 * w, h)
-    dst0 = bteve2.Surface(block_addr * 6, src.fmt, w, h)
-    dst1 = bteve2.Surface(block_addr * 7, src.fmt, w, h)
+    src = bteve2.Surface(block_addr * 0, fmt, 2 * w, h)
+    dst0 = bteve2.Surface(block_addr * 1, src.fmt, w, h)
+    dst1 = bteve2.Surface(block_addr * 2, src.fmt, w, h)
 
     eve.LIB_BeginCoProList()
     iload(eve, src.addr, convert(eve, im0, src.fmt))

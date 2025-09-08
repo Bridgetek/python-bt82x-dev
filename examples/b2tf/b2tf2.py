@@ -9,10 +9,11 @@ sys.path.append('../../bteve2')
 
 # This module provides the connector to the EVE hardware.
 import apprunner
+# Import the patch file required by this code.
+import patch_b2tf2 as patch
 
 # Load the sevensegment source code from the "snippets" directory.
 sys.path.append('../snippets')
-import extplotmemsevenseg 
 
 def ledbox(eve, x, y, count, segsize):
     eve.VERTEX_FORMAT(2)
@@ -49,8 +50,6 @@ def gradbox(eve, x, y, w, h):
     eve.CMD_GRADIENT(x, y, 0x808080, x, y+h, 0x404040)
 
 def b2tf(eve):
-
-    print("Extension: ", extplotmemsevenseg.loadpatch(eve))
 
     destination = datetime.datetime(1985, 10, 26, 1, 21)
     present = datetime.datetime.now()
@@ -209,4 +208,4 @@ def b2tf(eve):
         present = present - datetime.timedelta(hours=1)
         lasttime = datetime.datetime.now()
 
-apprunner.run(b2tf)
+apprunner.run(b2tf, patch)

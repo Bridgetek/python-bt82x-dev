@@ -78,12 +78,16 @@ def eve_display(eve):
         alt = (max_alt / 2) + (max_alt / 2) * math.sin(anim * (math.pi/360) * anim_alt)
         anim+=1
 
-        # No keypresses involved yet
-        #while (eve_read_tag(&key) == 0)
+        # Read the tag register on the device
+        key = eve.rd32(eve.REG_TOUCH_TAG)
 
         # Debounce keys.
         if (key != keyprev):
             keyprev = key
+
+            # Improvements: 
+            #  Make the altimeter increase or decrease using CMD_TRACK as a rotary dial
+            #  Make the attitude meter change depending on points from CMD_TRACK
 
 
 def flightdeck(eve):

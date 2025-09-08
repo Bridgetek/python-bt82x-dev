@@ -9,17 +9,16 @@ sys.path.append('../../bteve2')
 
 # Load the extension code from the "snippets" directory.
 sys.path.append('../snippets')
-import extplotmem
 
 # This module provides the connector to the EVE hardware.
 import apprunner
+# Import the patch file required by this code.
+import patch_plottest as patch
 
 # Target EVE device.
 family = "BT82x"
 
 def plottest(eve):
-
-    print(extplotmem.loadpatch(eve))
 
     arr = bytes([
             # Offset 0x00000000 to 0x00000400
@@ -135,4 +134,4 @@ def plottest(eve):
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
-apprunner.run(plottest)
+apprunner.run(plottest, patch)

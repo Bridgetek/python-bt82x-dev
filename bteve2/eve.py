@@ -241,20 +241,7 @@ class EVE2:
 
     FIFO_MAX = (CMDBUF_SIZE - 4) # Maximum reported free space in the EVE command FIFO
 
-    # EVE options
-
-    KEY_RETURN                     = 13     # Definition of value of return key.
-    KEY_DEL                        = 8      # Definition of value of backspace\delete key.
-    KEY_TAB                        = 9      # Definition of value of tab key.
-    KEY_ESC                        = 27     # Definition of value of escape key.
-    KEY_SHIFT                      = 1      # Definition of value of shift key.
-    KEY_ALPHA                      = 2      # Definition of value of alpha key.
-    KEY_NUMBER                     = 3      # Definition of value of number key.
-    KEY_SYMBOLNUM                  = 4      # Definition of value of symbol key.
-    KEY_SYMBOLS                    = 5      # Definition of value of symbol key.
-    KEY_CAPS                       = 6      # Definition of value of caps lock key.
-    KEY_ALT                        = 11     # Definition of value of alt key.
-    KEY_CTRL                       = 12     # Definition of value of ctrl key.
+    # Command options
 
     OPT_3D                         = 0
     OPT_1BIT                       = 0
@@ -300,40 +287,7 @@ class EVE2:
     OPT_TRUECOLOR                  = 0x200
     OPT_YCBCR                      = 0x400
 
-    # patch-sevenseg
-    OPT_DECIMAL                    = 0x10   #   Option to draw a decimal point to the immediate right of the 7 segment.
-    OPT_TIMECOLON                  = 0x20   # Option to draw a time colon to the immediate right of the 7 segment.
-    OPT_NUMBER                     = 0x0f   # Option of BCD number to show in segments.
-    OPT_SEGMENTMASK                = 0x2030 # Mask for above options and vc.OPT_FILL
-
-    # patch-dialogs
-    # The amount of alpha to apply to the background box rectangle 
-    # behind the text of the message. Set to zero to not apply
-    # any alpha.
-    OPT_MSGBGALPHA                 = 0x00ff   
-    # Option to place the message box in the top third of the screen.
-    # This is useful to allow space to draw feedback buttons below.
-    OPT_MSGTOP                     = 0x0200   
-    # Option to place the message box in the bottom third of the screen.
-    # This is useful to allow space to draw feedback buttons above.
-    OPT_MSGBOTTOM                  = 0x0400   
-    # Option to place the message box aligned to the top or bottom edge of the screen.
-    # This gives maximum space below or above the message.
-    OPT_MSGEDGE                    = 0x0800   
-
-    # patch-keyboard
-    OPT_EXTEND_EDGE                = 0x1000 # Option to extend edge keys to fill spaces.
-    OPT_NO_EXTEND_SPACE            = 0x2000 # Option to not expand space character to maximum extent.
-    OPT_MAP_SPECIAL_KEYS           = 0x4000 # Options to map special key tags and use premade text instead of mapped font character (Ret, Del, Esc, Aa, ?123, Abc)
-    OPT_INVERT_SPECIAL             = 0x8000 # Option to invert colours of special keys.
-    OPT_PRESSED                    = 0x00ff # Option to show key with matching tag code in this byte as pressed.
-
-    # patch-plotgraph
-    OPT_PLOTHORIZONTAL             = 0x0000      # Option to plot graph horizontally, data on Y-axis
-    OPT_PLOTVERTICAL               = 0x1000      # Option to plot graph vertically, data on X-axis
-    OPT_PLOTFILTER                 = 0x2000      # Option to remove duplicate points
-    OPT_PLOTINVERT                 = 0x4000      # Option to invert data
-    OPT_PLOTOVERLAY                = 0x8000
+    # Bitmap formats
 
     FORMAT_ARGB1555                       = 0
     FORMAT_L1                             = 1
@@ -377,6 +331,8 @@ class EVE2:
     FORMAT_COMPRESSED_RGBA_ASTC_8x6_KHR   = 0x93b6
     FORMAT_COMPRESSED_RGBA_ASTC_8x8_KHR   = 0x93b7
 
+    # Begin types
+
     BEGIN_BITMAPS                        = 1
     BEGIN_POINTS                         = 2
     BEGIN_LINES                          = 3
@@ -387,6 +343,8 @@ class EVE2:
     BEGIN_EDGE_STRIP_B                   = 8
     BEGIN_RECTS                          = 9
 
+    # Test conditions
+
     TEST_NEVER                          = 0
     TEST_LESS                           = 1
     TEST_LEQUAL                         = 2
@@ -396,11 +354,17 @@ class EVE2:
     TEST_NOTEQUAL                       = 6
     TEST_ALWAYS                         = 7
 
+    # Filter types
+
     FILTER_NEAREST                        = 0
     FILTER_BILINEAR                       = 1
 
+    # Wrap methods
+
     WRAP_BORDER                         = 0
     WRAP_REPEAT                         = 1
+
+    # Blend functions
 
     BLEND_ZERO                           = 0
     BLEND_ONE                            = 1
@@ -409,6 +373,8 @@ class EVE2:
     BLEND_ONE_MINUS_SRC_ALPHA            = 4
     BLEND_ONE_MINUS_DST_ALPHA            = 5
 
+    # Stencil functions
+
     STENCIL_ZERO                           = 0
     STENCIL_KEEP                           = 1
     STENCIL_REPLACE                        = 2
@@ -416,10 +382,14 @@ class EVE2:
     STENCIL_DECR                           = 4
     STENCIL_INVERT                         = 5
 
+    # Touch mode types
+
     TOUCHMODE_OFF                  = 0
     TOUCHMODE_ONESHOT              = 1
     TOUCHMODE_FRAME                = 2
     TOUCHMODE_CONTINUOUS           = 3
+
+    # Touch controller settings
 
     TOUCH_100KHZ                   = 0x800
     TOUCH_400KHZ                   = 0x000
@@ -430,8 +400,12 @@ class EVE2:
     TOUCH_TSC2007                  = 5
     TOUCH_QUICKSIM                 = 0x8000
 
+    # Display list swap conditions
+
     DLSWAP_DONE                    = 0
     DLSWAP_FRAME                   = 2
+
+    # Interrupts
 
     INT_SWAP                       = 0x01
     INT_TOUCH                      = 0x02
@@ -442,34 +416,50 @@ class EVE2:
     INT_CMDFLAG                    = 0x40
     INT_CONVCOMPLETE               = 0x80
 
+    # Audio sample types
+
     SAMPLES_LINEAR                 = 0
     SAMPLES_ULAW                   = 1
     SAMPLES_ADPCM                  = 2
     SAMPLES_S16                    = 3
     SAMPLES_S16S                   = 4
 
+    # Colour filters
+
     RED                            = 2
     GREEN                          = 3
     BLUE                           = 4
     ALPHA                          = 5
 
+    # ADC type
+
     ADC_SINGLE_ENDED           = 0
     ADC_DIFFERENTIAL           = 1
+
+    # Animation control
 
     ANIM_ONCE                      = 0
     ANIM_LOOP                      = 1
     ANIM_HOLD                      = 2
 
+    # Circular gradient types
+
     CGRADIENT_CORNER_ZERO                    = 0
     CGRADIENT_EDGE_ZERO                      = 1
 
+    # Touch mode function
+
     CTOUCHMODE_EXTENDED           = 0
     CTOUCHMODE_COMPATIBILITY      = 1
+
+    # Flash status
 
     FLASH_STATUS_INIT              = 0
     FLASH_STATUS_DETACHED          = 1
     FLASH_STATUS_BASIC             = 2
     FLASH_STATUS_FULL              = 3
+
+    # ROM FONT information
 
     ROMFONT_WIDTHS = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
         8,8,8,8,10,13,14,17,24,30, 
@@ -484,14 +474,15 @@ class EVE2:
         FORMAT_L4,FORMAT_L4,FORMAT_L4,FORMAT_L4 ]
     
     # Definitions used for target display resolution selection
-    WQVGA   = 480     # e.g. VM800B with 5" or 4.3" display
-    WVGA    = 800     # e.g. ME813A-WH50C or VM816
-    WSVGA   = 1024    # e.g. ME817EV with 7" display
-    WXGA    = 1280    # e.g. ME817EV with 10.1" display
-    HD      = 1920    # e.g. 10" high definition display
+    WQVGA   = 480       # e.g. VM800B with 5" or 4.3" display
+    WVGA    = 800       # e.g. ME813A-WH50C or VM816
+    WSVGA   = 1024      # e.g. ME817EV with 7" display
+    WXGA    = 1280      # e.g. ME817EV with 10.1" display
+    WUXGA   = 19201200  # e.g. 10" high definition display
+    HD      = 19201080  # e.g. 15" high definition display
 
     # Select the resolution
-    DISPLAY_RES = HD
+    DISPLAY_RES = WUXGA
 
     # Explicitly disable QuadSPI
     QUADSPI_ENABLE = 0
@@ -580,6 +571,10 @@ class EVE2:
         self.cs(True)
         self.wr(a, struct.pack("I", v))
         self.cs(False)
+
+    # Get the highest available memory address for programs
+    def getmemory(self):
+        return self.topmem
 
     # Query the co-processor RAM_CMD space.
     # When the co-processor is idle this will be FIFO_MAX.
@@ -835,7 +830,9 @@ class EVE2:
         return message
 
     # Setup the EVE registers to match the surface created.
-    def panel(self, surface, panelset=None, touch=None):
+    def panel(self, surface, panelset=None, touch=None, topmem=0x7d80000):
+        self.topmem = topmem
+
         self.LIB_BeginCoProList()
         self.CMD_RENDERTARGET(*surface)
         self.CLEAR()
@@ -888,9 +885,7 @@ class EVE2:
             self.EVE_DISP_CSPREAD = panelset.cspread
             self.EVE_DISP_DITHER = panelset.dither
 
-        if touch == None:
-            self.EVE_TOUCH_CONFIG = ((0x5d << 4) | (2) | (1 << 11)) # Goodix GT911
-        else:
+        if touch:
             self.EVE_TOUCH_CONFIG = ((touch.address << 4) | (touch.type) | (1 << 11)) 
 
         self.CMD_REGWRITE(self.REG_HSIZE, self.EVE_DISP_WIDTH)
@@ -1669,161 +1664,3 @@ class EVE2:
     # CMD_LOADPATCH(uint32_t options)
     def CMD_LOADPATCH(self, *args):
         self.cmd(0x82, 'I', [ int(arg) for arg in args ])
-
-    # CMD_REGION(void)
-    def CMD_REGION(self, *args):
-        self.cmd0(0x8f)
-
-    # CMD_ENDREGION(int16_t x, int16_t y, int16_t w, int16_t h)
-    def CMD_ENDREGION(self, *args):
-        self.cmd(0x90, 'hhhh', [ int(arg) for arg in args ])
-
-    # CMD_SDBLOCKWRITE(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
-    def CMD_SDBLOCKWRITE(self, *args):
-        self.cmd(0x70, 'IIII', [ int(arg) for arg in args ])
-
-    def LIB_SDBlockWrite(self, dst, src, count):
-        self.CMD_SDBLOCKWRITE(dst, src, count, 0)
-        return self.previous()
-
-    # CMD_FSWRITE (uint32_t dst, const char* filename, uint32_t result)
-    def CMD_FSWRITE(self, *args):
-        self.cmd(0x91, 'I', [int(args[0])])
-        self.cstring(args[1])
-        self.c4(int(args[2]))
-
-    def LIB_FSWrite(self, dst, filename):
-        self.CMD_FSWRITE(dst, filename, 0)
-        return self.previous()
-
-    # CMD_FSFILE (uint32_t size, const char* filename, uint32_t result)
-    def CMD_FSFILE(self, *args):
-        self.cmd(0x92, 'I', [int(args[0])])
-        self.cstring(args[1])
-        self.c4(int(args[2]))
-
-    def LIB_FSFile(self, size, filename):
-        self.CMD_FSFILE(size, filename, 0)
-        return self.previous()
-        
-    # CMD_FSSNAPSHOT (uint32_t temp, const char* filename, uint32_t result)
-    def CMD_FSSNAPSHOT(self, *args):
-        self.cmd(0x93, 'I', [int(args[0])])
-        self.cstring(args[1])
-        self.c4(int(args[2]))
-
-    def LIB_FSSnapShot(self, temp, filename):
-        self.CMD_FSSNAPSHOT(temp, filename, 0)
-        return self.previous()
-
-    # CMD_FSCROPSHOT (uint32_t temp, const char* filename, int16_t x, int16_t y, uint16_t w, uint16_t h)
-    def CMD_FSCROPSHOT(self, *args):
-        self.cmd(0x94, 'I', [int(args[0])])
-        self.cstring(args[1])
-        self.cc(struct.pack('hhHH', [ int(arg) for arg in args[2:6] ] ))
-        self.c4(int(args[6]))
-
-    def LIB_FSCropShot(self, temp, filename, x, y, w, h):
-        self.CMD_FSCROPSHOT(temp, filename, x, y, w, h, 0)
-        return self.previous()
-
-    # CMD_SEVENSEG(int16_t x, int16_t y, uint16_t s, uint16_t n)
-    def CMD_SEVENSEG(self, *args):
-        self.cmd(0x98, 'hhHH', [ int(arg) for arg in args ])
-
-    # CMD_MESSAGEBOX(int16_t font, uint16_t options, const char* s)
-    def CMD_MESSAGEBOX(self, *args):
-        self.cmd(0x99, 'hH', [ int(arg) for arg in args[:2] ])
-        self.fstring(args[2:])
-
-    # CMD_TOOLTIP(int16_t x, int16_t y, int16_t font, uint16_t options, const char* s)
-    def CMD_TOOLTIP(self, *args):
-        self.cmd(0x9a, 'hhhH', [ int(arg) for arg in args[:4] ])
-        self.fstring(args[4:])
-
-    # CMD_TEXTSCALE(int16_t x, int16_t y, int16_t font, uint16_t options, uint32_t scale, const char* s)
-    def CMD_TEXTSCALE(self, *args):
-        self.cmd(0x95, 'hhhHI', [ int(arg) for arg in args[:5] ])
-        self.fstring(args[5:])
-
-    # CMD_TEXTANGLE(int16_t x, int16_t y, int16_t font, uint16_t options, uint32_t angle, const char* s)
-    def CMD_TEXTANGLE(self, *args):
-        self.cmd(0x96, 'hhhHI', [ int(arg) for arg in args[:5] ])
-        self.fstring(args[5:])
-
-    # CMD_TEXTTICKER(int16_t x, int16_t y, uint16_t w, uint16_t h, int16_t font, uint16_t options, uint32_t pos, const char* s)
-    def CMD_TEXTTICKER(self, *args):
-        self.cmd(0x97, 'hhHHhHi', [ int(arg) for arg in args[:7] ])
-        self.fstring(args[7:])
-
-    # CMD_TEXTSIZE(int16_t font, uint16_t options, const char* s, uint16_t w, uint16_t h)
-    def CMD_TEXTSIZE(self, *args):
-        self.cmd(0xaa, 'hH', [ int(arg) for arg in args[:2] ])
-        self.fstring((args[2],))
-        self.c4(args[3])
-
-    def LIB_TextSize(self, font, options, s):
-        self.CMD_TEXTSIZE(font, options, s, 0)
-        wh = self.previous()
-        return ((wh >> 16) & 0xffff, wh & 0xffff)
-
-    # CMD_KEYBOARD(int16_t x, int16_t y, uint16_t w, uint16_t h, int16_t font, uint16_t options, const char* s)
-    def CMD_KEYBOARD(self, *args):
-        self.cmd(0x9b, 'hhHHhH', [ int(arg) for arg in args[:6] ])
-        self.fstring(args[6:])
-
-    # CMD_MEMORYINIT(uint32_t address, uint32_t size)
-    def CMD_MEMORYINIT(self,*args):
-        self.cmd(0x9c, "II", [ int(arg) for arg in args ])
-
-    # CMD_MEMORYMALLOC(uint32_t size, uint32_t address)
-    def CMD_MEMORYMALLOC(self, *args):
-        self.cmd(0x9d, "II", [ int(arg) for arg in args ])
-
-    def LIB_MemoryMalloc(self, size):
-        self.CMD_MEMORYMALLOC(size, 0);
-        return self.previous()
-
-    # CMD_MEMORYFREE(uint32_t address, uint32_t size)
-    def CMD_MEMORYFREE(self, *args):
-        self.cmd(0x9e, "II", [ int(arg) for arg in args ])
-
-    def LIB_MemoryFree(self, address):
-        self.CMD_MEMORYFREE(address, 0);
-        return self.previous()
-
-    # CMD_MEMORYBITMAP(uint16_t fmt, uint16_t w, uint16_t h, uint16_t addn, uint32_t address)
-    def CMD_MEMORYBITMAP(self, *args):
-        self.cmd(0xa9, "HHHHI", [ int(arg) for arg in args ])
-
-    def LIB_MemoryBitmap(self, fmt, w, h, addn):
-        self.CMD_MEMORYBITMAP(fmt, w, h, addn, 0);
-        return self.previous()
-    
-    # CMD_PLOTDRAW(uint32_t addr, uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale)
-    def CMD_PLOTDRAW(self, *args):
-        self.cmd(0xab, "IHHhhIII", [ int(arg) for arg in args ])
-
-    # CMD_PLOTSTREAM(uint16_t len, uint16_t opt, int16_t x, int16_t y, uint32_t xscale, uint32_t yscale")
-    def CMD_PLOTSTREAM(self, *args):
-        self.cmd(0xac, "HHhhIII", [ int(arg) for arg in args ])
-
-    # CMD_PLOTBITMAP(uint32_t addr, uint16_t len, uint16_t opt, uint32_t handle)
-    def CMD_PLOTBITMAP(self, *args):
-        self.cmd(0xad, "IHHI", [ int(arg) for arg in args ])
-
-    # CMD_LVDSINIT(uint16_t setup, uint16_t ctrl)
-    def CMD_LVDSINIT(self, *args):
-        self.cmd(0x9f, 'HH', [ int(arg) for arg in args ])
-
-    # CMD_LVDSCONN(uint32_t connected")
-    def CMD_LVDSCONN(self, *args):
-        self.cmd(0xa0, 'I', [ int(arg) for arg in args ])
-
-    # CMD_LVDSSTOP(void)
-    def CMD_LVDSSTOP(self, *args):
-        self.cmd0(0xa1)
-
-    # CMD_LVDSSTART(void)
-    def CMD_LVDSSTART(self, *args):
-        self.cmd0(0xa2)

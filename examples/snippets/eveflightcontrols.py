@@ -115,6 +115,8 @@ def altwidget(eve, x, y, radius, alt):
     eve.VERTEX2F(x, y)
     eve.RESTORE_CONTEXT()
 
+    eve.SAVE_CONTEXT()
+    eve.COLOR(alt_reference)
     # Indicators choose a font which is about 1/5th of the radius
     font = len(eve.ROMFONT_HEIGHTS)
     for n in reversed(eve.ROMFONT_HEIGHTS):
@@ -130,6 +132,8 @@ def altwidget(eve, x, y, radius, alt):
 
         eve.CMD_TEXT(x, y - (radius_inner * 3 / 10), font, eve.OPT_CENTER, "Altitude")
         eve.CMD_TEXT(x, y + (radius_inner * 3 / 10), font, eve.OPT_CENTER, "10000ft")
+    eve.RESTORE_CONTEXT()
+
     # Altitude needle
     eve.SAVE_CONTEXT()
     eve.CLEAR(0,1,0)
