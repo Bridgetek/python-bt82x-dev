@@ -76,7 +76,7 @@ class run:
             
         # Check that there is a write method for the connector.
         eve.register(eve)
-        eve.ramgsize = (int(args.ram) << 25)
+        eve.ramgsize = (int(args.ram) << 27)
         # The top 0x280000 of RAM_G is reserved
         eve.ramgtop = eve.ramgsize - 0x280000
 
