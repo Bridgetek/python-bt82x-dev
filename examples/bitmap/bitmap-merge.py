@@ -79,13 +79,13 @@ def convert(eve, im, fmt, dither = False):
 
     return bb
 
-def oe_merge(eve, dst, src0, src1):
+def oe_merge(eve, dst, src0, src1, mask):
+    # Draw mask bitmap in RAM
+    eve.CMD_MEMWRITE(mask.addr, 4)
+    eve.c4(0xff00)
     eve.CMD_RENDERTARGET(*dst)
-
-    scratch = eve.ramgtop # maximum allowable address in RAM_G
-    mask = bteve2.Surface(scratch, eve.FORMAT_L8, 2, 1)
-
     eve.CMD_SETBITMAP(*mask)
+    # Change the bitmap to a size of 0,0 - special meaning of infinite size bitmap
     eve.BITMAP_SIZE(eve.FILTER_NEAREST, eve.WRAP_REPEAT, eve.WRAP_REPEAT, 0, 0)
     eve.BITMAP_SIZE_H(0, 0)
 
@@ -124,12 +124,13 @@ def bitmap_merge(eve):
     src0 = bteve2.Surface(block_addr * 1, fmt, w, h)
     src1 = bteve2.Surface(block_addr * 2, fmt, w, h)
     dst = bteve2.Surface(block_addr * 3, fmt, 2 * w, h)
+    mask = bteve2.Surface(block_addr * 4, eve.FORMAT_L8, 2, 1)
 
     eve.LIB_BeginCoProList()
     iload(eve, src0.addr, convert(eve, im0, fmt))
     iload(eve, src1.addr, convert(eve, im1, fmt))
 
-    oe_merge(eve, dst, src0, src1)
+    oe_merge(eve, dst, src0, src1, mask)
     eve.CMD_GRAPHICSFINISH()
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
