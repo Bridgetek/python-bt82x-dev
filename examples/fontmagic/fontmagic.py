@@ -1,5 +1,5 @@
 # Typical command line:
-# python fontmagic.py --connector ft4232h ascii fonts\L4\Roboto-BoldCondensed_50_L4.raw -d 0x400 -l 32
+# python fontmagic.py --connector ft4222module standard assets/Roboto-BoldCondensed_32_L4.raw -d 0 -l 32
 import sys
 import struct
 import zlib
