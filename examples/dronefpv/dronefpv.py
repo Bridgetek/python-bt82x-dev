@@ -1,5 +1,5 @@
 # Typical command line:
-# python attitude.py --connector ft4222module
+# python dronefpv.py --connector ft4222module
 import sys
 import math
 import struct
