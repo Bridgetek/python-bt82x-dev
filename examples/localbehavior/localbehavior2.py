@@ -92,9 +92,11 @@ def localbehavior_2(eve):
         bd._if(eve.REG_TOUCH_TAG, eve.TEST_EQUAL, i + 1)    # {
         s = state + 4 * i
         bd._if(s, eve.TEST_EQUAL, 0)                        # {
-        bd.CMD_REGWRITE(s, 1)
+        bd.CMD_MEMWRITE(s, 4)
+        bd.c4(1)
         bd._else()                                          # }{
-        bd.CMD_REGWRITE(s, 0)
+        bd.CMD_MEMWRITE(s, 4)
+        bd.c4(0)
         bd._endif()                                         # }
         bd._endif()                                         # }
     bd._endif()                                             # }
