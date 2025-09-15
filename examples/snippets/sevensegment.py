@@ -78,7 +78,7 @@ def cmd_sevenseg(eve, x, y, size, digit, fgcolour = (255,0,0), bgcolour = (20,0,
 
     eve.VERTEX_FORMAT(2)
     eve.COLOR_MASK(0, 0, 0, 1)
-    eve.BLEND_FUNC(1, 4)
+    eve.BLEND_FUNC(eve.BLEND_ONE, eve.BLEND_ONE_MINUS_SRC_ALPHA)
     # Top segment
     eve.BEGIN(eve.BEGIN_LINES)
     eve.LINE_WIDTH(width * 8)
@@ -116,7 +116,7 @@ def cmd_sevenseg(eve, x, y, size, digit, fgcolour = (255,0,0), bgcolour = (20,0,
     eve.VERTEX2F(right, bottom)
 
     # Draw mesh frame for segments
-    eve.BLEND_FUNC(0, 4)
+    eve.BLEND_FUNC(eve.BLEND_ZERO, eve.BLEND_ONE_MINUS_SRC_ALPHA)
     eve.LINE_WIDTH(width * 0.9 * 8)
     eve.BEGIN(eve.BEGIN_LINE_STRIP)
     eve.VERTEX2F(pt0lx, pt0ly)
@@ -132,7 +132,7 @@ def cmd_sevenseg(eve, x, y, size, digit, fgcolour = (255,0,0), bgcolour = (20,0,
     eve.VERTEX2F(pt2lx, pt3ly)
 
     eve.COLOR_MASK(1, 1, 1, 0)
-    eve.BLEND_FUNC(3, 1)
+    eve.BLEND_FUNC(eve.BLEND_DST_ALPHA, eve.BLEND_ONE)
     # Top segment
     seg(digit, 0)
     eve.BEGIN(eve.BEGIN_LINES)
@@ -175,7 +175,7 @@ def cmd_sevenseg(eve, x, y, size, digit, fgcolour = (255,0,0), bgcolour = (20,0,
     eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(left, bottom)
     eve.VERTEX2F(right, bottom)
-    eve.BLEND_FUNC(1, 4)
+    eve.BLEND_FUNC(eve.BLEND_ONE, eve.BLEND_ONE_MINUS_SRC_ALPHA)
     
     if region:
         eve.CMD_ENDREGION(left - width, top - width, right + width, bottom + width)
