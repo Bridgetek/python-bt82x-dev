@@ -479,7 +479,7 @@ class EVE2:
     WSVGA   = 1024      # e.g. ME817EV with 7" display
     WXGA    = 1280      # e.g. ME817EV with 10.1" display
     WUXGA   = 19201200  # e.g. 10" high definition display
-    HD      = 19201080  # e.g. 15" high definition display
+    FHD     = 19201080  # e.g. 15" full high definition display
 
     # Select the resolution
     DISPLAY_RES = WUXGA
