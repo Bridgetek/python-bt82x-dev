@@ -46,7 +46,7 @@ All platforms will require a working up-to-date installation of __python 3.13.x_
 pip install pyftdi
 ```
 
-This code may also be used with [circuitpython](https://circuitpython.org/), however __this is not yet supported__.
+This code may also be used with [circuitpython](https://circuitpython.org/). 
 
 #### Windows Setup
 
@@ -141,7 +141,7 @@ The cable or board connections are identical to the (#MPSSE Cables) section.
 
 ### CircuitPython Interface
 
-Embedded MCUs which support the `busio` and `digitalio` modules can be interfaced to the BT82x using the `circuitpython` connector. 
+Embedded MCUs which support the `busio` and `digitalio` modules can be interfaced to the BT82x using the `circuitpython` connector.
 
 #### Software Setup
 
@@ -157,15 +157,13 @@ For development, individual files can be converted to `.mpy` format using the `m
 pip install mpy-cross
 ```
 
-In future the code here may be distributed as an installable module for circuitpython.
-
 ## Files and Folder Structure
 
 The source code in this repository is structured as follows:
 
 | File/Folder | Description |
 | --- | --- |
-| [bteve2](bteve2) | Module and library code for BT82x |
+| [bteve2](bteve2) | Module, connectors and library code for BT82x |
 | [docs](docs) | Documentation and images for documentation |
 | [examples](examples) | Example code which use this module |
 | [apprunner.py](apprunner.py) | Wrapper code to setup library, connector and application |

@@ -66,10 +66,11 @@ class connector():
             # At a 20MHz SPI bus the timeout is approximately 140 clock cycles.
             # On FT4222H the spiMaster_EndTransaction will take 11uS.
             # This is T0 (12.5nS for 80MHz clock) * 880 clocks from Datasheet.
-            # Read a maximum of 8 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 16 + nn)
+            # Read a maximum of 16 bytes before the "0x01" that signifies data ready.
+            n = min(a1 - a, 0x8000)
             if self.multi_mode:
                 bb = self.devA.spiMaster_MultiReadWrite(b'', self.addr(a), 16 + n)
+                # Read until the "0x01" that signifies data ready.
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
@@ -84,6 +85,7 @@ class connector():
                 def recv(n):
                     return self.devA.spiMaster_SingleRead(n, False)
                 bb = recv(16 + n)
+                # Read until the "0x01" that signifies data ready.
                 if 1 in bb:
                     # Got READY byte in response
                     i = bb.index(1)
@@ -180,7 +182,7 @@ class connector():
                 while not fault and self.rd32(eve.EVE2.REG_BOOT_STATUS) != 0x522e2e2e:
                     fault = 1e-9 * (time.monotonic_ns() - t0) > 0.1
                 if fault:
-                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.EVE2.BOOT_STATUS):08x}, retrying...]")
+                    print(f"[Timeout waiting for REG_BOOT_STATUS, stuck at {self.rd32(eve.EVE2.REG_BOOT_STATUS):08x}, retrying...]")
                     continue
                 actual = self.rd32(eve.EVE2.REG_FREQUENCY)
                 if actual != self.FREQUENCY:

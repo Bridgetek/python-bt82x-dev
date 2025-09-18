@@ -1,5 +1,5 @@
 # Typical command line:
-# python fontmagic.py --connector ft4222module standard assets/Roboto-BoldCondensed_32_L4.raw -d 0 -l 32
+# python fontmagic2.py --connector ft4222module standard assets/Roboto-BoldCondensed_32_L4.raw -d 0 -l 32
 import sys
 import struct
 import zlib
@@ -14,6 +14,8 @@ sys.path.append('../snippets')
 
 # This module provides the connector to the EVE hardware.
 import apprunner
+# Import the patch file required by this code.
+import patch_fontmagic as patch
 
 # Target EVE device.
 family = "BT82x"
@@ -266,7 +268,7 @@ def cmd_textzoom(eve, x, y, fontcache, zoom, text):
 
 def fontmagic(eve):
     # Default/unset parameters.
-    address = 0
+    address = 256
     first_character = 32
     # Handles for fonts to use in the test.
     romfont = 24
@@ -328,6 +330,7 @@ def fontmagic(eve):
         eve.LIB_WriteDataToCMD(pad4(zlib.compress(dd)))
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
+    """print(f"0x{address:x}: 0x{eve.rd32(address):08x} 0x{eve.rd32(address+4):08x} 0x{eve.rd32(address+8):08x} 0x{eve.rd32(address+12):08x}")"""
 
     # Update the font table with the custom font.
     print("Setfont...")
@@ -338,16 +341,14 @@ def fontmagic(eve):
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
-    # Obtain details on custom installed fonts from RAM_G.
-    print("Get custom font info...")
-    customfontcache = getcustomfontinfo(eve, customfont, address, first_character)
-    assert(customfontcache)
-    print(customfontcache)
-
-    # Obtain details of a ROM font.
-    print("Get ROM font info...")
-    romfontcache = getromfontinfo(eve, romfont)
-    assert(romfontcache)
+    eve.LIB_BeginCoProList()
+    eve.CMD_DLSTART()
+    eve.CMD_TEXTDIM(0, romfont, 0, "X")
+    eve.CMD_TEXTDIM(16, customfont, 0, "X")
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
+    romfontsize = eve.rd32(0)
+    customfontsize = eve.rd32(16)
 
     print("Draw test screen...")
     # Start drawing test screen.
@@ -363,38 +364,38 @@ def fontmagic(eve):
         y = 100
         x = 100
         eve.CMD_TEXT(x, y, customfont, 0, "Custom font text")
-        y += getheight(customfontcache)
-        cmd_textzoom(eve, x, y, customfontcache, 2, "Custom zoomed in text!")
-        y += (2 * getheight(customfontcache))
-        cmd_textzoom(eve, x, y, customfontcache, 4, "Custom more zoomed in text!")
+        y += customfontsize
+        eve.CMD_TEXTSCALE(x, y, customfont, 0, 0x20000, "Custom zoomed in text!")
+        y += (2 * customfontsize)
+        eve.CMD_TEXTSCALE(x, y, customfont, 0, 0x40000, "Custom more zoomed in text!")
         y = 100
-        x = x - getheight(customfontcache)
-        cmd_textrotate(eve, x, y, customfontcache, "Custom rotated text!")
+        x = x - customfontsize
+        eve.CMD_TEXTANGLE(x, y, customfont, 0, 0x4000, "Custom rotated text!")
         y = 100
         x = 600
         # Draw test text using a ROM font.
         eve.CMD_TEXT(x, y, romfont, 0, "ROM font text")
-        y += getheight(romfontcache)
-        cmd_textzoom(eve, x, y, romfontcache, 0.5, "ROM zoomed out text!")
+        y += romfontsize
+        eve.CMD_TEXTSCALE(x, y, romfont, 0, 0x8000, "ROM zoomed out text!")
         y = 100
-        x = x - getheight(romfontcache)
-        cmd_textrotate(eve, x, y, romfontcache, "ROM rotated text!")
+        x = x - romfontsize
+        eve.CMD_TEXTANGLE(x, y, romfont, 0, 0x4000, "ROM rotated text!")
 
     elif args.action == actions[1]:
         y = 100
         # Draw test text of all ASCII characters.
         eve.CMD_TEXT(100, y, customfont, 0, "!\"#$%&'()*+,-./0123456789:;<=>?")
-        y += getheight(customfontcache)
+        y += customfontsize
         eve.CMD_TEXT(100, y, customfont, 0, "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_")
-        y += getheight(customfontcache)
+        y += customfontsize
         eve.CMD_TEXT(100, y, customfont, 0, "`abcdefghijklmnopqrstuvwxyz{|}")
-        y += getheight(customfontcache)
+        y += customfontsize
         eve.CMD_TEXT(100, y, romfont, 0, "!\"#$%&'()*+,-./0123456789:;<=>?")
-        y += getheight(romfontcache)
+        y += romfontsize
         eve.CMD_TEXT(100, y, romfont, 0, "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_")
-        y += getheight(romfontcache)
+        y += romfontsize
         eve.CMD_TEXT(100, y, romfont, 0, "`abcdefghijklmnopqrstuvwxyz{|}")
-        y += getheight(romfontcache)
+        y += romfontsize
 
     elif args.action == actions[2]:
         # To be used with `fnt_cvt.py` with font files create with the option 
@@ -406,20 +407,20 @@ def fontmagic(eve):
         # Miss out \x0a since that is a carriage return to CMD_TEXT.
         eve.CMD_TEXT(100, y, customfont, eve.OPT_FILL, "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0d\x0e\x0f" \
                     "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f")
-        y += getheight(customfontcache)
+        y += customfontsize
         eve.CMD_TEXT(100, y, customfont, 0, "\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f" \
                     "\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x3a\x3b\x3c\x3d\x3e\x3f")
-        y += getheight(customfontcache)
+        y += customfontsize
         eve.CMD_TEXT(100, y, customfont, 0, "\x40\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4a\x4b\x4c\x4d\x4e\x4f" \
                     "\x50\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5a\x5b\x5c\x5d\x5e\x5f")
-        y += getheight(customfontcache)
-        cmd_textzoom(eve, 100, y, customfontcache, 2, "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0d\x0e\x0f" \
+        y += customfontsize
+        eve.CMD_TEXTSCALE(100, y, customfont, 2, "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0d\x0e\x0f" \
                     "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f")
-        y += (2 * getheight(customfontcache))
-        cmd_textzoom(eve, 100, y, customfontcache, 2, "\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f" \
+        y += (2 * customfontsize)
+        eve.CMD_TEXTSCALE(100, y, customfont, 2, "\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f" \
                     "\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x3a\x3b\x3c\x3d\x3e\x3f")
-        y += (2 * getheight(customfontcache))
-        cmd_textzoom(eve, 100, y, customfontcache, 2, "\x40\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4a\x4b\x4c\x4d\x4e\x4f" \
+        y += (2 * customfontsize)
+        eve.CMD_TEXTSCALE(100, y, customfont, 2, "\x40\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4a\x4b\x4c\x4d\x4e\x4f" \
                     "\x50\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5a\x5b\x5c\x5d\x5e\x5f")
 
     eve.DISPLAY()
@@ -427,4 +428,4 @@ def fontmagic(eve):
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
-apprunner.run(fontmagic)
+apprunner.run(fontmagic, patch)

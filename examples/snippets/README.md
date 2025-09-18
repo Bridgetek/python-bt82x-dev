@@ -9,6 +9,7 @@ The `snippets` directory contains code that is used in the examples for the Pyth
 - [Widgets](#widgets)
   - [Seven Segment LED Widget](#Seven-Segment-LED-Widget)
   - [VU Meter Widget](#vu-meter-widget)
+  - [Flight Control Widgets](#flight-control-widgets)
 - [Utilities](#utilities)
   - [Screenshot Utility](#python-screenshot-utility)
   - [Image Size Utility](#python-image-size-utility)
@@ -25,6 +26,7 @@ There are several widgets in the directory:
 | --- | --- |
 | [sevensegment.py](#Seven-Segment-LED-Widget) | Seven segement LED code |
 | [vumeter.py](#vu-meter-widget) | VU meter code |
+| [eveflightcontrols.py](#flight-control-widgets) | Flight control code |
 
 ### Seven Segment LED Widget
 
@@ -79,6 +81,60 @@ while True:
     vu_prev1 = vumeter.cmd_vumeter(eve, 100, 100, 300, 200, vu_level, vu_prev1, 5)
 ```
 
+### Flight Control Widgets
+
+These widgets will simulate an aeroplane altitude indicator and attitude indicator. The file has both indicators included.
+
+#### Flight Control Altitude Indicator
+
+This is a simulation of an altitude indicator. It reads from zero to 10000 feet. It has 2 hands measuring thousands and hundreds of feet.
+
+The altitude is specified in the call. It is clamped to 0 to 10000 feet as a real-life altitude indicator would.
+
+![Altitude Indicator](docs/altitude.png)
+
+_Calling format:_
+
+   `eveflightcontrols.altwidget(eve, x, y, radius, alt)`
+
+_Parameters:_
+
+-   **x,y**: Location of the centre of the widget (in pixels).
+-   **radius**: Radius of the widget dial (in pixels).
+-   **alt**: Altitude to render.
+
+_Example:_
+
+```
+eveflightcontrols.altwidget(eve, 300, 300, 200, 4382)
+```
+
+#### Flight Control Attitude Indicator
+
+This is a simulation of an attitude indicator. It displays pitch, roll and climb.
+
+The pitch, roll and climb are specified in the call and are in degrees. The range of pitch and climb must be between -90 degrees and + 90 degrees. Roll may be between -180 degrees and +180 degrees. 
+
+![Attitude Indicator](docs/attitude.png)
+
+_Calling format:_
+
+   `eveflightcontrols.attwidget(eve, x, y, radius, pitch, climb, roll)`
+
+_Parameters:_
+
+-   **x,y**: Location of the centre of the widget (in pixels).
+-   **radius**: Radius of the widget dial (in pixels).
+-   **pitch**: Pitch angle in degrees.
+-   **climb**: Climb angle in degrees.
+-   **roll**: Roll angle in degrees.
+
+_Example:_
+
+```
+eveflightcontrols.altwidget(eve, 300, 300, 200, +5, -10, -30)
+```
+
 ## Python Utilities
 
 | File/Folder | Description |
@@ -114,7 +170,7 @@ eve.CLEAR_COLOR_RGB(64,72,64)
 eve.CLEAR(1,1,1)
 drawscreen(eve)
 eve.DISPLAY()
-screenshot.cmd_screenshot(eve, "segments.bmp")
+evescreenshot.cmd_screenshot(eve, "segments.bmp")
 eve.CMD_SWAP()
 eve.LIB_EndCoProList()
 eve.LIB_AwaitCoProEmpty()

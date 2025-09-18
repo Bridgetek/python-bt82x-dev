@@ -11,10 +11,11 @@ sys.path.append('../../bteve2')
 
 # This module provides the connector to the EVE hardware.
 import apprunner
+# Import the patch file required by this code.
+import patch_audioloop as patch
 
 # Load the extension code from the "snippets" directory.
 sys.path.append('../snippets')
-import extplotmemsevenseg
 import vumeter
 
 def pad4(s):
@@ -23,9 +24,6 @@ def pad4(s):
     return s
 
 def audioloop(eve):
-
-    # Load extension code
-    print("Extension: ", extplotmemsevenseg.loadpatch(eve))
 
     # Calibrate screen if necessary. 
     # Don't do this for now.
@@ -423,4 +421,4 @@ def audioloop(eve):
             tplotstream = 0
             tcoprocend = 0
 
-apprunner.run(audioloop)
+apprunner.run(audioloop, patch)

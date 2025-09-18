@@ -202,8 +202,8 @@ class connector():
         while a != a1:
             # Timout for a read is 7uS for BT82x.
             # At a 20MHz SPI bus the timout is approximately 140 clock cycles.
-            # Read a a maximum of 4 bytes before the "0x01" that signifies data ready.
-            n = min(a1 - a, 4 + nn)
+            # Read a maximum of 16 bytes before the "0x01" that signifies data ready.
+            n = min(a1 - a, 0x8000)
             msg = (struct.pack("<BH", 0x11, 3) + self.addr(a))
             self.raw_write(self.csel() + msg)
             def recv(n):
@@ -212,7 +212,8 @@ class connector():
                    pass
                r = b''.join(self.raw_read(n))
                return r
-            bb = recv(4 + n)
+            bb = recv(16 + n)
+            # Read until the "0x01" that signifies data ready.
             if 1 in bb:             # Got READY byte in response
                 i = bb.index(1)
                 response = bb[i + 1:i + 1 + n]
@@ -272,7 +273,7 @@ class connector():
             # Set DDR, JT and AUD in Boot Control
             exchange(bytes([0xFF, 0xE8, 0xF0, 0x00, 0x00]))
             # CLEAR BootCfgEn
-            exchange(bytes([0xFF, 0xE9, 0xC0, 0x00, 0x00]))
+            exchange(bytes([0xFF, 0xE9, 0xe0, 0x00, 0x00]))
             # Perform a reset pulse
             exchange(bytes([0xFF, 0xE7, 0x00, 0x00, 0x00]))  
             # Set ACTIVE

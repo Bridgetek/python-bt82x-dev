@@ -31,15 +31,23 @@ def crop(eve, dst, src, x, y):
 
 def image_crop(eve):
     source_image = "assets/paris-1280.png"
-    block_addr = 0x400000       # allocate 4MB per block
-    src = bteve2.Surface(block_addr * 5, eve.FORMAT_RGB565, 1280, 720)
+    block_addr = 0x400000       # allocate 4MB for base image
+    src = bteve2.Surface(0, eve.FORMAT_RGB565, 1280, 720)
     eve.LIB_BeginCoProList()
+    eve.BEGIN(eve.BEGIN_BITMAPS)
+    eve.BITMAP_HANDLE(0)
+    # Tell coprocessor to load image from the SPI interface
     eve.CMD_LOADIMAGE(src.addr, 0)
+    # Load the original image from the host hard disk
     eve.cc(pad4(open(source_image, "rb").read()))
+    eve.CMD_SETBITMAP(*src)
+    eve.DISPLAY()
+    eve.CMD_SWAP()
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
-    buf_addr = block_addr * 6
+    # start cropped images after base image allocation
+    buf_addr = block_addr
     dst = bteve2.Surface(buf_addr, eve.FORMAT_RGB565, 320, 180)
 
     for x in range(0, 1280, 320):
@@ -58,9 +66,13 @@ def image_crop(eve):
     eve.CMD_RENDERTARGET(*framebuffer)
     eve.VERTEX_FORMAT(0) # integer coordinates
     eve.BEGIN(eve.BEGIN_BITMAPS)
+    eve.BITMAP_HANDLE(0)
     eve.CMD_SETBITMAP(*src)
     eve.VERTEX2F(220, 210)
 
+    # assign a bitmap handle and reuse it for each cropped image
+    eve.BITMAP_HANDLE(1)
+    
     # top 4
     eve.CMD_SETBITMAP(dst.addr, eve.FORMAT_RGB565, 320, 180)
     eve.VERTEX2F(100, 0)
