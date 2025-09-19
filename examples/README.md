@@ -14,13 +14,16 @@ The following example code is available:
 | [b2tf](b2tf/README.md) | Advanced seven segment demo code |
 | [bitmap](bitmap/README.md) | Simple bitmap demo code |
 | [cruise](cruise/README.md) | Circular click-wheel display demo code |
+| [dronefpv](dronefpv/README.md) | Drone FP Video demo code |
 | [flightdeck](flightdeck/README.md) | Flightdeck example demo code |
 | [fontmagic](fontmagic/README.md) | Simple example code demonstrating scaling and rotating fonts |
+| [ledclock](ledclock/README.md) | led clock demo code |
 | [localbehavior](localbehavior/README.md) | localbehavior button demo code |
 | [plottest](plottest/README.md) | Simple plot graph demo code |
 | [segment](segment/README.md) | Simple seven segment demo code |
 | [simple](simple/README.md) | Simple example code |
 | [teapot](teapot/README.md) | 3D teapot rotation demo code |
+| [touchoffset](touchoffset/README.md) | Touch-offset demo code |
 | [tsd](tsd/README.md) | Time-series data live display, using HISTOGRAM |
 
 ## Widgets and Utilities
