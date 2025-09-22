@@ -79,39 +79,27 @@ def cmd_sevenseg(eve, x, y, size, digit, fgcolour = (255,0,0), bgcolour = (20,0,
     eve.VERTEX_FORMAT(2)
     eve.COLOR_MASK(0, 0, 0, 1)
     eve.BLEND_FUNC(eve.BLEND_ONE, eve.BLEND_ONE_MINUS_SRC_ALPHA)
-    # Top segment
     eve.BEGIN(eve.BEGIN_LINES)
     eve.LINE_WIDTH(width * 8)
+    # Top segment
     eve.VERTEX2F(left, top)
     eve.VERTEX2F(right, top)
     # Top left segment
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(left, top)
     eve.VERTEX2F(left, centre)
     # Top right segment
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(right, top)
     eve.VERTEX2F(right, centre)
     # Centre segment
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(left, centre)
     eve.VERTEX2F(right, centre)
     # Bottom left segment
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(left, centre)
     eve.VERTEX2F(left, bottom)
     # Bottom right segment
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(right, centre)
     eve.VERTEX2F(right, bottom)
     # Bottom segment
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(left, bottom)
     eve.VERTEX2F(right, bottom)
 
@@ -132,47 +120,35 @@ def cmd_sevenseg(eve, x, y, size, digit, fgcolour = (255,0,0), bgcolour = (20,0,
     eve.VERTEX2F(pt2lx, pt3ly)
 
     eve.COLOR_MASK(1, 1, 1, 0)
-    eve.BLEND_FUNC(eve.BLEND_DST_ALPHA, eve.BLEND_ONE)
+    eve.BLEND_FUNC(eve.BLEND_DST_ALPHA, eve.BLEND_ONE_MINUS_DST_ALPHA)
     # Top segment
-    seg(digit, 0)
     eve.BEGIN(eve.BEGIN_LINES)
     eve.LINE_WIDTH(width * 8)
+    seg(digit, 0)
     eve.VERTEX2F(left, top)
     eve.VERTEX2F(right, top)
     # Top left segment
     seg(digit, 1)
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(left, top)
     eve.VERTEX2F(left, centre)
     # Top right segment
     seg(digit, 2)
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(right, top)
     eve.VERTEX2F(right, centre)
     # Centre segment
     seg(digit, 3)
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(left, centre)
     eve.VERTEX2F(right, centre)
     # Bottom left segment
     seg(digit, 4)
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(left, centre)
     eve.VERTEX2F(left, bottom)
     # Bottom right segment
     seg(digit, 5)
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(right, centre)
     eve.VERTEX2F(right, bottom)
     # Bottom segment
     seg(digit, 6)
-    eve.BEGIN(eve.BEGIN_LINES)
-    eve.LINE_WIDTH(width * 8)
     eve.VERTEX2F(left, bottom)
     eve.VERTEX2F(right, bottom)
     eve.BLEND_FUNC(eve.BLEND_ONE, eve.BLEND_ONE_MINUS_SRC_ALPHA)

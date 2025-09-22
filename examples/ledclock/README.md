@@ -4,7 +4,9 @@
 
 ## LED Clock Example
 
-The `ledclock.py` example demonstrates drawing multiple seven segment displays on the same screen. The script uses the `ext-sevenseg` extension to draw the seven segment displays.
+The program `ledclock.py` is included with uses the `sevensegment` snippet code to draw the LEDs. This does not support or show a time colon between the hours and minutes.
+
+The `ledclock2.py` example demonstrates drawing multiple seven segment displays on the same screen. The script uses the `ext-sevenseg` extension to draw the seven segment displays. 
 
 ### Extension
 
@@ -43,6 +45,7 @@ The example contains a single file which comprises all the demo functionality.
 
 | File/Folder | Description |
 | --- | --- |
-| [ledclock.py](ledclock.py) | Example source code file |
+| [ledclock2.py](ledclock.py) | Example source code file using extension patch code |
+| [ledclock.py](ledclock.py) | Example source code file using seven segment snippet code |
 | [patch_ledclock.py](patch_ledclock.py) | Extension loader module from EAB |
 | [docs](docs) | Documentation support files |

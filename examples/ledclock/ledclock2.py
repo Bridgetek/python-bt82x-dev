@@ -9,10 +9,11 @@ sys.path.append('../../bteve2')
 
 # This module provides the connector to the EVE hardware.
 import apprunner
+# Import the patch file required by this code.
+import patch_ledclock as patch
 
 # Load the sevensegment source code from the "snippets" directory.
 sys.path.append('../snippets')
-import sevensegment 
 
 def ledbox(eve, x, y, count, segsize):
     eve.VERTEX_FORMAT(2)
@@ -30,7 +31,7 @@ def lednumber(eve, x, y, count, segsize, value, fg, bg, opt):
     _ = bg
     for i in range(count):
         cmd = (int(value) % 10) + opt
-        sevensegment.cmd_sevenseg(eve, x + ((count - i - 1) * (segsize + (segsize//3))), y, segsize, cmd)
+        eve.CMD_SEVENSEG(x + ((count - i - 1) * (segsize + (segsize//3))), y, segsize, cmd)
         value = value // 10
 
 def tapebox(eve, x, y, w, h):
@@ -56,7 +57,7 @@ def ledclock(eve):
        
         eve.LIB_BeginCoProList()
         eve.CMD_DLSTART()
-        eve.CLEAR_COLOR_RGB(0, 0, 0)
+        eve.CLEAR_COLOR_RGB(0x33, 0x44, 0x55)
         eve.CLEAR(1,1,1)
 
         segsize = 150
@@ -93,12 +94,12 @@ def ledclock(eve):
 
         fill = eve.OPT_FILL if present.microsecond > 500000 else 0
         dx = dx - (3 * segsize)
-        eve.COLOR_RGB(0x0, 0x0, 0x0)
+        eve.COLOR_RGB(0, 0, 0)
         ledbox(eve, dx, dy, 5, segsize)
         dx = dx + (segsize // 3)
         lednumber(eve, dx, dy, 1, segsize, present.hour / 10, fg, bg, 0)
         dx = dx + (3 * segsize // 2)
-        lednumber(eve, dx, dy, 1, segsize, present.hour, fg, bg, 0)
+        lednumber(eve, dx, dy, 1, segsize, present.hour, fg, bg, eve.OPT_TIMECOLON + fill)
         dx = dx + (3 * segsize // 2)
         lednumber(eve, dx, dy, 1, segsize, present.minute / 10, fg, bg, 0)
         dx = dx + (3 * segsize // 2)
@@ -109,4 +110,4 @@ def ledclock(eve):
         eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
 
-apprunner.run(ledclock)
+apprunner.run(ledclock, patch)
