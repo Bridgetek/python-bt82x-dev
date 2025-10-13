@@ -26,7 +26,7 @@ def pad4(s):
         s += b'\x00'
     return s
 
-titleaddress = "Nakatomi Plaza Directory"
+titleaddress = "Makatoni Plaza Directory"
 
 fontfiles = [(3, "assets/Roboto-BoldCondensed_32_L4.reloc")]
 imagefiles = [(4, ["assets/face_2.png",
@@ -133,7 +133,7 @@ def eve_display(eve):
 
     eve.LIB_BeginCoProList()
     # Amount of memory to allocate to heap
-    eve.CMD_MEMORYINIT(0, 6 << 24)
+    eve.CMD_MEMORYINIT(0, eve.topmem)
     eve.LIB_AwaitCoProEmpty()
 
     # Install any custom fonts. 
@@ -231,6 +231,10 @@ def eve_display(eve):
         eve.CMD_SWAP()
         eve.LIB_AwaitCoProEmpty()
 
+    directorysize = eve.LIB_TextSize(32, 0, "Directory")
+    directoryheight = directorysize & 0xffff
+    directorywidth = directorysize >> 16
+    
     ticker = 0
     tickerwords = "Fire Alarm test on Friday Morning at 10:00... Please close the door behind you... "#Mrs Jackson has lost her cat... Amazon please leave all parcels at reception... Uber Eats don't spill anything please..."
     tickersize = eve.LIB_TextSize(34, 0, tickerwords)
@@ -239,6 +243,11 @@ def eve_display(eve):
 
     tenant_dir = 0
     logosel = 0
+    keypress = 0
+    keypress_debounce = 0
+    extension = ""
+    contact = ""
+    calling = False
 
     while True:
 
@@ -247,6 +256,8 @@ def eve_display(eve):
         eve.CMD_SETROTATE(2)
         eve.CLEAR_COLOR_RGB(30, 30, 90)
         eve.CLEAR(1,1,1)
+        eve.CMD_FGCOLOR_RGB(0x00, 0x38, 0x70)
+        eve.CMD_BGCOLOR_RGB(0x00, 0x38, 0xc0)
 
         eve.TAG_MASK(1)
         eve.TAG(99)
@@ -291,41 +302,77 @@ def eve_display(eve):
         elif page == 4:
             
             # Page 4 - Contact Reception
-            pass
+            eve.CMD_MESSAGEBOX(34, eve.OPT_FLAT | eve.OPT_MSGBGALPHA, "Incomplete")
 
         elif page == 1:
             
             # Page 1 - QR Code Entry
-            pass
+            eve.CMD_MESSAGEBOX(34, eve.OPT_FLAT | eve.OPT_MSGBGALPHA, "Incomplete")
 
         elif page == 2:
 
             # Page 2 - Contacts page
 
+            if (keypress >= ord("A") and keypress <= ord("Z")):
+                contact = chr(keypress)
+                animation_last_time = time.monotonic()
+
+            tenants_filter = []
+            if contact != "":
+                for t in tenants:
+                    if t.startswith(contact):
+                        tenants_filter.append(t)
+
+                animation_timer = time.monotonic()
+                took = animation_timer - animation_last_time
+                if took > 5:
+                    contact = ""
+            else:
+                tenants_filter = tenants
+
+            if ((directoryheight * len(tenants_filter)) > 900):
+                # Scroll list of tenants.
+                if tenant_dir == 0: tenant_offset += 2
+                else: tenant_offset -= 2
+
+                # Switch directions at the end of the list.
+                if tenant_dir == 0 and tenant_offset >= (directoryheight * len(tenants_filter)) - 900:
+                    tenant_dir = 1
+                elif tenant_dir == 1 and tenant_offset <= 0:
+                    tenant_dir = 0
+            else: 
+                tenant_dir = 0
+                tenant_offset = 0
+
             eve.CMD_FGCOLOR_RGB(30, 30, 30)
             eve.SAVE_CONTEXT()
             eve.SCISSOR_XY(300,350)
             eve.SCISSOR_SIZE(600,900)
-            for i,t in enumerate(tenants):
-                ypos = -tenant_offset + (60 * i)
-                if ypos > -60 and ypos < 900:
+            for i,t in enumerate(tenants_filter):
+                ypos = -tenant_offset + (directoryheight * i)
+                if ypos > -(directoryheight) and ypos < (directoryheight * len(tenants_filter)):
                     eve.CMD_TEXT(300, 350 + ypos, 32, 0, t)
             eve.RESTORE_CONTEXT()
-            eve.CMD_KEYBOARD(100, 1300, 1000, 480, 32, eve.OPT_FLAT, "QWERTYUIOP\nASDFGHJKL\nZXCVBNM")
-
-            # Scroll list of tenants.
-            if tenant_dir == 0: tenant_offset += 2
-            else: tenant_offset -= 2
-
-            # Switch directions at the end of the list.
-            if tenant_dir == 0 and tenant_offset >= 60 * len(tenants) - 900:
-                tenant_dir = 1
-            elif tenant_dir == 1 and tenant_offset <= 0:
-                tenant_dir = 0
-        
+            option = eve.OPT_FLAT 
+            if contact != "":
+                option |= ord(contact)
+            eve.CMD_KEYBOARD(100, 1300, 1000, 480, 32, option, "QWERTYUIOP\nASDFGHJKL\nZXCVBNM")
+            eve.CMD_FGCOLOR_RGB(0x00, 0x38, 0x70)
+       
         elif page == 3:
 
             # Page 3 - Dial Extension Number page
+
+            if keypress == 100:
+                extension = ""
+            if keypress == 101:
+                calling = True
+                animation_last_time = time.monotonic()
+
+            if len(extension) < 4:
+                if (keypress >= ord("0") and keypress <= ord("9")) or \
+                    (keypress >= ord("A") and keypress <= ord("B")):
+                        extension = extension + chr(keypress)
 
             eve.CMD_TEXT(600, 350, 32, eve.OPT_CENTERX, "Type Extension Number")
 
@@ -337,10 +384,28 @@ def eve_display(eve):
             eve.VERTEX2F(900, 600)
 
             eve.COLOR_RGB(255, 255, 255)
-            eve.CMD_NUMBER(600, 490, 34, eve.OPT_CENTERX, 3846)
+            eve.CMD_TEXT(600, 490, 34, eve.OPT_CENTERX, extension)
             eve.CMD_KEYBOARD(300, 700, 600, 800, 32, eve.OPT_FLAT | eve.OPT_MAP_SPECIAL_KEYS , "123\n456\n789\nA0B")
+            eve.TAG_MASK(1)
+            eve.TAG(100)
             eve.CMD_BUTTON(100, 1600, 400, 200, 34, eve.OPT_FLAT, "Clear")
+            eve.TAG(101)
             eve.CMD_BUTTON(700, 1600, 400, 200, 34, eve.OPT_FLAT, "Call")
+            eve.TAG_MASK(0)
+
+            if calling:
+                eve.CMD_FGCOLOR_RGB(0x30, 0xc0, 0x30)
+
+                message = f"Calling extension:\n{extension}"
+                eve.CMD_MESSAGEBOX(34, eve.OPT_FLAT | eve.OPT_MSGBGALPHA, message)
+                
+                eve.CMD_FGCOLOR_RGB(0x00, 0x38, 0x70)
+                
+                animation_timer = time.monotonic()
+                took = animation_timer - animation_last_time
+                if took > 2:
+                    calling = False
+                    extension = ""
 
         # Display the performance indicator of frame updates per second.
         if (perf_fps):
@@ -351,12 +416,23 @@ def eve_display(eve):
         eve.CMD_SWAP()
         eve.CMD_REGREAD(eve.REG_TOUCH_TAG, 0)
         eve.LIB_AwaitCoProEmpty()
-        next_page = eve.LIB_GetResult()
+        tag = eve.LIB_GetResult()
 
-        if (next_page > 0) and (next_page < 5):
-            page = next_page
-        if next_page == 99:
+        if (tag > 0) and (tag < 5):
+            page = tag
+            extension = ""
+            contact = ""
+        elif tag == 99:
             page = 0
+            extension = ""
+            contact = ""
+        else:
+            keypress = tag
+        
+        if keypress == keypress_debounce:
+            keypress = 0
+        else:
+            keypress_debounce = keypress
         
         # Calculate frames update per second.
         trigger_count += 1

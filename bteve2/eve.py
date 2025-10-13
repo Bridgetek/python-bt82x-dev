@@ -1121,7 +1121,7 @@ class EVE2:
         self.cmd(0x07, 'I', [ int(arg) for arg in args ])
 
     def CMD_BGCOLOR_RGB(self, red,green,blue):
-        self.CMD_BGCOLOR((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255))
+        self.CMD_BGCOLOR(((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255)))
 
     # CMD_BITMAP_TRANSFORM(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2, uint16_t result)
     def CMD_BITMAP_TRANSFORM(self, *args):
