@@ -38,7 +38,7 @@ imagefiles = [(4, ["assets/face_2.png",
               "assets/patient_list.png",
               "assets/support_agent.png",
               "assets/qr_code_scanner.png"])]
-logofiles = [(2, ["assets/nature_800x480-0.jpg"])]
+logofiles = [(2, ["assets/nature_800x480-0.jpg","assets/fruit_800x480.jpg"])]
 
 tenants = ["Ellis, Harry", "Gary, David", "Gennero, Holly", "Gfeller, Bruce", "Gruber, Hans", 
     "Maas, Stanley", "Mabry, Ann", "Mabus, Fredrick", "McAdam, M. J.", "MacAluso, D. L.", 
@@ -57,26 +57,6 @@ imagecell = {}
 logocell = {}
 fontcell = {}
 
-LVDS_RES = 1080
-
-if LVDS_RES == 1080:
-
-    # Incoming signal is 1920 x 1080
-    LVDSRX_W = 1920
-    LVDSRX_H = 1080
-
-    LVDSRX_CODE_SETUP_VALUE = 0x03   # 2 channels, two pixels per clock
-    LVDSRX_SETUP_VALUE      = 0x17   # One pixel per clock, 2 channels, VESA 24
-    LVDSRX_CTRL_VALUE       = 0x8c8c # Ch0 Deskew 0x8, Ch0 clock sel, Frange 0x2
-
-else:
-    # 1080P only supported
-    raise "1080P only supported"
-
-# Handle for incoming video bitmap
-HND_LVDSRX = 1
-HND_VIDEO = 5
-
 def drawbanner(eve):
     # Pixel addressing.
     eve.VERTEX_FORMAT(0)
@@ -86,6 +66,7 @@ def drawbanner(eve):
     eve.CELL(c)
     eve.BEGIN(eve.BEGIN_BITMAPS)
     eve.VERTEX2II(0, 0, h, c)
+    # Write banner with custom font
     eve.CMD_TEXTSCALE(256, 128, fontcell["Roboto-BoldCondensed_32_L4"], eve.OPT_CENTERY, 0x40000, "EntryBot")
     eve.CMD_TEXTSCALE(10, 256, fontcell["Roboto-BoldCondensed_32_L4"], 0, 0x20000, titleaddress)
     eve.CELL(0)
@@ -231,8 +212,8 @@ def eve_display(eve):
         eve.CMD_SWAP()
         eve.LIB_AwaitCoProEmpty()
 
-    directorysize = eve.LIB_TextSize(32, 0, "Directory")
-    directoryheight = directorysize & 0xffff
+    directorysize = eve.LIB_TextSize(fontcell["Roboto-BoldCondensed_32_L4"], 0, "Directory")
+    directoryheight = (directorysize & 0xffff) * 2
     directorywidth = directorysize >> 16
     
     ticker = 0
@@ -242,12 +223,24 @@ def eve_display(eve):
     tickerwidth = tickersize >> 16
 
     tenant_dir = 0
+    tenants_filter = []
+    tenant_contact = ""
+    
     logosel = 0
+
     keypress = 0
     keypress_debounce = 0
+    keypress_persist = 0
+
     extension = ""
-    contact = ""
     calling = False
+
+    animation_timer = 0
+    animation_last_time = 0
+    keyboard_timer = 0
+    keyboard_last_time = 0
+    page_timer = 0
+    page_last_time = 0
 
     while True:
 
@@ -271,7 +264,7 @@ def eve_display(eve):
             eve.BEGIN(eve.BEGIN_BITMAPS)
             h,c = logocell["nature_800x480-0"]
             eve.BITMAP_HANDLE(h)
-            eve.CELL(c)
+            eve.CELL(logosel)
             eve.VERTEX2F(200, 1300)
 
             eve.TAG_MASK(1)
@@ -313,68 +306,97 @@ def eve_display(eve):
 
             # Page 2 - Contacts page
 
-            if (keypress >= ord("A") and keypress <= ord("Z")):
-                contact = chr(keypress)
-                animation_last_time = time.monotonic()
+            if not calling:
+                # "Freeze" screen
+                if keypress >= 100 and keypress < (100 + len(tenants_filter)):
+                    calling = True
+                    animation_last_time = time.monotonic()
+                    extension = tenants_filter[keypress - 100]
+                else:
+                    # Filter list of tenants on key pressed on keyboard entry
+                    if (keypress >= ord("A") and keypress <= ord("Z")):
+                        tenant_contact += chr(keypress)
+                        print(f"Filtering on {tenant_contact}")
+                        animation_last_time = time.monotonic()
+                        keyboard_last_time = time.monotonic()
+                        keypress_persist = keypress
 
-            tenants_filter = []
-            if contact != "":
-                for t in tenants:
-                    if t.startswith(contact):
-                        tenants_filter.append(t)
+                    tenants_filter = []
+                    if tenant_contact != "":
+                        # Match contacts against search string
+                        for t in tenants:
+                            if t.upper().startswith(tenant_contact):
+                                tenants_filter.append(t)
+                            elif len(tenant_contact) > 1:
+                                if tenant_contact in t.upper():
+                                    tenants_filter.append(t)
+                        # Clear search time after a timeout
+                        animation_timer = time.monotonic()
+                        took = animation_timer - animation_last_time
+                        if took > 5:
+                            tenant_contact = ""
+                    else:
+                        tenants_filter = tenants
 
-                animation_timer = time.monotonic()
-                took = animation_timer - animation_last_time
-                if took > 5:
-                    contact = ""
-            else:
-                tenants_filter = tenants
+                # Clear keypress persistence after a timeout
+                keyboard_timer = time.monotonic()
+                took = keyboard_timer - keyboard_last_time
+                if took > 1:
+                    keypress_persist = 0
 
-            if ((directoryheight * len(tenants_filter)) > 900):
-                # Scroll list of tenants.
-                if tenant_dir == 0: tenant_offset += 2
-                else: tenant_offset -= 2
+                if ((directoryheight * len(tenants_filter) * 3 // 2) > 900):
+                    # Scroll list of tenants.
+                    if tenant_dir == 0: tenant_offset += 2
+                    else: tenant_offset -= 2
 
-                # Switch directions at the end of the list.
-                if tenant_dir == 0 and tenant_offset >= (directoryheight * len(tenants_filter)) - 900:
-                    tenant_dir = 1
-                elif tenant_dir == 1 and tenant_offset <= 0:
+                    # Switch directions at the end of the list.
+                    if tenant_dir == 0 and tenant_offset >= (directoryheight * len(tenants_filter) * 3 // 2) - 900:
+                        tenant_dir = 1
+                    elif tenant_dir == 1 and tenant_offset <= 0:
+                        tenant_dir = 0
+                else: 
+                    # Don't scroll tenants if there are not enough of them to fill the screen
                     tenant_dir = 0
-            else: 
-                tenant_dir = 0
-                tenant_offset = 0
+                    tenant_offset = 0
 
             eve.CMD_FGCOLOR_RGB(30, 30, 30)
             eve.SAVE_CONTEXT()
             eve.SCISSOR_XY(300,350)
             eve.SCISSOR_SIZE(600,900)
+            eve.TAG_MASK(1)
             for i,t in enumerate(tenants_filter):
-                ypos = -tenant_offset + (directoryheight * i)
-                if ypos > -(directoryheight) and ypos < (directoryheight * len(tenants_filter)):
-                    eve.CMD_TEXT(300, 350 + ypos, 32, 0, t)
+                ypos = -tenant_offset + (directoryheight * i * 3 // 2)
+                if ypos > -(directoryheight * 3 // 2) and ypos < (directoryheight * len(tenants_filter) * 3 // 2):
+                    eve.TAG(100 + i)
+                    eve.CMD_TEXTSCALE(300, 350 + ypos, fontcell["Roboto-BoldCondensed_32_L4"], 0, 0x20000, t)
             eve.RESTORE_CONTEXT()
-            option = eve.OPT_FLAT 
-            if contact != "":
-                option |= ord(contact)
-            eve.CMD_KEYBOARD(100, 1300, 1000, 480, 32, option, "QWERTYUIOP\nASDFGHJKL\nZXCVBNM")
+            option = eve.OPT_FLAT
+            if tenant_contact != "":
+                option |= keypress_persist
+            eve.CMD_KEYBOARD(50, 1300, 1100, 480, 32, option, "QWERTYUIOP\nASDFGHJKL\nZXCVBNM")
+            eve.TAG_MASK(0)
             eve.CMD_FGCOLOR_RGB(0x00, 0x38, 0x70)
        
         elif page == 3:
 
             # Page 3 - Dial Extension Number page
 
-            if keypress == 100:
-                extension = ""
-            if keypress == 101:
-                calling = True
-                animation_last_time = time.monotonic()
+            if not calling:
+                # "Freeze" screen
+                if keypress == 100:
+                    extension = ""
+                if keypress == 101:
+                    calling = True
+                    animation_last_time = time.monotonic()
 
-            if len(extension) < 4:
-                if (keypress >= ord("0") and keypress <= ord("9")) or \
-                    (keypress >= ord("A") and keypress <= ord("B")):
-                        extension = extension + chr(keypress)
+                if len(extension) < 4:
+                    if (keypress >= ord("0") and keypress <= ord("9")) or \
+                        (keypress >= ord("A") and keypress <= ord("B")):
+                            extension = extension + chr(keypress)
+                            keyboard_last_time = time.monotonic()
+                            keypress_persist = keypress
 
-            eve.CMD_TEXT(600, 350, 32, eve.OPT_CENTERX, "Type Extension Number")
+            eve.CMD_TEXTSCALE(600, 350, fontcell["Roboto-BoldCondensed_32_L4"], eve.OPT_CENTERX, 0x20000, "Type Extension Number")
 
             eve.VERTEX_FORMAT(0)
             eve.BEGIN(eve.BEGIN_RECTS)
@@ -384,8 +406,8 @@ def eve_display(eve):
             eve.VERTEX2F(900, 600)
 
             eve.COLOR_RGB(255, 255, 255)
-            eve.CMD_TEXT(600, 490, 34, eve.OPT_CENTERX, extension)
-            eve.CMD_KEYBOARD(300, 700, 600, 800, 32, eve.OPT_FLAT | eve.OPT_MAP_SPECIAL_KEYS , "123\n456\n789\nA0B")
+            eve.CMD_TEXTSCALE(600, 490, fontcell["Roboto-BoldCondensed_32_L4"], eve.OPT_CENTERX, 0x30000, extension)
+            eve.CMD_KEYBOARD(300, 700, 600, 800, 32, eve.OPT_FLAT | eve.OPT_MAP_SPECIAL_KEYS | keypress_persist, "123\n456\n789\nA0B")
             eve.TAG_MASK(1)
             eve.TAG(100)
             eve.CMD_BUTTON(100, 1600, 400, 200, 34, eve.OPT_FLAT, "Clear")
@@ -393,19 +415,25 @@ def eve_display(eve):
             eve.CMD_BUTTON(700, 1600, 400, 200, 34, eve.OPT_FLAT, "Call")
             eve.TAG_MASK(0)
 
-            if calling:
-                eve.CMD_FGCOLOR_RGB(0x30, 0xc0, 0x30)
+            # Clear keypress persistence after a timeout
+            keyboard_timer = time.monotonic()
+            took = keyboard_timer - keyboard_last_time
+            if took > 1:
+                keypress_persist = 0
 
-                message = f"Calling extension:\n{extension}"
-                eve.CMD_MESSAGEBOX(34, eve.OPT_FLAT | eve.OPT_MSGBGALPHA, message)
-                
-                eve.CMD_FGCOLOR_RGB(0x00, 0x38, 0x70)
-                
-                animation_timer = time.monotonic()
-                took = animation_timer - animation_last_time
-                if took > 2:
-                    calling = False
-                    extension = ""
+        if calling:
+            eve.CMD_FGCOLOR_RGB(0x30, 0xc0, 0x30)
+
+            message = f"Calling extension:\n{extension}"
+            eve.CMD_MESSAGEBOX(34, eve.OPT_FLAT | eve.OPT_MSGBGALPHA, message)
+            
+            eve.CMD_FGCOLOR_RGB(0x00, 0x38, 0x70)
+            
+            animation_timer = time.monotonic()
+            took = animation_timer - animation_last_time
+            if took > 2:
+                calling = False
+                extension = ""
 
         # Display the performance indicator of frame updates per second.
         if (perf_fps):
@@ -419,16 +447,33 @@ def eve_display(eve):
         tag = eve.LIB_GetResult()
 
         if (tag > 0) and (tag < 5):
+            # Change page TAGs
+            print(f"Go to page {tag}")
             page = tag
             extension = ""
-            contact = ""
+            tenant_contact = ""
+            # Change back after an amount of time
+            page_last_time = time.monotonic()
         elif tag == 99:
+            # Return to home page TAG
+            print("Return to home page")
             page = 0
             extension = ""
-            contact = ""
+            tenant_contact = ""
         else:
+            # Other TAG action
             keypress = tag
         
+        page_timer = time.monotonic()
+        took = page_timer - page_last_time
+        if took > 10:
+            print("Timer return to home page")
+            page_last_time = page_timer
+            page = 0
+            extension = ""
+            tenant_contact = ""
+
+        # Keypress only happens once
         if keypress == keypress_debounce:
             keypress = 0
         else:
@@ -440,7 +485,7 @@ def eve_display(eve):
             trigger_count = 0
             frame_timer = time.monotonic()
             took = frame_timer - frame_last_time
-            print(f"{trigger_offset} frames took {took:.3f} s. {trigger_offset / took:.2f} perf_fps")
+            #print(f"{trigger_offset} frames took {took:.3f} s. {trigger_offset / took:.2f} perf_fps")
             perf_fps = int(trigger_offset / took)
             frame_last_time = frame_timer
 
