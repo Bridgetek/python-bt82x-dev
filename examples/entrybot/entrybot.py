@@ -316,7 +316,6 @@ def eve_display(eve):
                     # Filter list of tenants on key pressed on keyboard entry
                     if (keypress >= ord("A") and keypress <= ord("Z")):
                         tenant_contact += chr(keypress)
-                        print(f"Filtering on {tenant_contact}")
                         animation_last_time = time.monotonic()
                         keyboard_last_time = time.monotonic()
                         keypress_persist = keypress
@@ -448,7 +447,6 @@ def eve_display(eve):
 
         if (tag > 0) and (tag < 5):
             # Change page TAGs
-            print(f"Go to page {tag}")
             page = tag
             extension = ""
             tenant_contact = ""
@@ -456,7 +454,6 @@ def eve_display(eve):
             page_last_time = time.monotonic()
         elif tag == 99:
             # Return to home page TAG
-            print("Return to home page")
             page = 0
             extension = ""
             tenant_contact = ""
@@ -467,7 +464,6 @@ def eve_display(eve):
         page_timer = time.monotonic()
         took = page_timer - page_last_time
         if took > 10:
-            print("Timer return to home page")
             page_last_time = page_timer
             page = 0
             extension = ""
