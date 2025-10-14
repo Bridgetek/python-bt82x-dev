@@ -6,6 +6,7 @@ import struct
 import time
 import struct
 
+import os
 import board
 import digitalio
 
@@ -30,10 +31,22 @@ class connector():
     def __init__(self):
         print("Initialise circuitpython interface")
 
-        self.sp = SPI(board.GP2, MOSI=board.GP3, MISO=board.GP4)
-        self.pcs = self.pin(board.GP5) #cs of SPI for Eve
-        self.pdn = self.pin(board.GP7) #power down pin of Eve
-
+        mach = os.uname().machine
+        if mach.startswith("Raspberry Pi Pico with rp2040"):
+            self.sp = SPI(board.GP2, MOSI=board.GP3, MISO=board.GP4)
+            self.pcs = self.pin(board.GP5) #cs of SPI for Eve
+            self.pdn = self.pin(board.GP7) #power down pin of Eve
+        elif mach.startswith("Adafruit Feather "):
+            self.sp = SPI(board.D12, MOSI=board.D13, MISO=board.D11)
+            self.pcs = self.pin(board.D10) #cs of SPI for Eve
+            self.pdn = self.pin(board.D6) #power down pin of Eve
+            #self.sp = SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+            #self.pcs = self.pin(board.D4) #cs of SPI for Eve
+            #self.pdn = self.pin(board.D6) #power down pin of Eve
+        else:
+            self.sp = busio.SPI(board.D13, MOSI=board.D11, MISO=board.D12)
+            self.pcs = self.pin(board.D8) #cs of SPI for Eve
+            self.pdn = self.pin(board.D10) #power down pin of Eve
         self.setup_spi()
 
     def pin(self,p):

@@ -26,9 +26,11 @@ class run:
             # Update any arguments that match
             if (args.connector): connector = args.connector
             if (args.panel): paneltype = args.panel
+            if (args.ram): ramsize = args.ram
         elif implementation.name == "circuitpython":
             connector = "circuitpython"
             paneltype = "WUXGA"
+            ramsize = 1
 
         # Create an connector to BT82x family devices only.
         eve = bteve2.EVE2(connector)
@@ -76,7 +78,7 @@ class run:
             
         # Check that there is a write method for the connector.
         eve.register(eve)
-        eve.ramgsize = (int(args.ram) << 27)
+        eve.ramgsize = (ramsize << 27)
         # The top 0x280000 of RAM_G is reserved
         eve.ramgtop = eve.ramgsize - 0x280000
 
