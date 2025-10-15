@@ -10,6 +10,8 @@ import os
 import board
 import digitalio
 
+import storage
+
 from busio import SPI
 
 import bteve2 as eve
@@ -183,5 +185,24 @@ class connector():
 
         # Disable QSPI burst mode
         #self.wr32(eve.EVE2.REG_SYS_CFG, 1 << 10)
+
+    calfn = "calibrate.bin"
+
+    def getcalibration(self):
+        try:
+            with open(self.calfn, "rb") as f:
+                cal = f.read()
+        except OSError:
+            cal = None
+        return cal
+    
+    def setcalibration(self, cal):
+        storage.remount("/", readonly=False)
+        try:
+            with open(self.calfn, "wb") as f:
+                f.write(cal)
+        except OSError:
+            print("Failed to write")
+        storage.remount("/", readonly=True)
 
 

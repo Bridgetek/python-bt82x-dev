@@ -775,12 +775,12 @@ class EVE2:
     def LIB_AutoCalibrate(self):
         fn = "calibrate.bin"
 
-        try:
-            with open(fn, "rb") as f:
-                self.cs(True)
-                self.wr(self.REG_TOUCH_TRANSFORM_A, f.read())
-                self.cs(False)
-        except OSError:
+        fcal = self.getcalibration()
+        if fcal:
+            self.cs(True)
+            self.wr(self.REG_TOUCH_TRANSFORM_A, fcal)
+            self.cs(False)
+        else:
             self.LIB_BeginCoProList()
             self.CMD_DLSTART()
             self.CLEAR()
@@ -788,14 +788,10 @@ class EVE2:
             self.CMD_CALIBRATE(0)
             self.LIB_EndCoProList()
             self.LIB_AwaitCoProEmpty()
-            self.CMD_DLSTART()
             self.cs(True)
-            try:
-                with open(fn, "wb") as f:
-                    f.write(self.rd(self.REG_TOUCH_TRANSFORM_A, 24))
-            except OSError:
-                pass
+            fcal = self.rd(self.REG_TOUCH_TRANSFORM_A, 24)
             self.cs(False)
+            self.setcalibration(fcal)
 
     # Load from a file-like into the command buffer.
     def load(self, f):

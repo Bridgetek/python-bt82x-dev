@@ -72,6 +72,8 @@ class EVE2(e_EVE2):
         self.wr = self.connector.wr
         self.cs = self.connector.cs
         self.reset = self.connector.reset
+        self.getcalibration = self.connector.getcalibration
+        self.setcalibration = self.connector.setcalibration
 
         # Start connection to the BT82x
         self.boot()
