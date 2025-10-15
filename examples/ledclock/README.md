@@ -22,20 +22,20 @@ The format of the command call is as follows:
 
 _MPSSE example:_
 ```
-python clock.py --connector ft232h 
+python ledclock.py --connector ft232h 
 ```
 
 _FT4222 example in single mode (--mode 0):_
 
 ```
-python clock.py --connector ft4222module 
+python ledclock.py --connector ft4222module 
 
 ```
 
 _FT4222 example in dual mode (--mode 1) or quad mode (--mode 2):_
 
 ```
-python clock.py --connector ft4222module --mode 2
+python ledclock.py --connector ft4222module --mode 2
 
 ```
 
