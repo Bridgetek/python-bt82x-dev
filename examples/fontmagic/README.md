@@ -14,6 +14,8 @@ In the standard mode, the text is written at an angle using the `cmd_textrotate`
 
 To make the scaling and rotation possible the program needs to know the widths of each character in the font. Therefore there is code that will read the font descriptors and calculate the widths of each character. This is stored in a python tuple called the font cache. This is initialised with the `getromfontinfo` function for ROM fonts and `getcustomfontinfo` for custom fonts.
 
+The `fontmagic2.py` example performs the same task but uses the `textangle` and `textscale` extension.
+
 ![Font Magic Example](docs/fontmagic.png)
 
 _Example code running in standard mode._
@@ -54,5 +56,7 @@ The example contains a single file which comprises all the demo functionality. A
 | File/Folder | Description |
 | --- | --- |
 | [fontmagic.py](fontmagic.py) | Example source code file |
+| [fontmagic2.py](fontmagic2.py) | Example source code file |
+| [patch_fontmagic.py](patch_fontmagic.py) | Extension loader module from EAB |
 | [assets](assets) | Font file for demo |
 | [docs](docs) | Documentation support files |
