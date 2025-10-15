@@ -1,15 +1,17 @@
 import sys
 from sys import implementation
+if implementation.name != "circuitpython":
+    import argparse
+    circuitpython = False
+else:
+    circuitpython = True
 
 # This loads BT82x family definitions only.
 import bteve2
 
-if implementation.name != "circuitpython":
-    import argparse
-
 class run:
     def __init__(self, app, patch=None, autotouch=True, minimal=False, connector=None, panel="WUXGA"):
-        if implementation.name != "circuitpython":
+        if not circuitpython:
             if connector == None: 
                 connector = "ft4222module"
             progname = sys.argv[0]
@@ -27,7 +29,7 @@ class run:
             if (args.connector): connector = args.connector
             if (args.panel): paneltype = args.panel
             if (args.ram): ramsize = args.ram
-        elif implementation.name == "circuitpython":
+        else: # implementation.name == "circuitpython"
             connector = "circuitpython"
             paneltype = "WUXGA"
             ramsize = "1G"
@@ -78,16 +80,15 @@ class run:
             
         # Check that there is a write method for the connector.
         eve.register(eve)
-        match ramsize:
-            case "4G":
+        if ramsize == "4G":
                 eve.ramgsize = (1 << 29)
-            case "2G":
+        elif ramsize == "2G":
                 eve.ramgsize = (1 << 28)
-            case "1G":
+        elif ramsize == "1G":
                 eve.ramgsize = (1 << 27)
-            case "512M":
+        elif ramsize == "512M":
                 eve.ramgsize = (1 << 26)
-            case _:
+        else:
                 raise (f"ram size unknown")
         # The top 0x280000 of RAM_G is reserved
         eve.ramgtop = eve.ramgsize - 0x280000

@@ -1,6 +1,12 @@
-# Generated file by extensionutil.py
+# Generated file by extensionutil.py 
 
 import struct
+from sys import implementation
+if implementation.name != "circuitpython":
+    import os
+    circuitpython = False
+else:
+    circuitpython = True
 
 def pad4(s):
     while len(s) % 4:
@@ -28,7 +34,12 @@ def CMD_ENDTOUCHOFFSET(eve, *args):
     eve.cmd0(0xaf)
 
 def loadpatch(eve):
-    patchfile = "patch_base.bin"
+    if not circuitpython:
+        patchfile = os.path.join(os.path.dirname(__file__), "patch_base.bin")
+        chunk = 256
+    else:
+        patchfile = "patch_base.bin"
+        chunk = 16
     actual = ""
     expected = "patch_base;1.1;"
     # Load extension code to BT82x
@@ -38,9 +49,9 @@ def loadpatch(eve):
     try:
         with open(patchfile, "rb") as f:
             while True:
-                patchdata = f.read(4)
+                patchdata = f.read(chunk)
                 eve.LIB_WriteDataToCMD(patchdata)
-                if len(patchdata) < 4:
+                if len(patchdata) < chunk:
                     break
                 pass
     except OSError:

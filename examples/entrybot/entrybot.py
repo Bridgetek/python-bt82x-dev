@@ -2,11 +2,7 @@
 # python fontmagic.py --connector ft4232h ascii fonts\L4\Roboto-BoldCondensed_50_L4.raw -d 0x400 -l 32
 import sys
 import os
-import re
-import struct
 import zlib
-import argparse
-import subprocess
 import time
 
 # Add the library directories to the module search path.
