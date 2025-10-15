@@ -780,7 +780,7 @@ class EVE2:
                 self.cs(True)
                 self.wr(self.REG_TOUCH_TRANSFORM_A, f.read())
                 self.cs(False)
-        except FileNotFoundError:
+        except OSError:
             self.LIB_BeginCoProList()
             self.CMD_DLSTART()
             self.CLEAR()
@@ -790,8 +790,11 @@ class EVE2:
             self.LIB_AwaitCoProEmpty()
             self.CMD_DLSTART()
             self.cs(True)
-            with open(fn, "wb") as f:
-                f.write(self.rd(self.REG_TOUCH_TRANSFORM_A, 24))
+            try:
+                with open(fn, "wb") as f:
+                    f.write(self.rd(self.REG_TOUCH_TRANSFORM_A, 24))
+            except OSError:
+                pass
             self.cs(False)
 
     # Load from a file-like into the command buffer.

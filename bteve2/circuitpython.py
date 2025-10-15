@@ -40,9 +40,6 @@ class connector():
             self.sp = SPI(board.D12, MOSI=board.D13, MISO=board.D11)
             self.pcs = self.pin(board.D10) #cs of SPI for Eve
             self.pdn = self.pin(board.D6) #power down pin of Eve
-            #self.sp = SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-            #self.pcs = self.pin(board.D4) #cs of SPI for Eve
-            #self.pdn = self.pin(board.D6) #power down pin of Eve
         else:
             self.sp = busio.SPI(board.D13, MOSI=board.D11, MISO=board.D12)
             self.pcs = self.pin(board.D8) #cs of SPI for Eve
@@ -83,7 +80,7 @@ class connector():
 
     def rd32(self, a):
         return struct.unpack("I", self.rd(a, 4))[0]
-        
+
     @spilock
     def rd(self, a, nn):
         assert (a & 3) == 0

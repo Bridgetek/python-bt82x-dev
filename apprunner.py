@@ -18,7 +18,7 @@ class run:
             parser = argparse.ArgumentParser(description="EVE demo")
             parser.add_argument("--connector", help="the connection method for EVE")
             parser.add_argument("--panel", default=str("WUXGA"), help="panel type")
-            parser.add_argument("--ram", default="1", choices=['0.5', '1', '2', '4'], help="size of RAM_G in Gbits")
+            parser.add_argument("--ram", default="1G", choices=['512M', '1G', '2G', '4G'], help="size of RAM_G in Gbits")
             (args, rem) = parser.parse_known_args()
             # Persist arguments to target program
             rem.insert(0, progname)
@@ -30,7 +30,7 @@ class run:
         elif implementation.name == "circuitpython":
             connector = "circuitpython"
             paneltype = "WUXGA"
-            ramsize = 1
+            ramsize = "1G"
 
         # Create an connector to BT82x family devices only.
         eve = bteve2.EVE2(connector)
@@ -78,7 +78,17 @@ class run:
             
         # Check that there is a write method for the connector.
         eve.register(eve)
-        eve.ramgsize = (ramsize << 27)
+        match ramsize:
+            case "4G":
+                eve.ramgsize = (1 << 29)
+            case "2G":
+                eve.ramgsize = (1 << 28)
+            case "1G":
+                eve.ramgsize = (1 << 27)
+            case "512M":
+                eve.ramgsize = (1 << 26)
+            case _:
+                raise (f"ram size unknown")
         # The top 0x280000 of RAM_G is reserved
         eve.ramgtop = eve.ramgsize - 0x280000
 
