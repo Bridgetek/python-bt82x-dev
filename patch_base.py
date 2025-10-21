@@ -41,7 +41,7 @@ def loadpatch(eve):
         patchfile = "patch_base.bin"
         chunk = 16
     actual = ""
-    expected = "patch_base;1.1;"
+    expected = "patch_base;1.0;"
     # Load extension code to BT82x
     eve.LIB_BeginCoProList()
     eve.CMD_DLSTART()
