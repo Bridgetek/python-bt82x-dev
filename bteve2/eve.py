@@ -775,12 +775,12 @@ class EVE2:
     def LIB_AutoCalibrate(self):
         fn = "calibrate.bin"
 
-        try:
-            with open(fn, "rb") as f:
-                self.cs(True)
-                self.wr(self.REG_TOUCH_TRANSFORM_A, f.read())
-                self.cs(False)
-        except FileNotFoundError:
+        fcal = self.getcalibration()
+        if fcal:
+            self.cs(True)
+            self.wr(self.REG_TOUCH_TRANSFORM_A, fcal)
+            self.cs(False)
+        else:
             self.LIB_BeginCoProList()
             self.CMD_DLSTART()
             self.CLEAR()
@@ -788,11 +788,10 @@ class EVE2:
             self.CMD_CALIBRATE(0)
             self.LIB_EndCoProList()
             self.LIB_AwaitCoProEmpty()
-            self.CMD_DLSTART()
             self.cs(True)
-            with open(fn, "wb") as f:
-                f.write(self.rd(self.REG_TOUCH_TRANSFORM_A, 24))
+            fcal = self.rd(self.REG_TOUCH_TRANSFORM_A, 24)
             self.cs(False)
+            self.setcalibration(fcal)
 
     # Load from a file-like into the command buffer.
     def load(self, f):
@@ -1121,7 +1120,7 @@ class EVE2:
         self.cmd(0x07, 'I', [ int(arg) for arg in args ])
 
     def CMD_BGCOLOR_RGB(self, red,green,blue):
-        self.CMD_BGCOLOR((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255))
+        self.CMD_BGCOLOR(((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255)))
 
     # CMD_BITMAP_TRANSFORM(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2, uint16_t result)
     def CMD_BITMAP_TRANSFORM(self, *args):
