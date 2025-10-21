@@ -162,3 +162,20 @@ class connector():
                 break
 
             print(f"[Boot fail after reset, retrying...]")
+
+    calfn = "calibrate.bin"
+
+    def getcalibration(self):
+        try:
+            with open(self.calfn, "rb") as f:
+                cal = f.read()
+        except OSError:
+            cal = None
+        return cal
+
+    def setcalibration(self, cal):
+        try:
+            with open(self.calfn, "wb") as f:
+                f.write(cal)
+        except OSError:
+            print("Failed to write")

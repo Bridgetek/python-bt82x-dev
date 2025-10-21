@@ -46,8 +46,6 @@ All platforms will require a working up-to-date installation of __python 3.13.x_
 pip install pyftdi
 ```
 
-This code may also be used with [circuitpython](https://circuitpython.org/). 
-
 #### Windows Setup
 
 To communicate with the MPSSE interface on Windows the standard FTDI drivers cannot be used. These must be replaced with a libusb driver in order for pyftdi to access the device directly. It is not necessary to replace the drivers for all the interfaces on the FTDI devices, just the one used for MPSSE.
@@ -131,8 +129,6 @@ All platforms will require a working up-to-date installation of __python 3.13.x_
 pip install ft4222
 ```
 
-This code may also be used with [circuitpython](https://circuitpython.org/), however __this is not yet supported__.
-
 ### D2XX Interface
 
 The D2XX interface needs no external libraries as it communicates directly with the MPSSE hardware on an FT4232H, FT232H or FT232R device.
@@ -141,21 +137,31 @@ The cable or board connections are identical to the (#MPSSE Cables) section.
 
 ### CircuitPython Interface
 
-Embedded MCUs which support the `busio` and `digitalio` modules can be interfaced to the BT82x using the `circuitpython` connector.
+Embedded MCUs which support the `busio`, `digitalio` and `storage` modules can be interfaced to the BT82x using the `circuitpython` connector.
+
+[CircuitPython](https://circuitpython.org/) is a subset of python for embedded use. The CircuitPython connector has been tested on an Adafruit ESP32S3 Feather (""Adafruit CircuitPython 9.0.5 on 2024-05-22; Adafruit Feather ESP32S3 4MB Flash 2MB PSRAM with ESP32S3").
 
 #### Software Setup
 
-The SPI and GPIO pins used for communication are defined in the `__init__` function of the [bteve2/circuitpython.py](bteve2/circuitpython.py) file.
+The SPI and GPIO pins used for communication are defined in the `__init__` function of the [bteve2/circuitpython.py](bteve2/circuitpython.py) file. It may be necessary to add more "machines" to the pin setup section of the `connector` function.
 
-The directory structure on circuitpython is different to this repository. The files in `bteve2` must be copied to the `lib` directory on the circuitpython `CIRCUITPY` drive. Since there is usually less space on a circuitpython device than a PC the library file in `bteve2` may need to be 
+The directory structure on CircuitPython is different to this repository. The files in `bteve2` must be copied to the `lib` directory on the CircuitPython `CIRCUITPY` drive. Since there is usually less space on a CircuitPython device than a PC the library files in `bteve2` may need to be pre-compiled into `.mpy` files.
 
-See the page [Creating and sharing a CircuitPython library](https://learn.adafruit.com/creating-and-sharing-a-circuitpython-library) for creating a circuitpython module for distribution. This method uses `cookiecutter` to make a distributable library.
+<!-- See the page [Creating and sharing a CircuitPython library](https://learn.adafruit.com/creating-and-sharing-a-circuitpython-library) for creating a CircuitPython module for distribution. This method uses `cookiecutter` to make a distributable library. -->
 
 For development, individual files can be converted to `.mpy` format using the `mpy-cross` utility. These can be copied into the `lib` directory in a subdirectory called `bteve2` to replicate the functionality on a PC.
 
 ```
 pip install mpy-cross
 ```
+
+The CircuitPython application is implemented as normal program in the `code.py` file in the top-level of the `CIRCUITPY` drive. The files `apprunner.py`, `patch_base.py` and `patch_base.bin` files must be placed in the top level.
+
+![CIRCUITPY Drive screenshot](docs/circuitpy.png)
+
+The screenshot from the CircuitPython editor [Thonny](https://thonny.org/) above shows the `bteve2` library in the `lib` directory and the application and the top-level programs.
+
+Due to the limited stoarge available on typical CircuitPython implementations some of the examples may not work.
 
 ## Files and Folder Structure
 
@@ -178,7 +184,7 @@ This is a python module for the BT82x interface allowing calls from python to be
 
 To run the python code and connect to a BT82x, a connector is required. The connector is selected in the parameters to the example programs. It opens a port to the device that makes the SPI signals and sets-up the target device. API interfaces for `reset`, `wr`, `rd`, `cs` functions are required. 
 
-There are supported connectors for [FT4232H (`ft4232h.py`)](bteve2/ft4232h.py), [FT232H (`ft232h.py`)](bteve2/ft232h.py), [FT4222H (`ft4222module.py`)](bteve2/ft4222module.py), [D2XX (`d2xx.py`)](bteve2/d2xx.py). 
+There are supported connectors for [FT4232H (`ft4232h.py`)](bteve2/ft4232h.py), [FT232H (`ft232h.py`)](bteve2/ft232h.py), [FT4222H (`ft4222module.py`)](bteve2/ft4222module.py), [D2XX (`d2xx.py`)](bteve2/d2xx.py) and [CircuitPython (`circuitpython.py`)](bteve2/circuitpython.py). 
 
 The FT4232H connector uses the first MPSSE interface; if it fails to open, the second MPSSE interface (USB Interface 1) is used. The CN2 connector on the UMFTPD2A board is connected to the second MPSSE interface.
 

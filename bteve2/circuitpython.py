@@ -6,8 +6,11 @@ import struct
 import time
 import struct
 
+import os
 import board
 import digitalio
+
+import storage
 
 from busio import SPI
 
@@ -30,10 +33,19 @@ class connector():
     def __init__(self):
         print("Initialise circuitpython interface")
 
-        self.sp = SPI(board.GP2, MOSI=board.GP3, MISO=board.GP4)
-        self.pcs = self.pin(board.GP5) #cs of SPI for Eve
-        self.pdn = self.pin(board.GP7) #power down pin of Eve
-
+        mach = os.uname().machine
+        if mach.startswith("Raspberry Pi Pico with rp2040"):
+            self.sp = SPI(board.GP2, MOSI=board.GP3, MISO=board.GP4)
+            self.pcs = self.pin(board.GP5) #cs of SPI for Eve
+            self.pdn = self.pin(board.GP7) #power down pin of Eve
+        elif mach.startswith("Adafruit Feather "):
+            self.sp = SPI(board.D12, MOSI=board.D13, MISO=board.D11)
+            self.pcs = self.pin(board.D10) #cs of SPI for Eve
+            self.pdn = self.pin(board.D6) #power down pin of Eve
+        else:
+            self.sp = busio.SPI(board.D13, MOSI=board.D11, MISO=board.D12)
+            self.pcs = self.pin(board.D8) #cs of SPI for Eve
+            self.pdn = self.pin(board.D10) #power down pin of Eve
         self.setup_spi()
 
     def pin(self,p):
@@ -70,7 +82,7 @@ class connector():
 
     def rd32(self, a):
         return struct.unpack("I", self.rd(a, 4))[0]
-        
+
     @spilock
     def rd(self, a, nn):
         assert (a & 3) == 0
@@ -173,5 +185,24 @@ class connector():
 
         # Disable QSPI burst mode
         #self.wr32(eve.EVE2.REG_SYS_CFG, 1 << 10)
+
+    calfn = "calibrate.bin"
+
+    def getcalibration(self):
+        try:
+            with open(self.calfn, "rb") as f:
+                cal = f.read()
+        except OSError:
+            cal = None
+        return cal
+    
+    def setcalibration(self, cal):
+        storage.remount("/", readonly=False)
+        try:
+            with open(self.calfn, "wb") as f:
+                f.write(cal)
+        except OSError:
+            print("Failed to write")
+        storage.remount("/", readonly=True)
 
 

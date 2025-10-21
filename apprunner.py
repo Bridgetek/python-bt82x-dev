@@ -1,15 +1,17 @@
 import sys
 from sys import implementation
+if implementation.name != "circuitpython":
+    import argparse
+    circuitpython = False
+else:
+    circuitpython = True
 
 # This loads BT82x family definitions only.
 import bteve2
 
-if implementation.name != "circuitpython":
-    import argparse
-
 class run:
     def __init__(self, app, patch=None, autotouch=True, minimal=False, connector=None, panel="WUXGA"):
-        if implementation.name != "circuitpython":
+        if not circuitpython:
             if connector == None: 
                 connector = "ft4222module"
             progname = sys.argv[0]
@@ -18,7 +20,7 @@ class run:
             parser = argparse.ArgumentParser(description="EVE demo")
             parser.add_argument("--connector", help="the connection method for EVE")
             parser.add_argument("--panel", default=str("WUXGA"), help="panel type")
-            parser.add_argument("--ram", default="1", choices=['0.5', '1', '2', '4'], help="size of RAM_G in Gbits")
+            parser.add_argument("--ram", default="1G", choices=['512M', '1G', '2G', '4G'], help="size of RAM_G in Gbits")
             (args, rem) = parser.parse_known_args()
             # Persist arguments to target program
             rem.insert(0, progname)
@@ -26,9 +28,11 @@ class run:
             # Update any arguments that match
             if (args.connector): connector = args.connector
             if (args.panel): paneltype = args.panel
-        elif implementation.name == "circuitpython":
+            if (args.ram): ramsize = args.ram
+        else: # implementation.name == "circuitpython"
             connector = "circuitpython"
             paneltype = "WUXGA"
+            ramsize = "1G"
 
         # Create an connector to BT82x family devices only.
         eve = bteve2.EVE2(connector)
@@ -76,7 +80,16 @@ class run:
             
         # Check that there is a write method for the connector.
         eve.register(eve)
-        eve.ramgsize = (int(args.ram) << 27)
+        if ramsize == "4G":
+                eve.ramgsize = (1 << 29)
+        elif ramsize == "2G":
+                eve.ramgsize = (1 << 28)
+        elif ramsize == "1G":
+                eve.ramgsize = (1 << 27)
+        elif ramsize == "512M":
+                eve.ramgsize = (1 << 26)
+        else:
+                raise (f"ram size unknown")
         # The top 0x280000 of RAM_G is reserved
         eve.ramgtop = eve.ramgsize - 0x280000
 

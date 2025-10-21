@@ -1,6 +1,12 @@
 # Generated file by extensionutil.py 
 
 import struct
+from sys import implementation
+if implementation.name != "circuitpython":
+    import os
+    circuitpython = False
+else:
+    circuitpython = True
 
 def pad4(s):
     while len(s) % 4:
