@@ -67,7 +67,7 @@ def blur(eve):
 
     eve.DISPLAY()
     if TAKE_SCREENSHOT:
-        status = eve.LIB_FSSnapShot(0x400000, "paris.bmp", 0)
+        status = eve.LIB_FSSnapShot(0x400000, "paris.bmp")
         assert status == 0, "SD card couldn't be written"
     
     eve.CMD_SWAP()

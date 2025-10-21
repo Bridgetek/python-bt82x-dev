@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 
-__version__ = '0.3.0'
+__version__ = '1.2.0'
 
 from sys import implementation
 if implementation.name == "circuitpython":
