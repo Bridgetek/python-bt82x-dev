@@ -48,8 +48,6 @@ python plottest.py --connector ft4222module --mode 2
 
 ```
 
-The number in the command line is used as a decimal number to display in the widgets.
-
 ## Files and Folders
 
 The example contains a single file which comprises all the demo functionality.
