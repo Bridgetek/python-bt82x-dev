@@ -22,10 +22,6 @@ def eve_display(eve):
     keyprev = 0
     units = 1
         
-    # Calibrate screen if necessary. 
-    # Don't do this for now.
-    #eve.LIB_AutoCalibrate()
-
     while True:
         # Start drawing test screen.
         eve.LIB_BeginCoProList()
