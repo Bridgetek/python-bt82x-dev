@@ -13,6 +13,7 @@ The following example code is available:
 | [audioloop](audioloop/README.md) | Advanced plot graph widget demo code |
 | [b2tf](b2tf/README.md) | Advanced seven segment demo code |
 | [bitmap](bitmap/README.md) | Simple bitmap demo code |
+| [carousel](carousel/README.md) | Simple image carousel display to show JPG and PNG files from the SD card |
 | [cruise](cruise/README.md) | Circular click-wheel display demo code |
 | [dronefpv](dronefpv/README.md) | Drone FP Video demo code |
 | [flightdeck](flightdeck/README.md) | Flightdeck example demo code |
@@ -35,6 +36,4 @@ In addition to runable demo code there are libraries of widgets and utilities th
 | [snippets](snippets/README.md) | Common files and widgets for the examples |
 
 Many of the examples load code or modules from this directory. 
-
-TODO: this directory will be split into widgets and utilities.
 
