@@ -507,6 +507,9 @@ class EVE2:
     EVE_DISP_DITHER     = 0
     EVE_TOUCH_CONFIG    = 0 # Touch panel settings
 
+    buf = bytearray(FIFO_MAX)
+    bufptr = 0
+
     """
     Co-processor commands are defined in this file and begin with "cmd_".
 
@@ -733,11 +736,6 @@ class EVE2:
         else:
             return r
 
-    # For operations that return a result code in the last argument
-    def result(self):
-        self.cc(b'\00\00\00\00')
-        return self.previous()
-
     # Send a 'C' string to the command buffer.
     def cstring(self, s):
         if type(s) == str:
@@ -802,11 +800,6 @@ class EVE2:
             while len(s) % 4:
                 s += b'\x00'
             self.ram_cmd(s)
-
-    # Command that returns a value as a result from the CMDB.
-    def cmdr(self, code, fmt, args):
-        self.cmd(code, fmt, args)
-        return self.result()
 
     # Get the touch panel X,Y coordinates
     def LIB_GetTouch(self):
@@ -921,28 +914,31 @@ class EVE2:
     # the size of the FIFO.
     def cc(self, s):
         assert (len(s) % 4) == 0, "Coprocessor commands must be a multiple of 4 bytes"
-        self.buf += s
-        assert (len(self.buf) % 4) == 0, "Coprocessor command buffer must be a multiple of 4 bytes"
+        for b in s: 
+            self.buf[self.bufptr] = b
+            self.bufptr += 1
+        #assert (self.bufptr % 4) == 0, "Coprocessor command buffer must be a multiple of 4 bytes"
         # Flush the co-processor buffer to the EVE device.
-        n = len(self.buf)
-        if n >= self.FIFO_MAX - 16:
-            chunk = min(self.FIFO_MAX - 16, n)
-            self.write(self.buf[:chunk])
-            self.buf = self.buf[chunk:]
+        if self.bufptr >= self.FIFO_MAX - 16:
+            self.flush()
 
     def register(self, sub):
-        self.buf = b''
+        self.bufptr = 0
+        assert (len(self.buf) == self.FIFO_MAX)
         getattr(sub, 'write') # Confirm that there is a write method
 
     # Send the co-processor buffer to the EVE device.
     def flush(self):
-        if (len(self.buf)):
-            self.write(self.buf)
-            self.buf = b''
+        if self.bufptr:
+            self.write(self.buf[:self.bufptr])
+            self.bufptr = 0
 
     # Send a 32-bit value to the EVE.
     def c4(self, i):
-        self.cc(struct.pack("I", i))
+        for j in range(4):
+            self.buf[self.bufptr] = i & 0xff
+            self.bufptr += 1
+            i = i >> 8
 
     # Send a 32-bit basic graphic command to the EVE.
     def cmd0(self, num):
@@ -956,18 +952,12 @@ class EVE2:
     # Send an arbirtary block of data to the co-processor buffer.
     # This can cope with data sizes larger than the buffer.
     def ram_cmd(self, s):
-        # CLEAR currently stored buffer.
-        n = len(self.buf)
-        if n >= self.FIFO_MAX:        
-            self.flush()
         assert (len(s) & 3) == 0, "Data must be a multiple of 4 bytes"
-        p = len(s)
-        while p > 0:
-            chunk = min((1024 * 15), self.FIFO_MAX - n)
-            self.buf += s[:chunk]
-            self.flush()
-            s = s[chunk:]
-            p -= chunk
+        for b in s: 
+            self.buf[self.bufptr] = b
+            self.bufptr += 1
+            if self.bufptr >= self.FIFO_MAX - 16:
+                self.flush()
 
     # The basic graphics instructions for DISPLAY Lists.
     def ALPHA_FUNC(self, func,ref):
