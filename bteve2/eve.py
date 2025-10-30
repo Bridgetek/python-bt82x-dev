@@ -507,55 +507,6 @@ class EVE2:
     EVE_DISP_DITHER     = 0
     EVE_TOUCH_CONFIG    = 0 # Touch panel settings
 
-    buf = bytearray(FIFO_MAX)
-    bufptr = 0
-
-    """
-    Co-processor commands are defined in this file and begin with "cmd_".
-
-    Typically the library will be called like this:
-        gd.LIB_BeginCoProList()
-        gd.CMD_DLSTART()
-        gd.CLEAR_COLOR_RGB(64,72,64)
-        gd.CLEAR(1,1,1)
-        gd.CMD_TEXT(10, 10, 25, 0, "Hello, World!")
-        # Send CMD_SWAP then wait for the co-processor to finish.
-        gd.CMD_SWAP()
-        gd.LIB_EndCoProList()
-        gd.LIB_AwaitCoProEmpty() 
-
-    However, if required the display list can be ended with finish
-        gd.LIB_BeginCoProList()
-        gd.CMD_DLSTART()
-        gd.CLEAR_COLOR_RGB(64,72,64)
-        gd.CLEAR(1,1,1)
-        gd.CMD_TEXT(10, 10, 25, 0, "Hello, World!")
-        # Send CMD_SWAP to the display list.
-        gd.CMD_SWAP()
-        # Wait for the co-processor to finish.
-        gd.LIB_EndCoProList()
-        gd.LIB_AwaitCoProEmpty()
-    
-    More advanced usage can have multiple display lists sent to the 
-    co-processor.
-        gd.LIB_BeginCoProList()
-        gd.CMD_DLSTART()
-        gd.CLEAR_COLOR_RGB(64,72,64)
-        gd.CLEAR(1,1,1)
-        gd.CMD_TEXT(10, 10, 25, 0, "Hello, World!")
-        # Send CMD_SWAP to the display list.
-        gd.CMD_SWAP()
-        # Start the co-processor, but do not wait to finish.
-        gd.LIB_EndCoProList()
-        gd.LIB_AwaitCoProEmpty()
-        # Perform some processing for a long time in parallel to the
-        # co-processor working.
-        long_time_routine()
-        # Wait for co-processor.
-        while not gd.is_finished(): pass
-
-    """
-
     # Reset and wait until the co-processor is ready.
     def boot(self):
         print("Booting")
@@ -736,6 +687,16 @@ class EVE2:
         else:
             return r
 
+    # Send a 32-bit value to the EVE.
+    def c4(self, i):
+        self.cc(i.to_bytes(4, "little"))
+
+    # Send an arbirtary block of data to the co-processor buffer.
+    # This can cope with data sizes larger than the buffer.
+    def ram_cmd(self, s):
+        assert (len(s) & 3) == 0, "Data must be a multiple of 4 bytes"
+        self.cc(s)
+
     # Send a 'C' string to the command buffer.
     def cstring(self, s):
         if type(s) == str:
@@ -909,56 +870,6 @@ class EVE2:
         self.LIB_EndCoProList()
         self.LIB_AwaitCoProEmpty()
 
-    # Add commands to the co-processor buffer.
-    # It is only sent when flush is called or the buffer exceeds
-    # the size of the FIFO.
-    def cc(self, s):
-        assert (len(s) % 4) == 0, "Coprocessor commands must be a multiple of 4 bytes"
-        for b in s: 
-            self.buf[self.bufptr] = b
-            self.bufptr += 1
-        #assert (self.bufptr % 4) == 0, "Coprocessor command buffer must be a multiple of 4 bytes"
-        # Flush the co-processor buffer to the EVE device.
-        if self.bufptr >= self.FIFO_MAX - 16:
-            self.flush()
-
-    def register(self, sub):
-        self.bufptr = 0
-        assert (len(self.buf) == self.FIFO_MAX)
-        getattr(sub, 'write') # Confirm that there is a write method
-
-    # Send the co-processor buffer to the EVE device.
-    def flush(self):
-        if self.bufptr:
-            self.write(self.buf[:self.bufptr])
-            self.bufptr = 0
-
-    # Send a 32-bit value to the EVE.
-    def c4(self, i):
-        for j in range(4):
-            self.buf[self.bufptr] = i & 0xff
-            self.bufptr += 1
-            i = i >> 8
-
-    # Send a 32-bit basic graphic command to the EVE.
-    def cmd0(self, num):
-        self.c4(0xffffff00 | num)
-
-    # Send a 32-bit basic graphic command and parameters to the EVE.
-    def cmd(self, num, fmt, args):
-        self.c4(0xffffff00 | num)
-        self.cc(struct.pack(fmt, *args))
-
-    # Send an arbirtary block of data to the co-processor buffer.
-    # This can cope with data sizes larger than the buffer.
-    def ram_cmd(self, s):
-        assert (len(s) & 3) == 0, "Data must be a multiple of 4 bytes"
-        for b in s: 
-            self.buf[self.bufptr] = b
-            self.bufptr += 1
-            if self.bufptr >= self.FIFO_MAX - 16:
-                self.flush()
-
     # The basic graphics instructions for DISPLAY Lists.
     def ALPHA_FUNC(self, func,ref):
         self.c4((9 << 24) | ((int(func) & 7) << 8) | ((int(ref) & 255)))
@@ -1075,55 +986,55 @@ class EVE2:
 
     # CMD_ANIMDRAW(int32_t ch)
     def CMD_ANIMDRAW(self, *args):
-        self.cmd(0x4f, 'i', [ int(arg) for arg in args ])
+        self.cmd(0x4f, 'i', tuple( int(arg) for arg in args ) )
 
     # CMD_ANIMFRAME(int16_t x, int16_t y, uint32_t aoptr, uint32_t frame)
     def CMD_ANIMFRAME(self, *args):
-        self.cmd(0x5e, 'hhII', [ int(arg) for arg in args ])
+        self.cmd(0x5e, 'hhII', tuple( int(arg) for arg in args ) )
 
     # CMD_ANIMSTART(int32_t ch, uint32_t aoptr, uint32_t loop)
     def CMD_ANIMSTART(self, *args):
-        self.cmd(0x5f, 'iII', [ int(arg) for arg in args ])
+        self.cmd(0x5f, 'iII', tuple( int(arg) for arg in args ) )
 
     # CMD_ANIMSTOP(int32_t ch)
     def CMD_ANIMSTOP(self, *args):
-        self.cmd(0x4d, 'i', [ int(arg) for arg in args ])
+        self.cmd(0x4d, 'i', tuple( int(arg) for arg in args ) )
 
     # CMD_ANIMXY(int32_t ch, int16_t x, int16_t y)
     def CMD_ANIMXY(self, *args):
-        self.cmd(0x4e, 'ihh', [ int(arg) for arg in args ])
+        self.cmd(0x4e, 'ihh', tuple( int(arg) for arg in args ) )
 
     # CMD_APPEND(uint32_t ptr, uint32_t num)
     def CMD_APPEND(self, *args):
-        self.cmd(0x1c, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x1c, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_APPENDF(uint32_t ptr, uint32_t num)
     def CMD_APPENDF(self, *args):
-        self.cmd(0x52, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x52, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_ARC(int16_t x, int16_t y, uint16_t r0, uint16_t r1, uint16_t a0, uint16_t a1)
     def CMD_ARC(self, *args):
-        self.cmd(0x87, 'hhHHHH', [ int(arg) for arg in args ])
+        self.cmd(0x87, 'hhHHHH', tuple( int(arg) for arg in args ) )
 
     # CMD_BGCOLOR(uint32_t c)
     def CMD_BGCOLOR(self, *args):
-        self.cmd(0x07, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x07, 'I', tuple( int(arg) for arg in args ) )
 
     def CMD_BGCOLOR_RGB(self, red,green,blue):
         self.CMD_BGCOLOR(((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255)))
 
     # CMD_BITMAP_TRANSFORM(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2, uint16_t result)
     def CMD_BITMAP_TRANSFORM(self, *args):
-        self.cmd(0x1f, 'iiiiiiiiiiiiHH', [ int(arg) for arg in args ] + [0])
+        self.cmd(0x1f, 'iiiiiiiiiiiiHH', tuple( [ int(arg) for arg in args ] + [0] ) )
 
     # CMD_BUTTON(int16_t x, int16_t y, int16_t w, int16_t h, int16_t font, uint16_t options, const char* s)
     def CMD_BUTTON(self, *args):
-        self.cmd(0x0b, 'hhhhhH', [ int(arg) for arg in args[:6] ])
+        self.cmd(0x0b, 'hhhhhH', tuple( int(arg) for arg in args[:6] ) )
         self.fstring(args[6:])
 
     # CMD_CALIBRATE(uint32_t result)
     def CMD_CALIBRATE(self, *args):
-        self.cmd(0x13, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x13, 'I', tuple( int(arg) for arg in args ) )
 
     def LIB_Calibrate(self, size):
         self.CMD_CALIBRATE(0)
@@ -1131,19 +1042,19 @@ class EVE2:
 
     # CMD_CALIBRATESUB(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t result)
     def CMD_CALIBRATESUB(self, *args):
-        self.cmd(0x56, 'HHHHI', [ int(arg) for arg in args ])
+        self.cmd(0x56, 'HHHHI', tuple( int(arg) for arg in args ) )
 
     # CMD_CALLLIST(uint32_t a)
     def CMD_CALLLIST(self, *args):
-        self.cmd(0x5b, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x5b, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_CGRADIENT(uint32_t shape, int16_t x, int16_t y, int16_t w, int16_t h, uint32_t rgb0, uint32_t rgb1)
     def CMD_CGRADIENT(self, *args):
-        self.cmd(0x8a, 'IhhhhII', [ int(arg) for arg in args ])
+        self.cmd(0x8a, 'IhhhhII', tuple( int(arg) for arg in args ) )
 
     # CMD_CLOCK(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t h, uint16_t m, uint16_t s, uint16_t ms)
     def CMD_CLOCK(self, *args):
-        self.cmd(0x12, 'hhhHHHHH', [ int(arg) for arg in args ])
+        self.cmd(0x12, 'hhhHHHHH', tuple( int(arg) for arg in args ) )
 
     # CMD_COLDSTART()
     def CMD_COLDSTART(self, *args):
@@ -1151,7 +1062,7 @@ class EVE2:
 
     # CMD_COPYLIST(uint32_t dst)
     def CMD_COPYLIST(self, *args):
-        self.cmd(0x88, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x88, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_DDRSHUTDOWN()
     def CMD_DDRSHUTDOWN(self, *args):
@@ -1163,7 +1074,7 @@ class EVE2:
 
     # CMD_DIAL(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t val)
     def CMD_DIAL(self, *args):
-        self.cmd(0x29, "hhhHI", [ int(arg) for arg in args ])
+        self.cmd(0x29, "hhhHI", tuple( int(arg) for arg in args ) )
 
     # CMD_DLSTART()
     def CMD_DLSTART(self, *args):
@@ -1171,7 +1082,7 @@ class EVE2:
 
     # CMD_ENABLEREGION(uint32_t en)
     def CMD_ENABLEREGION(self, *args):
-        self.cmd(0x7e, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x7e, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_ENDLIST()
     def CMD_ENDLIST(self, *args):
@@ -1183,14 +1094,14 @@ class EVE2:
 
     # CMD_FGCOLOR(uint32_t c)
     def CMD_FGCOLOR(self, *args):
-        self.cmd(0x08, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x08, 'I', tuple( int(arg) for arg in args ) )
 
     def CMD_FGCOLOR_RGB(self, red,green,blue):
         self.CMD_FGCOLOR(((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255)))
 
     # CMD_FILLWIDTH(uint32_t s)
     def CMD_FILLWIDTH(self, *args):
-        self.cmd(0x51, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x51, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_FLASHATTACH()
     def CMD_FLASHATTACH(self, *args):
@@ -1206,7 +1117,7 @@ class EVE2:
 
     # CMD_FLASHFAST(uint32_t result)
     def CMD_FLASHFAST(self, *args):
-        self.cmd(0x44, "I", [ int(arg) for arg in args ])
+        self.cmd(0x44, "I", tuple( int(arg) for arg in args ) )
 
     def LIB_FlashFast(self):
         self.CMD_FLASHFAST(0)
@@ -1214,15 +1125,15 @@ class EVE2:
 
     # CMD_FLASHPROGRAM(uint32_t dest, uint32_t src, uint32_t num)
     def CMD_FLASHPROGRAM(self, *args):
-        self.cmd(0x64, 'III', [ int(arg) for arg in args ])
+        self.cmd(0x64, 'III', tuple( int(arg) for arg in args ) )
 
     # CMD_FLASHREAD(uint32_t dest, uint32_t src, uint32_t num)
     def CMD_FLASHREAD(self, *args):
-        self.cmd(0x40, 'III', [ int(arg) for arg in args ])
+        self.cmd(0x40, 'III', tuple( int(arg) for arg in args ) )
 
     # CMD_FLASHSOURCE(uint32_t ptr)
     def CMD_FLASHSOURCE(self, *args):
-        self.cmd(0x48, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x48, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_FLASHSPIDESEL()
     def CMD_FLASHSPIDESEL(self, *args):
@@ -1230,23 +1141,23 @@ class EVE2:
 
     # CMD_FLASHSPIRX(uint32_t ptr, uint32_t num)
     def CMD_FLASHSPIRX(self, *args):
-        self.cmd(0x47, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x47, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_FLASHSPITX(uint32_t num!)
     def CMD_FLASHSPITX(self, *args):
-        self.cmd(0x46, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x46, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_FLASHUPDATE(uint32_t dest, uint32_t src, uint32_t num)
     def CMD_FLASHUPDATE(self, *args):
-        self.cmd(0x41, 'III', [ int(arg) for arg in args ])
+        self.cmd(0x41, 'III', tuple( int(arg) for arg in args ) )
 
     # CMD_FLASHWRITE(uint32_t ptr, uint32_t num!)
     def CMD_FLASHWRITE(self, *args):
-        self.cmd(0x3f, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x3f, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_FSDIR(uint32_t dst, uint32_t num, const char* path, uint32_t result)
     def CMD_FSDIR(self, *args):
-        self.cmd(0x8e, 'II', [ int(arg) for arg in args[:2] ])
+        self.cmd(0x8e, 'II', tuple( int(arg) for arg in args[:2] ) )
         self.cstring(args[2])
         self.c4(int(args[3]))
 
@@ -1256,11 +1167,11 @@ class EVE2:
 
     # CMD_FSOPTIONS(uint32_t options)
     def CMD_FSOPTIONS(self, *args):
-        self.cmd(0x6d, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x6d, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_FSREAD(uint32_t dst, const char* filename, uint32_t result)
     def CMD_FSREAD(self, *args):
-        self.cmd(0x71, 'I', [int(args[0])])
+        self.cmd(0x71, 'I', tuple( int(args[0]) ) )
         self.cstring(args[1])
         self.c4(args[2])
 
@@ -1290,11 +1201,11 @@ class EVE2:
 
     # CMD_GAUGE(int16_t x, int16_t y, int16_t r, uint16_t options, uint16_t major, uint16_t minor, uint16_t val, uint16_t range)
     def CMD_GAUGE(self, *args):
-        self.cmd(0x11, 'hhhHHHHH', [ int(arg) for arg in args ])
+        self.cmd(0x11, 'hhhHHHHH', tuple( int(arg) for arg in args ) )
 
     # CMD_GETIMAGE(uint32_t source, uint32_t fmt, uint32_t w, uint32_t h, uint32_t palette)
     def CMD_GETIMAGE(self, *args):
-        self.cmd(0x58, 'IIIII', [ int(arg) for arg in args ])
+        self.cmd(0x58, 'IIIII', tuple( int(arg) for arg in args ) )
 
     # @brief EVE API: Get image properties.
     # @details From the last CMD_LOADIMAGE get the address, size, format and 
@@ -1307,7 +1218,7 @@ class EVE2:
 
     # CMD_GETMATRIX(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f)
     def CMD_GETMATRIX(self, *args):
-        self.cmd(0x2f, 'iiiiii', [ int(arg) for arg in args ])
+        self.cmd(0x2f, 'iiiiii', tuple( int(arg) for arg in args ) )
 
     # @brief EVE API: Get the touchscreen transformation matrix.
     # @details Obtains the transformation matric from a CMD_CALIBRATE operation.
@@ -1318,7 +1229,7 @@ class EVE2:
 
     # CMD_GETPROPS(uint32_t ptr, uint32_t w, uint32_t h)
     def CMD_GETPROPS(self, *args):
-        self.cmd(0x22, 'III', [ int(arg) for arg in args ])
+        self.cmd(0x22, 'III', tuple( int(arg) for arg in args ) )
 
     # @brief EVE API: Get properties of an CMD_LOADIMAGE operation
     # @details Obtains the details of an image decoded by the CMD_LOADIMAGE
@@ -1331,7 +1242,7 @@ class EVE2:
 
     # CMD_GETPTR(uint32_t result)
     def CMD_GETPTR(self, *args):
-        self.cmd(0x20, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x20, 'I', tuple( int(arg) for arg in args ) )
 
     # @brief EVE API: Get current allocation pointer
     # @details Obtains the automatic allocation pointer of the last address
@@ -1344,19 +1255,19 @@ class EVE2:
 
     # CMD_GLOW(int16_t x, int16_t y, int16_t w, int16_t h)
     def CMD_GLOW(self, *args):
-        self.cmd(0x8b, 'hhhh', [ int(arg) for arg in args ])
+        self.cmd(0x8b, 'hhhh', tuple( int(arg) for arg in args ) )
 
     # CMD_GRADCOLOR(uint32_t c)
     def CMD_GRADCOLOR(self, *args):
-        self.cmd(0x30, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x30, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_GRADIENT(int16_t x0, int16_t y0, uint32_t rgb0, int16_t x1, int16_t y1, uint32_t rgb1)
     def CMD_GRADIENT(self, *args):
-        self.cmd(0x09, 'hhIhhI', [ int(arg) for arg in args ])
+        self.cmd(0x09, 'hhIhhI', tuple( int(arg) for arg in args ) )
 
     # CMD_GRADIENTA(int16_t x0, int16_t y0, uint32_t argb0, int16_t x1, int16_t y1, uint32_t argb1)
     def CMD_GRADIENTA(self, *args):
-        self.cmd(0x50, 'hhIhhI', [ int(arg) for arg in args ])
+        self.cmd(0x50, 'hhIhhI', tuple( int(arg) for arg in args ) )
 
     # CMD_GRAPHICSFINISH()
     def CMD_GRAPHICSFINISH(self, *args):
@@ -1364,24 +1275,24 @@ class EVE2:
 
     # CMD_I2SSTARTUP(uint32_t freq)
     def CMD_I2SSTARTUP(self, *args):
-        self.cmd(0x69, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x69, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_INFLATE(uint32_t ptr, uint32_t options!)
     def CMD_INFLATE(self, *args):
-        self.cmd(0x4a, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x4a, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_INTERRUPT(uint32_t ms)
     def CMD_INTERRUPT(self, *args):
-        self.cmd(0x02, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x02, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_KEYS(int16_t x, int16_t y, int16_t w, int16_t h, int16_t font, uint16_t options, const char* s)
     def CMD_KEYS(self, *args):
-        self.cmd(0x0c, 'hhhhhH', [ int(arg) for arg in args[:6] ])
+        self.cmd(0x0c, 'hhhhhH', tuple( int(arg) for arg in args[:6] ) )
         self.fstring(args[6:])
 
     # CMD_LOADASSET(uint32_t ptr, uint32_t options!)
     def CMD_LOADASSET(self, *args):
-        self.cmd(0x81, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x81, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_LOADIDENTITY()
     def CMD_LOADIDENTITY(self, *args):
@@ -1389,11 +1300,11 @@ class EVE2:
 
     # CMD_LOADIMAGE(uint32_t ptr, uint32_t options!)
     def CMD_LOADIMAGE(self, *args):
-        self.cmd(0x21, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x21, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_LOADWAV(uint32_t dst, uint32_t options!)
     def CMD_LOADWAV(self, *args):
-        self.cmd(0x85, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x85, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_LOGO()
     def CMD_LOGO(self, *args):
@@ -1401,15 +1312,15 @@ class EVE2:
 
     # CMD_MEDIAFIFO(uint32_t ptr, uint32_t size)
     def CMD_MEDIAFIFO(self, *args):
-        self.cmd(0x34, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x34, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_MEMCPY(uint32_t dest, uint32_t src, uint32_t num)
     def CMD_MEMCPY(self, *args):
-        self.cmd(0x1b, 'III', [ int(arg) for arg in args ])
+        self.cmd(0x1b, 'III', tuple( int(arg) for arg in args ) )
 
     # CMD_MEMCRC(uint32_t ptr, uint32_t num, uint32_t result)
     def CMD_MEMCRC(self, *args):
-        self.cmd(0x16, 'III', [ int(arg) for arg in args ])
+        self.cmd(0x16, 'III', tuple( int(arg) for arg in args ) )
 
     # @brief EVE API: Calculate the CRC of a memory area.
     # @details Obtains the CRC of a memory area.
@@ -1422,19 +1333,19 @@ class EVE2:
 
     # CMD_MEMSET(uint32_t ptr, uint32_t value, uint32_t num)
     def CMD_MEMSET(self, *args):
-        self.cmd(0x19, 'III', [ int(arg) for arg in args ])
+        self.cmd(0x19, 'III', tuple( int(arg) for arg in args ) )
 
     # CMD_MEMWRITE(uint32_t ptr, uint32_t num!)
     def CMD_MEMWRITE(self, *args):
-        self.cmd(0x18, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x18, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_MEMZERO(uint32_t ptr, uint32_t num)
     def CMD_MEMZERO(self, *args):
-        self.cmd(0x1a, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x1a, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_NEWLIST(uint32_t a)
     def CMD_NEWLIST(self, *args):
-        self.cmd(0x5c, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x5c, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_NOP()
     def CMD_NOP(self, *args):
@@ -1442,23 +1353,23 @@ class EVE2:
 
     # CMD_NUMBER(int16_t x, int16_t y, int16_t font, uint16_t options, int32_t n)
     def CMD_NUMBER(self, *args):
-        self.cmd(0x2a, 'hhhHi', [ int(arg) for arg in args ])
+        self.cmd(0x2a, 'hhhHi', tuple( int(arg) for arg in args ) )
 
     # CMD_PLAYVIDEO(uint32_t options!)
     def CMD_PLAYVIDEO(self, *args):
-        self.cmd(0x35, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x35, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_PLAYWAV(uint32_t options!)
     def CMD_PLAYWAV(self, *args):
-        self.cmd(0x79, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x79, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_PROGRESS(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t options, uint16_t val, uint16_t range)
     def CMD_PROGRESS(self, *args):
-        self.cmd(0x0d, 'hhhhHHHH', [ int(arg) for arg in args ] + [0])
+        self.cmd(0x0d, 'hhhhHHHH', tuple( [ int(arg) for arg in args ] + [0] ) )
 
     # CMD_REGREAD(uint32_t ptr, uint32_t result)
     def CMD_REGREAD(self, *args):
-        self.cmd(0x17, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x17, 'II', tuple( int(arg) for arg in args ) )
 
     # @brief EVE API: Read a register.
     # @details Reads a register value.
@@ -1470,11 +1381,11 @@ class EVE2:
 
     # CMD_REGWRITE(uint32_t dst, uint32_t value)
     def CMD_REGWRITE(self, *args):
-        self.cmd(0x86, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x86, "II", tuple( int(arg) for arg in args ) )
 
     # CMD_RENDERTARGET(uint32_t a, uint16_t fmt, int16_t w, int16_t h)
     def CMD_RENDERTARGET(self, *args):
-        self.cmd(0x8d, 'IHhhH', [ int(arg) for arg in args ] + [0])
+        self.cmd(0x8d, 'IHhhH', tuple( [ int(arg) for arg in args ] + [0] ) )
 
     # CMD_RESETFONTS()
     def CMD_RESETFONTS(self, *args):
@@ -1486,7 +1397,7 @@ class EVE2:
 
     # CMD_RESULT(uint32_t dst)
     def CMD_RESULT(self, *args):
-        self.cmd(0x89, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x89, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_RETURN()
     def CMD_RETURN(self, *args):
@@ -1494,19 +1405,19 @@ class EVE2:
 
     # CMD_ROMFONT(uint32_t font, uint32_t romslot)
     def CMD_ROMFONT(self, *args):
-        self.cmd(0x39, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x39, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_ROTATE(int32_t a)
     def CMD_ROTATE(self, *args):
-        self.cmd(0x26, 'i', [ int(arg) for arg in args ])
+        self.cmd(0x26, 'i', tuple( int(arg) for arg in args ) )
 
     # CMD_ROTATEAROUND(int32_t x, int32_t y, int32_t a, int32_t s)
     def CMD_ROTATEAROUND(self, *args):
-        self.cmd(0x4b, 'iiii', [ int(arg) for arg in args ])
+        self.cmd(0x4b, 'iiii', tuple( int(arg) for arg in args ) )
 
     # CMD_RUNANIM(uint32_t waitmask, uint32_t play)
     def CMD_RUNANIM(self, *args):
-        self.cmd(0x60, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x60, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_SAVECONTEXT()
     def CMD_SAVECONTEXT(self, *args):
@@ -1514,7 +1425,7 @@ class EVE2:
 
     # CMD_SCALE(int32_t sx, int32_t sy)
     def CMD_SCALE(self, *args):
-        self.cmd(0x25, 'ii', [ int(arg) for arg in args ])
+        self.cmd(0x25, 'ii', tuple( int(arg) for arg in args ) )
 
     # CMD_SCREENSAVER()
     def CMD_SCREENSAVER(self, *args):
@@ -1522,11 +1433,11 @@ class EVE2:
 
     # CMD_SCROLLBAR(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t options, uint16_t val, uint16_t size, uint16_t range)
     def CMD_SCROLLBAR(self, *args):
-        self.cmd(0x0f, 'hhhhHHHH', [ int(arg) for arg in args ])
+        self.cmd(0x0f, 'hhhhHHHH', tuple( int(arg) for arg in args ) )
 
     # CMD_SDATTACH(uint32_t options, uint32_t result)
     def CMD_SDATTACH(self, *args):
-        self.cmd(0x6e, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x6e, 'II', tuple( int(arg) for arg in args ) )
 
     def LIB_SDAttach(self, options):
         self.CMD_SDATTACH(options, 0)
@@ -1534,7 +1445,7 @@ class EVE2:
 
     # CMD_SDBLOCKREAD(uint32_t dst, uint32_t src, uint32_t count, uint32_t result)
     def CMD_SDBLOCKREAD(self, *args):
-        self.cmd(0x6f, 'IIII', [ int(arg) for arg in args ])
+        self.cmd(0x6f, 'IIII', tuple( int(arg) for arg in args ) )
 
     def LIB_SDBlockRead(self, dst, src, count):
         self.CMD_SDBLOCKREAD(dst, src, count, 0)
@@ -1542,15 +1453,15 @@ class EVE2:
 
     # CMD_SETBASE(uint32_t b)
     def CMD_SETBASE(self, *args):
-        self.cmd(0x33, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x33, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_SETBITMAP(uint32_t source, uint16_t fmt, uint16_t w, uint16_t h)
     def CMD_SETBITMAP(self, *args):
-        self.cmd(0x3d, 'IHHHH', [ int(arg) for arg in args ] + [0])
+        self.cmd(0x3d, 'IHHHH', tuple( [ int(arg) for arg in args ] + [0] ) )
 
     # CMD_SETFONT(uint32_t font, uint32_t ptr, uint32_t firstchar)
     def CMD_SETFONT(self, *args):
-        self.cmd(0x36, 'III', [ int(arg) for arg in args ])
+        self.cmd(0x36, 'III', tuple( int(arg) for arg in args ) )
 
     # CMD_SETMATRIX()
     def CMD_SETMATRIX(self, *args):
@@ -1558,31 +1469,31 @@ class EVE2:
 
     # CMD_SETROTATE(uint32_t r)
     def CMD_SETROTATE(self, *args):
-        self.cmd(0x31, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x31, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_SETSCRATCH(uint32_t handle)
     def CMD_SETSCRATCH(self, *args):
-        self.cmd(0x37, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x37, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_SKETCH(int16_t x, int16_t y, uint16_t w, uint16_t h, uint32_t ptr, uint16_t format)
     def CMD_SKETCH(self, *args):
-        self.cmd(0x2c, 'hhHHIHH', [ int(arg) for arg in args ] + [0])
+        self.cmd(0x2c, 'hhHHIHH', tuple( [ int(arg) for arg in args ] + [0] ) )
 
     # CMD_SKIPCOND(uint32_t a, uint32_t func, uint32_t ref, uint32_t mask, uint32_t num)
     def CMD_SKIPCOND(self, *args):
-        self.cmd(0x8c, 'IIIII', [ int(arg) for arg in args ])
+        self.cmd(0x8c, 'IIIII', tuple( int(arg) for arg in args ) )
 
     # CMD_SLIDER(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t options, uint16_t val, uint16_t range)
     def CMD_SLIDER(self, *args):
-        self.cmd(0x0e, 'hhhhHHHH', [ int(arg) for arg in args ] + [0])
+        self.cmd(0x0e, 'hhhhHHHH', tuple( [ int(arg) for arg in args ] + [0] ) )
 
     # CMD_SNAPSHOT(uint32_t ptr)
     def CMD_SNAPSHOT(self, *args):
-        self.cmd(0x1d, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x1d, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_SPINNER(int16_t x, int16_t y, uint16_t style, uint16_t scale)
     def CMD_SPINNER(self, *args):
-        self.cmd(0x14, 'hhHH', [ int(arg) for arg in args ])
+        self.cmd(0x14, 'hhHH', tuple( int(arg) for arg in args ) )
 
     # CMD_STOP()
     def CMD_STOP(self, *args):
@@ -1602,54 +1513,54 @@ class EVE2:
 
     # CMD_TEXT(int16_t x, int16_t y, int16_t font, uint16_t options, const char* s)
     def CMD_TEXT(self, *args):
-        self.cmd(0x0a, 'hhhH', [ int(arg) for arg in args[:4] ])
+        self.cmd(0x0a, 'hhhH', tuple( int(arg) for arg in args[:4] ) )
         self.fstring(args[4:])
 
     # CMD_TEXTDIM(uint32_t dimensions, int16_t font, uint16_t options, const char* s)
     def CMD_TEXTDIM(self, *args):
-        self.cmd(0x84, 'IhH', [ int(arg) for arg in args[:3] ])
+        self.cmd(0x84, 'IhH', tuple( int(arg) for arg in args[:3] ) )
         self.fstring(args[3:])
 
     # CMD_TOGGLE(int16_t x, int16_t y, int16_t w, int16_t font, uint16_t options, uint16_t state, const char* s)
     def CMD_TOGGLE(self, *args):
-        self.cmd(0x10, "hhhhHH", [ int(arg) for arg in args[0:6] ])
+        self.cmd(0x10, "hhhhHH", tuple( int(arg) for arg in args[0:6] ) )
         label = (args[6].encode() + b'\xff' + args[7].encode())
-        self.fstring((label,) + [ int(arg) for arg in args[8:] ])
+        self.fstring((label,) + tuple( int(arg) for arg in args[8:] ) )
 
     # CMD_TRACK(int16_t x, int16_t y, int16_t w, int16_t h, int16_t tag)
     def CMD_TRACK(self, *args):
-        self.cmd(0x28, 'hhhhhH', [ int(arg) for arg in args ] + [0])
+        self.cmd(0x28, 'hhhhhH', tuple( [ int(arg) for arg in args ] + [0] ) )
 
     # CMD_TRANSLATE(int32_t tx, int32_t ty)
     def CMD_TRANSLATE(self, *args):
-        self.cmd(0x24, 'ii', [ int(arg) for arg in args ])
+        self.cmd(0x24, 'ii', tuple( int(arg) for arg in args ) )
 
     # CMD_VIDEOFRAME(uint32_t dst, uint32_t ptr)
     def CMD_VIDEOFRAME(self, *args):
-        self.cmd(0x3b, 'II', [ int(arg) for arg in args ])
+        self.cmd(0x3b, 'II', tuple( int(arg) for arg in args ) )
 
     # CMD_VIDEOSTART(uint32_t options)
     def CMD_VIDEOSTART(self, *args):
-        self.cmd(0x3a, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x3a, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_WAIT(uint32_t us)
     def CMD_WAIT(self, *args):
-        self.cmd(0x59, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x59, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_WAITCHANGE(uint32_t a)
     def CMD_WAITCHANGE(self, *args):
-        self.cmd(0x67, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x67, 'I', tuple( int(arg) for arg in args ) )
 
     # CMD_WAITCOND(uint32_t a, uint32_t func, uint32_t ref, uint32_t mask)
     def CMD_WAITCOND(self, *args):
-        self.cmd(0x78, 'IIII', [ int(arg) for arg in args ])
+        self.cmd(0x78, 'IIII', tuple( int(arg) for arg in args ) )
 
     # CMD_WATCHDOG(uint32_t init_val)
     def CMD_WATCHDOG(self, *args):
-        self.cmd(0x83, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x83, 'I', tuple( int(arg) for arg in args ) )
 
     # Extension commands
 
     # CMD_LOADPATCH(uint32_t options)
     def CMD_LOADPATCH(self, *args):
-        self.cmd(0x82, 'I', [ int(arg) for arg in args ])
+        self.cmd(0x82, 'I', tuple( int(arg) for arg in args ) )

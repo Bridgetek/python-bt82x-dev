@@ -2,15 +2,17 @@
 
 from collections import namedtuple
 
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 from sys import implementation
 if implementation.name == "circuitpython":
     from .circuitpython import connector as connectorcp
-else:
-    #from ._eve import _EVE
-    pass
-    
+
+try:
+    from _eve import _EVE
+except:
+    from ._eve import _EVE
+  
 from .eve import CoprocessorException, EVE2 as e_EVE2
 
 """
@@ -43,8 +45,8 @@ Panel = namedtuple('Panel', ['display_res','hcycle','hoffset','hsync0','hsync1',
 # Optional touch screen settings
 Touch = namedtuple('Touch', ['description','address','type'])
 
-class EVE2(e_EVE2):
-
+class EVE2(e_EVE2, _EVE):
+        
     def __init__(self, connector):
 
         print(f"Connector is {connector}")
