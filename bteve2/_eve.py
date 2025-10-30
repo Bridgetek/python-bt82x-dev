@@ -9,7 +9,6 @@ class _EVE:
     # It is only sent when flush is called or the buffer exceeds
     # the size of the FIFO.
     def cc(self, s):
-        print(f"cc {self.bufptr}")
         assert (len(s) % 4) == 0, "Coprocessor commands must be a multiple of 4 bytes"
         for b in s: 
             self.buf[self.bufptr] = b
@@ -28,7 +27,6 @@ class _EVE:
         self.cc(struct.pack(fmt, *args))
 
     def register(self, sub):
-        print(f"registering {self.FIFO_MAX}")
         self.buf = bytearray(self.FIFO_MAX)
         self.bufptr = 0
         assert (len(self.buf) == self.FIFO_MAX)
