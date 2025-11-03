@@ -65,6 +65,36 @@ class EVE2(e_EVE2, _EVE):
                 self.connector = connectord2xx()
         else:
             self.connector = connectorcp()
+            
+            # Modifications to use CircuitPython shared bindings `_eve` library
+            # Shared bindings are coded in C and are much faster
+            self.vscale = 16
+            def VERTEX_FORMAT(frac):
+                self.vscale = 1 << frac
+                self.VertexFormat(frac)
+            def VERTEX2F(x, y):
+                self.Vertex2f(x/self.vscale,y/self.vscale)
+            def VERTEX2F(x, y):
+                self.Vertex2f(x/self.vscale,y/self.vscale)
+            def VERTEX_TRANSLATE_X(x):
+                self.VertexTranslateX(x/16)
+            def VERTEX_TRANSLATE_Y(y):
+                self.VertexTranslateY(y/16)
+            def LINE_WIDTH(width):
+                self.LineWidth(width/8)
+            def POINT_SIZE(width):
+                self.PointSize(width/8)
+            # Replace functions in `eve.py`
+            self.VERTEX_FORMAT = VERTEX_FORMAT
+            self.VERTEX2F = VERTEX2F
+            self.VERTEX_TRANSLATE_X = VERTEX_TRANSLATE_X
+            self.VERTEX_TRANSLATE_Y = VERTEX_TRANSLATE_Y
+            self.LINE_WIDTH = LINE_WIDTH
+            self.POINT_SIZE = POINT_SIZE
+            # Modification to add BitmapOrder to shared bindings for CircuitPython
+            def BitmapZorder(o):
+                self.c4((51 << 24) | (int(o) & 255))
+            self.BitmapZorder = BitmapZorder
 
         # Initialise connector interface
         self.setup_flash = self.connector.setup_flash
@@ -79,3 +109,5 @@ class EVE2(e_EVE2, _EVE):
 
         # Start connection to the BT82x
         self.boot()
+
+

@@ -871,118 +871,118 @@ class EVE2:
         self.LIB_AwaitCoProEmpty()
 
     # The basic graphics instructions for DISPLAY Lists.
-    def ALPHA_FUNC(self, func,ref):
-        self.c4((9 << 24) | ((int(func) & 7) << 8) | ((int(ref) & 255)))
+    def ALPHA_FUNC(self, func, ref):
+        self.AlphaFunc(func, ref)
     def BEGIN(self, prim):
-        self.c4((31 << 24) | ((int(prim) & 15)))
+        self.Begin(prim)
     def BITMAP_EXT_FORMAT(self, fmt):
-        self.c4((46 << 24) | (int(fmt) & 65535))
+        self.BitmapExtFormat(fmt)
     def BITMAP_HANDLE(self, handle):
-        self.c4((5 << 24) | ((int(handle) & 63)))
-    def BITMAP_LAYOUT(self, format,linestride,height):
-        self.c4((7 << 24) | ((int(format) & 31) << 19) | ((int(linestride) & 1023) << 9) | ((int(height) & 511)))
-    def BITMAP_LAYOUT_H(self, linestride,height):
-        self.c4((40 << 24) | (((linestride) & 3) << 2) | (((height) & 3)))
-    def BITMAP_SIZE(self, filter,wrapx,wrapy,width,height):
-        self.c4((8 << 24) | ((int(filter) & 1) << 20) | ((int(wrapx) & 1) << 19) | ((int(wrapy) & 1) << 18) | ((int(width) & 511) << 9) | ((int(height) & 511)))
-    def BITMAP_SIZE_H(self, width,height):
-        self.c4((41 << 24) | (((width) & 3) << 2) | (((height) & 3)))
+        self.BitmapHandle(handle)
+    def BITMAP_LAYOUT(self, format, linestride, height):
+        self.BitmapLayout(format, linestride, height)
+    def BITMAP_LAYOUT_H(self, linestride, height):
+        self.BitmapLayoutH(linestride, height)
+    def BITMAP_SIZE(self, filter, wrapx, wrapy, width, height):
+        self.BitmapSize(filter, wrapx, wrapy, width, height)
+    def BITMAP_SIZE_H(self, width, height):
+        self.BitmapSizeH(width, height)
     def BITMAP_SOURCE(self, addr):
-        self.c4((1 << 24) | ((int(addr) & 0xffffff)))
+        self.BitmapSource(addr)
     def BITMAP_SOURCE_H(self, addr):
-        self.c4((49 << 24) | ((int(addr) & 0xff)))
+        self.BitmapSourceH(addr)
     def BITMAP_SWIZZLE(self, r, g, b, a):
-        self.c4((47 << 24) | ((int(r) & 7) << 9) | ((int(g) & 7) << 6) | ((int(b) & 7) << 3) | ((int(a) & 7)))
+        self.BitmapSwizzle(r, g, b, a)
     def BITMAP_TRANSFORM_A(self, p, a):
-        self.c4((21 << 24) | ((int(p) & 1) << 17) | ((int(a) & 131071)))
+        self.BitmapTransformA(p, a)
     def BITMAP_TRANSFORM_B(self, p, b):
-        self.c4((22 << 24) | ((int(p) & 1) << 17) | ((int(b) & 131071)))
+        self.BitmapTransformB(p, b)
     def BITMAP_TRANSFORM_C(self, c):
-        self.c4((23 << 24) | ((int(c) & 16777215)))
+        self.BitmapTransformC(c)
     def BITMAP_TRANSFORM_D(self, p, d):
-        self.c4((24 << 24) | ((int(p) & 1) << 17) | ((int(d) & 131071)))
+        self.BitmapTransformD(p, d)
     def BITMAP_TRANSFORM_E(self, p, e):
-        self.c4((25 << 24) | ((int(p) & 1) << 17) | ((int(e) & 131071)))
+        self.BitmapTransformE(p, e)
     def BITMAP_TRANSFORM_F(self, f):
-        self.c4((26 << 24) | ((int(f) & 16777215)))
-    def BITMAP_ZORDER(self,o):
-        self.c4((51 << 24) | (int(o) & 255))
-    def BLEND_FUNC(self, src,dst):
-        self.c4((11 << 24) | ((int(src) & 7) << 3) | ((int(dst) & 7)))
+        self.BitmapTransformF(f)
+    def BITMAP_ZORDER(self, o):
+        self.BitmapZorder(o)
+    def BLEND_FUNC(self, src, dst):
+        self.BlendFunc(src, dst)
     def CALL(self, dest):
-        self.c4((29 << 24) | ((int(dest) & 65535)))
+        self.Call(dest)
     def CELL(self, cell):
-        self.c4((6 << 24) | ((int(cell) & 127)))
+        self.Cell(cell)
     def CLEAR_COLOR_A(self, alpha):
-        self.c4((15 << 24) | ((int(alpha) & 255)))
-    def CLEAR_COLOR_RGB(self, red,green,blue):
-        self.c4((2 << 24) | ((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255)))
+        self.ClearColorA(alpha)
+    def CLEAR_COLOR_RGB(self, red, green, blue):
+        self.ClearColorRGB(red, green, blue)
     def CLEAR_COLOR(self, c):
         self.c4((2 << 24) | (c&0xffffff))
-    def CLEAR(self, c = 1,s = 1,t = 1):
-        self.c4((38 << 24) | ((int(c) & 1) << 2) | ((int(s) & 1) << 1) | ((int(t) & 1)))
+    def CLEAR(self, c = 1, s = 1, t = 1):
+        self.Clear(c, s, t)
     def CLEAR_STENCIL(self, s):
-        self.c4((17 << 24) | ((int(s) & 255)))
+        self.ClearStencil(s)
     def CLEAR_TAG(self, s):
-        self.c4((18 << 24) | ((int(s) & 0xffffff)))
+        self.ClearTag(s)
     def COLOR_A(self, alpha):
-        self.c4((16 << 24) | ((int(alpha) & 255)))
-    def COLOR_MASK(self, r,g,b,a):
-        self.c4((32 << 24) | ((int(r) & 1) << 3) | ((int(g) & 1) << 2) | ((int(b) & 1) << 1) | ((int(a) & 1)))
-    def COLOR_RGB(self, red,green,blue):
-        self.c4((4 << 24) | ((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255)))
+        self.ColorA(alpha)
+    def COLOR_MASK(self, r, g, b, a):
+        self.ColorMask(r, g, b, a)
+    def COLOR_RGB(self, red, green, blue):
+        self.ColorRGB(red, green, blue)
     def COLOR(self, c):
         self.c4((4 << 24) | (c&0xffffff))
     def DISPLAY(self):
-        self.c4((0 << 24))
+        self.Display()
     def END(self):
-        self.c4((33 << 24))
+        self.End()
     def JUMP(self, dest):
-        self.c4((30 << 24) | ((int(dest) & 65535)))
+        self.Jump(dest)
     def LINE_WIDTH(self, width):
-        self.c4((14 << 24) | ((int(width) & 4095)))
+        self.LineWidth(width)
     def MACRO(self, m):
-        self.c4((37 << 24) | ((int(m) & 1)))
+        self.Macro(m)
     def NOP(self):
-        self.c4((45 << 24))
+        self.Nop()
     def PALETTE_SOURCE(self, addr):
-        self.c4((42 << 24) | (((addr) & 4194303)))
+        self.PaletteSource(addr)
     def PALETTE_SOURCE_H(self, addr):
-        self.c4((50 << 24) | (((addr >> 24) & 255)))
+        self.PaletteSourceH(addr)
     def POINT_SIZE(self, size):
-        self.c4((13 << 24) | ((int(size) & 8191)))
-    def REGION(self,y,h,dest):
-        self.c4((52 << 24) | ((int(y) & 63) << 18) | ((int(h) & 63 ) << 12) | (int(dest) & 4095))
+        self.PointSize(size)
+    def REGION(self, y, h, dest):
+        self.Region(y, h, dest)
     def RESTORE_CONTEXT(self):
-        self.c4((35 << 24))
+        self.RestoreContext()
     def RETURN(self):
-        self.c4((36 << 24))
+        self.Return()
     def SAVE_CONTEXT(self):
-        self.c4((34 << 24))
-    def SCISSOR_SIZE(self, width,height):
-        self.c4((28 << 24) | ((int(width) & 4095) << 12) | ((int(height) & 4095)))
-    def SCISSOR_XY(self, x,y):
-        self.c4((27 << 24) | ((int(x) & 2047) << 11) | ((int(y) & 2047)))
-    def STENCIL_FUNC(self, func,ref,mask):
-        self.c4((10 << 24) | ((int(func) & 7) << 16) | ((int(ref) & 255) << 8) | ((int(mask) & 255)))
+        self.SaveContext()
+    def SCISSOR_SIZE(self, width, height):
+        self.ScissorSize(width, height)
+    def SCISSOR_XY(self, x, y):
+        self.ScissorXY(x, y)
+    def STENCIL_FUNC(self, func, ref, mask):
+        self.StencilFunc(func, ref, mask)
     def STENCIL_MASK(self, mask):
-        self.c4((19 << 24) | ((int(mask) & 255)))
-    def STENCIL_OP(self, sfail,spass):
-        self.c4((12 << 24) | ((int(sfail) & 7) << 3) | ((int(spass) & 7)))
+        self.StencilMask(mask)
+    def STENCIL_OP(self, sfail, spass):
+        self.StencilOp(sfail, spass)
     def TAG_MASK(self, mask):
-        self.c4((20 << 24) | ((int(mask) & 1)))
+        self.TagMask(mask)
     def TAG(self, s):
-        self.c4((3 << 24) | ((int(s) & 0xffffff)))
+        self.Tag(s)
     def VERTEX_FORMAT(self, frac):
-        self.c4((39 << 24) | (int(frac) & 7))
+        self.VertexFormat(frac)
     def VERTEX2F(self, x, y):
-        self.c4(0x40000000 | ((int(x) & 32767) << 15) | (int(y) & 32767))
+        self.Vertex2f(x, y)
     def VERTEX2II(self, x, y, handle = 0, cell = 0):
-        self.c4((2 << 30) | ((int(x) & 511) << 21) | ((int(y) & 511) << 12) | ((int(handle) & 31) << 7) | ((int(cell) & 127)))
+        self.Vertex2ii(x, y, handle, cell)
     def VERTEX_TRANSLATE_X(self, x):
-        self.c4((43 << 24) | (((int(x)) & 131071)))
+        self.VertexTranslateX(x)
     def VERTEX_TRANSLATE_Y(self, y):
-        self.c4((44 << 24) | (((int(y)) & 131071)))
+        self.VertexTranslateY(y)
 
     # CMD_ANIMDRAW(int32_t ch)
     def CMD_ANIMDRAW(self, *args):
@@ -1020,7 +1020,7 @@ class EVE2:
     def CMD_BGCOLOR(self, *args):
         self.cmd(0x07, 'I', tuple( int(arg) for arg in args ) )
 
-    def CMD_BGCOLOR_RGB(self, red,green,blue):
+    def CMD_BGCOLOR_RGB(self, red, green, blue):
         self.CMD_BGCOLOR(((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255)))
 
     # CMD_BITMAP_TRANSFORM(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2, uint16_t result)
@@ -1096,7 +1096,7 @@ class EVE2:
     def CMD_FGCOLOR(self, *args):
         self.cmd(0x08, 'I', tuple( int(arg) for arg in args ) )
 
-    def CMD_FGCOLOR_RGB(self, red,green,blue):
+    def CMD_FGCOLOR_RGB(self, red, green, blue):
         self.CMD_FGCOLOR(((int(red) & 255) << 16) | ((int(green) & 255) << 8) | ((int(blue) & 255)))
 
     # CMD_FILLWIDTH(uint32_t s)
@@ -1213,7 +1213,7 @@ class EVE2:
     # @retuns tuple containting the address the image was loaded to, the format, 
     #   width, height, and palette of the loaded image.
     def LIB_GetImage(self):
-        self.CMD_GETIMAGE(0,0,0,0,0)
+        self.CMD_GETIMAGE(0, 0, 0, 0, 0)
         return self.previous(1, "IIiiI")
 
     # CMD_GETMATRIX(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f)
@@ -1224,7 +1224,7 @@ class EVE2:
     # @details Obtains the transformation matric from a CMD_CALIBRATE operation.
     # @returns tuple with a, b, c, d, e, f components of the matrix.
     def LIB_GetMatrix(self):
-        self.CMD_GETMATRIX(0,0,0,0,0,0)
+        self.CMD_GETMATRIX(0, 0, 0, 0, 0, 0)
         return tuple([x/0x10000 for x in self.previous(1, "6i")])
 
     # CMD_GETPROPS(uint32_t ptr, uint32_t w, uint32_t h)
@@ -1237,7 +1237,7 @@ class EVE2:
     #    the coprocessor command list.
     # @returns - tuple with image start address, image width, image height.
     def LIB_GetProps(self):
-        self.CMD_GETPROPS(0,0,0)
+        self.CMD_GETPROPS(0, 0, 0)
         return self.previous(1, "Iii")
 
     # CMD_GETPTR(uint32_t result)
@@ -1564,3 +1564,4 @@ class EVE2:
     # CMD_LOADPATCH(uint32_t options)
     def CMD_LOADPATCH(self, *args):
         self.cmd(0x82, 'I', tuple( int(arg) for arg in args ) )
+
