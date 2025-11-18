@@ -3,9 +3,6 @@
 import time
 import struct
 
-import time
-import struct
-
 import os
 import board
 import digitalio
@@ -108,6 +105,7 @@ class connector():
                 i = list(bb).index(1)
                 response = bb[i + 1:i + 1 + n]
             else:
+                print(".")
                 # Poll for READY byte
                 while recv(1) == b'\x00':
                     pass
@@ -195,7 +193,7 @@ class connector():
         except OSError:
             cal = None
         return cal
-    
+
     def setcalibration(self, cal):
         storage.remount("/", readonly=False)
         try:
@@ -204,5 +202,3 @@ class connector():
         except OSError:
             print("Failed to write")
         storage.remount("/", readonly=True)
-
-
