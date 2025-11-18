@@ -1417,7 +1417,7 @@ class EVE2:
 
     # CMD_RUNANIM(uint32_t waitmask, uint32_t play)
     def CMD_RUNANIM(self, *args):
-        self.cmd(0x60, 'II', tuple( int(arg) for arg in args ) )
+        self.cmd(0x60, 'Ii', tuple( int(arg) for arg in args ) )
 
     # CMD_SAVECONTEXT()
     def CMD_SAVECONTEXT(self, *args):

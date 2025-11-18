@@ -38,14 +38,6 @@ class _EVE:
         if self.bufptr:
             self.write(self.buf[:self.bufptr])
             self.bufptr = 0
-    def PaletteSource(self, addr):
-        self.cI((42 << 24) | (((addr) & 0xffffff)))
-    def PaletteSourceH(self, addr):
-        self.cI((50 << 24) | (((addr >> 24) & 255)))
-    def BitmapHandle(self, handle):
-        self.cI((5 << 24) | ((handle & 63)))
-    def Tag(self, s):
-        self.cI((3 << 24) | ((s & 0xffffff)))
 
     def AlphaFunc(self, func,ref):
         self.c4((9 << 24) | ((int(func) & 7) << 8) | ((int(ref) & 255)))
