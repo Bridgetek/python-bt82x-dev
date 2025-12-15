@@ -56,26 +56,33 @@ def eve_display(eve, ram_start):
             units *= 10
         eve.VERTEX_TRANSLATE_X(0)
 
-        # copy/backup the list from current working display buffer to RAM_G addr "ram_start"
-        eve.CMD_COPYLIST(ram_start)
-        eve.DISPLAY()
-        eve.CMD_SWAP()      # swap to the other display buffer
-
-        # copy the list from RAM_G addr "ram_start" to the new working display buffer
-        eve.CMD_DLSTART()
-        eve.CMD_CALLLIST(ram_start)
         eve.DISPLAY()
         eve.CMD_SWAP()
+        eve.LIB_EndCoProList()
+        eve.LIB_AwaitCoProEmpty()
 
+        # The BT82x only updates the tag buffer when a render occurs.
+        # This code copies the display list (CMD_COPYLIST) to RAM_G allowing us to render 
+        # the display when required. The copy in RAM_G can be written back to RAM_DL to
+        # duplicate the display list above into the alternate display list.
+        # Therefore only a CMD_SWAP is required to update the TAG value.
+        eve.LIB_BeginCoProList()
+        # Copy/backup the list from current working display buffer to RAM_G addr "ram_start".
+        eve.CMD_COPYLIST(ram_start)
+        eve.CMD_DLSTART()
+        # Copy the list from RAM_G addr "ram_start" to the new working display buffer.
+        eve.CMD_CALLLIST(ram_start)
+        eve.DISPLAY()
         eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
 
         while True:
+            # Update the TAG value.
             eve.LIB_BeginCoProList()
             eve.CMD_SWAP()
             eve.LIB_EndCoProList()
             eve.LIB_AwaitCoProEmpty()
-            # Read the tag register on the device
+            # Read the tag register on the device.
             key = eve.rd32(eve.REG_TOUCH_TAG)
 
             # Debounce keys.
