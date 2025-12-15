@@ -16,7 +16,7 @@ import simpleimage
 font_custom = 8
 logo_handle =  7
 
-def eve_display(eve):
+def eve_display(eve, ram_start):
     counter = 0
     key = 0
     keyprev = 0
@@ -56,14 +56,14 @@ def eve_display(eve):
             units *= 10
         eve.VERTEX_TRANSLATE_X(0)
 
-        # copy/backup the list from current working display buffer to RAM_G addr 0x100
-        eve.CMD_COPYLIST(0x100)
+        # copy/backup the list from current working display buffer to RAM_G addr "ram_start"
+        eve.CMD_COPYLIST(ram_start)
         eve.DISPLAY()
         eve.CMD_SWAP()      # swap to the other display buffer
 
-        # copy the list from RAM_G addr 0x100 to the new working display buffer
+        # copy the list from RAM_G addr "ram_start" to the new working display buffer
         eve.CMD_DLSTART()
-        eve.CMD_CALLLIST(0x100)
+        eve.CMD_CALLLIST(ram_start)
         eve.DISPLAY()
         eve.CMD_SWAP()
 
@@ -88,6 +88,7 @@ def eve_display(eve):
 
 def simple(eve):
     font_end = None
+    image_end = None
 
     # Calibrate the display
     print("Calibrating display...\n")
@@ -98,10 +99,10 @@ def simple(eve):
     print("Loading font...")
     font_end = simplefont.eve_init_fonts(eve, font_custom)
     print("Loading images...")
-    simpleimage.eve_load_images(eve, font_end, logo_handle)
+    image_end = simpleimage.eve_load_images(eve, font_end, logo_handle)
 
     # Start example code
     print("Starting demo:")
-    eve_display(eve)
+    eve_display(eve, image_end)
 
 apprunner.run(simple)

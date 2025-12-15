@@ -256,4 +256,9 @@ def eve_load_images(eve, start_addr, handle):
     eve.LIB_EndCoProList()
     eve.LIB_AwaitCoProEmpty()
 
+    # Get the start address, size, format and palette of the loaded image
     _, _, eve_img_bridgetek_logo_width, eve_img_bridgetek_logo_height, _ = eve.LIB_GetImage()
+    # Get the end address of the loaded image
+    end_addr = eve.LIB_GetPtr()
+    
+    return end_addr
