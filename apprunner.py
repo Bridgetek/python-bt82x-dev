@@ -60,20 +60,20 @@ class run:
         elif paneltype == "WXGA":
 
             surface = bteve2.Surface(eve.SWAPCHAIN_0, eve.FORMAT_RGB6, 1280, 800)
-            panel = bteve2.Panel(eve.WXGA, 1411, 120, 0, 100, 815, 14, 0, 10, 1, 0, 0, 0, 0, 0x8b1)
-            if not autotouch: touch = bteve2.Touch("Focaltech FT5206", 0x38, 1)
+            panel = bteve2.Panel(eve.WXGA, 1440, 10, 0, 2, 823, 10, 0, 2, 1, 0, 0, 0, 0, 1, 3)
+            if not autotouch: touch = bteve2.Touch("Ilitek IL2132", 0x41, 4)    # require touch extension
         
         elif paneltype == "WUXGA":
 
             surface = bteve2.Surface(eve.SWAPCHAIN_0, eve.FORMAT_RGB6, 1920, 1200)
-            panel = bteve2.Panel(eve.WUXGA, 2100,50, 0, 30, 1245,10, 0, 3, 2, 0, 0, 0, 1)
+            panel = bteve2.Panel(eve.WUXGA, 2100,50, 0, 30, 1245,10, 0, 3, 2, 0, 0, 0, 1, 3, 7)
             if not autotouch: touch = bteve2.Touch("Goodix GT911", 0x5d, 2)
 
         elif paneltype == "FHD":
 
             surface = bteve2.Surface(eve.SWAPCHAIN_0, eve.FORMAT_RGB6, 1920, 1080)
-            panel = bteve2.Panel(eve.FHD, 2140,220, 0, 20, 1108,28, 0, 4, 1, 0, 0, 0, 1)
-            if not autotouch: touch = bteve2.Touch("Ilitek IL2510", 0x41, 4)    # require touch entension 
+            panel = bteve2.Panel(eve.FHD, 2140,220, 0, 20, 1108,28, 0, 4, 1, 0, 0, 0, 1, 3, 7)
+            if not autotouch: touch = bteve2.Touch("Ilitek IL2510", 0x41, 4)    # require touch extension 
 
         else:
             raise (f"panel type unknown")

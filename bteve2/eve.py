@@ -820,7 +820,7 @@ class EVE2:
             self.EVE_DISP_SWIZZLE = 0 # Define RGB output pins
             self.EVE_DISP_CSPREAD = 0
             self.EVE_DISP_DITHER = 1
-        
+
         else:
         
             self.EVE_DISP_HCYCLE = panelset.hcycle
@@ -857,10 +857,10 @@ class EVE2:
         self.LIB_AwaitCoProEmpty()
 
         # 0: 1 pixel single // 1: 2 pixel single // 2: 2 pixel dual // 3: 4 pixel dual
-        extsyncmode = 3
+        extsyncmode = panelset.so_mode if panelset else 3
         TXPLLDiv = 0x03
         self.wr32(self.REG_LVDSTX_PLLCFG, 0x00300870 + TXPLLDiv if TXPLLDiv > 4 else 0x00301070 + TXPLLDiv)
-        self.wr32(self.REG_LVDSTX_EN, 7) # Enable PLL
+        self.wr32(self.REG_LVDSTX_EN, panelset.lvdstx_ch if panelset else 7) # Enable PLL
 
         self.LIB_BeginCoProList()
         self.CMD_REGWRITE(self.REG_SO_MODE, extsyncmode)
