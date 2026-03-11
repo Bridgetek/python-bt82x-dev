@@ -24,13 +24,25 @@ take_screenshot = 0
 
 HND_LVDSRX = 1
 
-# Incoming signal is 1920 x 1080
-LVDSRX_W = 1920
-LVDSRX_H = 1080
+# Select the mode for the input signal on LVDS
+dualchannel = False
 
-LVDSRX_CODE_SETUP_VALUE = 0x03   # 2 channels, two pixels per clock
-LVDSRX_SETUP_VALUE      = 0x17   # One pixel per clock, 2 channels, VESA 24
-LVDSRX_CTRL_VALUE       = 0x8c8c # Ch0 Deskew 0x8, Ch0 clock sel, Frange 0x2
+if dualchannel:
+    # Incoming signal is dual channel LVDS at 1920 x 1080
+    # Jumpers on HDMI to LVDS Converter Board CN27: S0 on, S1 off, S2 off, S3 on
+    LVDSRX_W = 1920
+    LVDSRX_H = 1080
+    LVDSRX_CORE_SETUP_VALUE = 0x03   # 2 channels, two pixels per clock
+    LVDSRX_SETUP_VALUE      = 0x17   # One pixel per clock, 2 channels, VESA 24
+    LVDSRX_CTRL_VALUE       = 0x8c8c # Ch0 Deskew 0x8, Ch0 clock sel, Frange 0x2
+else:
+    # Incoming signal is single channel LVDS at 1024 x 768
+    # Jumpers on HDMI to LVDS Converter Board CN27: S0 off, S1 on, S2 off, S3 off
+    LVDSRX_W = 1024
+    LVDSRX_H = 768
+    LVDSRX_CORE_SETUP_VALUE = 0x00   # 1 channels, one pixel per clock
+    LVDSRX_SETUP_VALUE      = 0x14   # One pixel per clock, 1 channel, VESA 24
+    LVDSRX_CTRL_VALUE       = 0x008c # Ch0 Deskew 0x8, Ch0 clock sel, Frange 0x2
 
 def sdattach(eve):
     r = eve.LIB_SDAttach(eve.OPT_IS_SD)
@@ -51,6 +63,17 @@ def screenshot(eve, filename):
 
 def video_LVDS(eve):
     global take_screenshot
+
+    print("Starting LVDS...")
+    eve.LIB_BeginCoProList()
+    eve.CMD_DLSTART()
+    eve.CLEAR_COLOR_RGB(0, 80, 0)
+    eve.CLEAR(1,1,1)
+    eve.CMD_TEXT(eve.EVE_DISP_WIDTH//2, eve.EVE_DISP_HEIGHT//2, 28, eve.OPT_CENTER, "Starting LVDS...")
+    eve.DISPLAY()
+    eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
 
     # Size of the overlay controls
     dial_radius = 200
@@ -75,7 +98,6 @@ def video_LVDS(eve):
         if sdattach(eve) != 0:
             return
     
-    print("LVDS start")
     lvds_connected = 1
 
     eve.LIB_BeginCoProList()
@@ -87,7 +109,7 @@ def video_LVDS(eve):
     eve.CMD_REGWRITE(eve.REG_LVDSRX_CORE_CAPTURE, 1)
 
     # LVDSRX_CORE_SETUP register
-    eve.CMD_REGWRITE(eve.REG_LVDSRX_CORE_SETUP, LVDSRX_CODE_SETUP_VALUE)
+    eve.CMD_REGWRITE(eve.REG_LVDSRX_CORE_SETUP, LVDSRX_CORE_SETUP_VALUE)
     eve.CMD_REGWRITE(eve.REG_LVDSRX_CORE_ENABLE, 1)
 
     # LVDS startup
@@ -132,6 +154,17 @@ def video_LVDS(eve):
     # Performance counter
     count = 0
 
+    print("Starting Main Loop...")
+    eve.LIB_BeginCoProList()
+    eve.CMD_DLSTART()
+    eve.CLEAR_COLOR_RGB(0, 80, 0)
+    eve.CLEAR(1,1,1)
+    eve.CMD_TEXT(eve.EVE_DISP_WIDTH//2, eve.EVE_DISP_HEIGHT//2, 28, eve.OPT_CENTER, "Starting Main Loop...")
+    eve.DISPLAY()
+    eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
+
     # Main loop
     while 1:
         frames = 30
@@ -144,18 +177,40 @@ def video_LVDS(eve):
         else:
             count = count + 1
 
+        use_ext = True
         # Test for LVDS connection
         # Get the memory address of the current SWAPCHAIN_2 buffer
         eve.LIB_BeginCoProList()
         eve.CMD_WAITCOND(eve.REG_SC2_STATUS, eve.TEST_EQUAL, 3, 3)
         eve.CMD_REGWRITE(eve.REG_SC2_STATUS, 0x3)
         eve.CMD_REGREAD(eve.REG_SC2_ADDR, 0)
-        eve.CMD_LVDSCONN(0)
+        if use_ext:
+            eve.CMD_LVDSCONN(0)
         eve.LIB_EndCoProList()
         eve.LIB_AwaitCoProEmpty()
 
-        conn = eve.LIB_GetResult(1)
-        lvdsrx_data_addr_new = eve.LIB_GetResult(3)
+        if use_ext:
+            conn = eve.LIB_GetResult(1)
+            lvdsrx_data_addr_new = eve.LIB_GetResult(3)
+        else:
+            conn = 0
+            lvdsrx_data_addr_new = eve.LIB_GetResult(1)
+
+        stat = eve.rd32(eve.REG_LVDSRX_STAT)
+        setup = eve.rd32(eve.REG_LVDSRX_SETUP)
+        
+        if not use_ext:
+            c1 = ((stat >> 28) != 0)
+            if False:
+                c2 = (((stat >> 24) & 3) == 3)
+            else:
+                c2 = (((setup & 2) + 1) & (stat >> 24) != 0)
+            c3 = ((stat & 0xffffff) == 0)
+            if c1 and c2 and c3:
+                conn = 1
+            print(f"{conn} {lvds_connected} {stat:x} {setup:x} {c1} {c2} {c3}")
+        else:
+            print(f"{conn} {lvds_connected} {stat:x} {setup:x}")
 
         if (conn == 0):
             # Not connected or synced
@@ -245,6 +300,15 @@ def attitude(eve):
 
     # Start example code
     print("Starting demo:")
+    eve.LIB_BeginCoProList()
+    eve.CMD_DLSTART()
+    eve.CLEAR_COLOR_RGB(0, 80, 0)
+    eve.CLEAR(1,1,1)
+    eve.CMD_TEXT(eve.EVE_DISP_WIDTH//2, eve.EVE_DISP_HEIGHT//2, 28, eve.OPT_CENTER, "Starting Demo...")
+    eve.DISPLAY()
+    eve.CMD_SWAP()
+    eve.LIB_EndCoProList()
+    eve.LIB_AwaitCoProEmpty()
 
     eve_display(eve)
 
